@@ -1,0 +1,14 @@
+{
+  "model_id":"String",
+  "version": "String",
+  "timestamp": "timestamp",
+  "load_path": {"value": "String" , "type":["localfs","hdfs"]},
+  "hash_code": {"value": "String" , "type":["MD5","SHA-1"]},
+  "metrics" : "model_metrics.json",
+  "data_initial" : "dataframe_metadata-structure.json",
+  "data_normalized" : "dataframe_metadata-structure.json",
+  "model_parmeters" : "algorithm_metadata.json",
+  "ignored_parameters" : "algorithm_metadata.json",
+  "full_parameters_stack" :  "algorithm_metadata.json",
+  "log_path" : {"value": "String" , "type":["localfs","hdfs"]},
+}
