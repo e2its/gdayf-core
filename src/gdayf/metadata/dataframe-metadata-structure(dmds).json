@@ -16,7 +16,7 @@
         "firstq": 381975,
         "secondq" : 457600,
         "thirdq" : 533325,
-      }
+      },
       {"name" : "INICIO",
         "type"    : "np.datetime64",
         "minval"  : "NaN",
@@ -28,7 +28,7 @@
         "firstq"  : "12-01-2011 00:00:00:000",
         "secondq" : "28-07-2015 00:00:00:000",
         "thirdq"  : "12-11-2016 00:00:00:000",
-      }
+      },
       {"name" : "COD_float",
         "type" : "np.float64",
         "minval" : 273300.0,

@@ -1,6 +1,7 @@
 {
   "model_id":"String",
   "version": "String",
+  "objective_column" : "String",
   "timestamp": "timestamp",
   "load_path": {"value": "String" , "type":["localfs","hdfs"]},
   "hash_code": {"value": "String" , "type":["MD5","SHA-1"]},
@@ -11,4 +12,5 @@
   "ignored_parameters" : "algorithm_metadata.json",
   "full_parameters_stack" :  "algorithm_metadata.json",
   "log_path" : {"value": "String" , "type":["localfs","hdfs"]},
+  "status": ["completed", "aborted", "failed"]
 }
