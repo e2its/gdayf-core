@@ -1,5 +1,4 @@
 {
-  "dataframe": {
     "type": "pandas",
     "rowcount" : 1062,
     "cols" : 13 ,
@@ -42,5 +41,4 @@
         "thirdq" : 533325.7,
       }
       ]
-  }
 }

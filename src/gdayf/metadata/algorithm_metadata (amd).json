@@ -1,13 +1,13 @@
 {
-  "h2o" : {
-    "H2OGradientBoostingEstimator" :{
+  "h2o" : [
+    { "model": "H2OGradientBoostingEstimator",
       "id" : "number",
       "module" : "h2o.estimators.gbm",
       "types": {
         "binomial": {"active" : true, "valued": "enum"},
         "multinomial": {"active" : true, "valued": "enum"},
         "regression" : {"active" : true, "valued": "float64"},
-        "topology" : {"active" : true, "valued": "float64"}
+        "topology" : {"active" : false, "valued": "float64"}
       },
       "parameters" :{
         "model_id":{"value":0, "seleccionable":true, "type":"str"},
@@ -62,14 +62,14 @@
         "categorical_encoding" : {"value":"auto", "seleccionable": true, "type":["auto", "enum", "one_hot_internal", "one_hot_explicit", "binary", "eigen"]}
       }
     },
-    "H2OGeneralizedLinearEstimator" :{
+    { "model" : "H2OGeneralizedLinearEstimator",
       "id" : "number",
       "module" : "h2o.estimators.glm",
       "types": {
         "binomial": {"active" : true, "valued": "enum"},
         "multinomial": {"active" : true, "valued": "enum"},
         "regression" : {"active" : true, "valued": "float64"},
-        "topology" : {"active" : true, "valued": "float64"}
+        "topology" : {"active" : false, "valued": "float64"}
       },
       "parameters" : {
         "model_id":{"value":0, "seleccionable":true, "type":"str"},
@@ -120,14 +120,14 @@
         "max_runtime_secs": {"value":0, "seleccionable":true, "type":"float"}
       }
     },
-    "H2ODeepLearningEstimator" :{
+    { "model":"H2ODeepLearningEstimator",
       "id" : "number",
       "module" : "h2o.estimators.deeplearning",
       "types": {
         "binomial": {"active" : true, "valued": "enum"},
         "multinomial": {"active" : true, "valued": "enum"},
         "regression" : {"active" : true, "valued": "float64"},
-        "topology" : {"active" : true, "valued": "float64"}
+        "topology" : {"active" : false, "valued": "float64"}
       },
       "parameters" : {
         "model_id":{"value":0, "seleccionable":true, "type":"str"},
@@ -219,15 +219,14 @@
         "elastic_averaging_regularization": {"value":0.001, "seleccionable":true, "type":"float"}
       }
     },
-    "H2ORandomForestEstimator" :{
+    { "model" : "H2ORandomForestEstimator",
       "id" : "number",
       "module" : "h2o.estimators.random_forest",
       "types": {
-        "types": {
           "binomial": {"active" : true, "valued": "enum"},
           "multinomial": {"active" : true, "valued": "enum"},
           "regression" : {"active" : true, "valued": "float64"},
-          "topology" : {"active" : true, "valued": "float64"}
+          "topology" : {"active" : false, "valued": "float64"}
         },
       "parameters" : {
         "model_id":{"value":0, "seleccionable":true, "type":"str"},
@@ -275,4 +274,5 @@
         "categorical_encoding": {"value":"auto", "seleccionable": true, "type":["auto", "enum", "one_hot_internal", "one_hot_explicit", "binary", "eigen"]}
       }
     }
+  ]
 }
