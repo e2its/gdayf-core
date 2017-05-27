@@ -2,11 +2,21 @@
 
 import pandas as pd
 import json
+from collections import OrderedDict
 
 
 class inputHandler:
     def __init__(self):
         True
+
+    def getDataFrameMetadata(self, dataframe, typedf):
+        md = OrderedDict()
+        md['type'] = '%s' % typedf
+        md['rowcount'] = dataframe.shape[0] - 1
+        md['cols'] = dataframe.shape[1]
+        md['timeformat'] = ''
+        md['columns'] = {}
+        return json.dumps(md, indent=4)
 
 
 class inputHandlerCSVLocal (inputHandler):
@@ -22,20 +32,13 @@ class inputHandlerCSVLocal (inputHandler):
     def inputCSV(self, filename=None, **kwargs):
         return pd.read_csv(filename)
 
-    def createDataFramePandasMetadata(self, dataframe):
-        md = {}
-        md['type'] = 'pandas'
-        md['rowcount'] = dataframe.shape[0] - 1
-        md['cols'] = dataframe.shape[1]
-        md['timeformat'] = ''
-        md['columns'] = {}
-
-        return md
-
 
 if __name__ == "__main__":
     ih = inputHandlerCSVLocal()
-    datos = ih.inputCSV('/home/luis/FL_insurance_sample.csv')
+    datos = ih.inputCSV(
+        '/home/luis/desarrollo/pruebas/FL_insurance_sample.csv')
     print("Tipos de datos: %s" % datos.dtypes)
-    metadatos = ih.createDataFramePandasMetadata(datos)
-    print("Metadatos: %s" % metadatos)
+    metadatas = ih.getDataFrameMetadata(datos, 'pandas')
+    file = open('salida.json', 'w')
+    file.writelines(metadatas)
+    file.close()
