@@ -15,7 +15,18 @@ class inputHandler:
         md['rowcount'] = dataframe.shape[0] - 1
         md['cols'] = dataframe.shape[1]
         md['timeformat'] = ''
-        md['columns'] = {}
+        columnlist = []
+        for col in dataframe.columns:
+            summary = dataframe[col].describe()
+            print('%s' % summary)
+            auxdict = OrderedDict()
+            auxdict['name'] = dataframe[col].name
+            auxdict['type'] = str(dataframe[col].dtype)
+            auxdict['minval'] = str(summary['min'])
+            auxdict['maxval'] = str(summary['max'])
+            auxdict['mean'] = str(summary['mean'])
+            columnlist.append(auxdict)
+        md['columns'] = columnlist
         return json.dumps(md, indent=4)
 
 
