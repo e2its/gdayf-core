@@ -18,13 +18,21 @@ class inputHandler:
         columnlist = []
         for col in dataframe.columns:
             summary = dataframe[col].describe()
-            print('%s' % summary)
             auxdict = OrderedDict()
             auxdict['name'] = dataframe[col].name
             auxdict['type'] = str(dataframe[col].dtype)
-            auxdict['minval'] = str(summary['min'])
-            auxdict['maxval'] = str(summary['max'])
-            auxdict['mean'] = str(summary['mean'])
+            for comp in ['min', 'max', 'mean']:
+                try:
+                    auxdict[comp] = str(summary[comp])
+                except KeyError:
+                    auxdict[comp] = 'Nan'
+            auxdict['sigma'] = ''
+            auxdict['zeros'] = str(dataframe[col][dataframe[col] == 0].count())
+            auxdict['missed'] = str(
+                dataframe[col].isnull().values.ravel().sum())
+            auxdict['firstq'] = ''
+            auxdict['secondq'] = ''
+            auxdict['thirdq'] = ''
             columnlist.append(auxdict)
         md['columns'] = columnlist
         return json.dumps(md, indent=4)
@@ -33,6 +41,7 @@ class inputHandler:
 class inputHandlerCSVLocal (inputHandler):
     def __init__(self):
         self.loadCSVDefaultParameters()
+        super(inputHandlerCSVLocal, self).__init__()
 
     def loadCSVDefaultParameters(self):
         self.sep = ','
