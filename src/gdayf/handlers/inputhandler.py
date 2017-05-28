@@ -57,7 +57,6 @@ if __name__ == "__main__":
     ih = inputHandlerCSVLocal()
     datos = ih.inputCSV(
         '/home/luis/desarrollo/pruebas/FL_insurance_sample.csv')
-    print("Tipos de datos: %s" % datos.dtypes)
     metadatas = ih.getDataFrameMetadata(datos, 'pandas')
     file = open('salida.json', 'w')
     file.writelines(metadatas)
