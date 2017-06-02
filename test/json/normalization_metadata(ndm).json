@@ -1,0 +1,57 @@
+{"front" : [
+  {"type" : "normalization",
+   "class" : "mean",
+   "objective" : {
+    "mean" : 0.0,
+    "std" : 1.0
+   },
+   "description" : "normalization to mean (mean=0 and standard deviation = 1)"
+  }
+  {"type" : "normalization",
+   "class" : "working_range",
+   "objective" : {
+    "minval" : -1.0,
+    "maxval" : 1.0
+   },
+   "description" : "normalization to range [minval .. maxval]"
+  }
+  {"type" : "bucketing",
+   "class" : "discretize",
+   "objective" : {
+    "buckets_number" : 25,
+    "fixed_size" : "Y"
+   },
+   "description" : "bucketing continuos distribution to fixed sized
+   or fixed frecuency"
+  }
+  {"type" : "bucketing",
+   "class" : "agregation",
+   "objective" : {
+      "bucket_ratio" : 0.25,
+    },
+    "description" : "bucketing less frcuent values on a single bucket.
+    bucket_ratio means the quantity of non-frecuent values to bucket
+    "
+  }
+  {"type" : "imputation",
+   "class" : "missing_values",
+   "objective" : {
+     "mean" : "T",
+     "mode" : "F",
+     "fixed" : "F",
+     "k_nearest" : -1,
+     "value": 0
+   },
+   "description" : "fill missing values with choosen option: mean: for continuous values or long cardinality
+   discrete values mode: for short cardinal discrete values fixed: means by value k_nearest: supporting mean and mode.
+   number of values to take in accounton selection (k_nearest upper and k-nearest lower)value: suppoting fixed "
+  }
+  {"type" : "encoding",
+   "class" : "binary_encoding",
+   "objective" : {
+    },
+    "description" : "for multinomial algorithms
+    "
+  }
+  ]
+}
