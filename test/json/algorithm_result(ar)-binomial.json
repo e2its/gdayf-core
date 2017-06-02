@@ -106,6 +106,8 @@
           "distribution": {"value":"bernoulli", "seleccionable":true, "type":["auto", "bernoulli", "multinomial", "gaussian", "poisson", "gamma", "tweedie", "laplace", "quantile", "huber"]},
           "max_runtime_secs": {"value":100.0, "seleccionable":true, "type":"float"},
           "mini_batch_size": {"value":128, "seleccionable":false, "type":"int"},
+          "rate": {"value":0.05, "seleccionable":true, "type":"float"},
+          "rate_annealing": {"value":1e-04, "seleccionable":true, "type":"float"},
           "elastic_averaging": {"value":true, "seleccionable":false, "type":"boolean"}
         }
       },
