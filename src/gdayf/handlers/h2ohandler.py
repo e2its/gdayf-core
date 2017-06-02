@@ -90,19 +90,17 @@ class H2OHandler(object):
         self.path_hdfs = None
         self.url = 'http://127.0.0.1:54321'
         self.nthreads = 6
-        self.ice_root = r'D:/Data/h2o-logs'
+        self.ice_root = r'D:/Data/logs'
         self.max_mem_size = '8G'
         self.start_h2o = True
         self._debug = False
         self._framework = 'h2o'
-
 
         try:
             self._h2o_session = connect(url=self.url)
         except:
             init(url=self.url, nthreads=self.nthreads, ice_root=self.ice_root, max_mem_size=self.max_mem_size)
             self._h2o_session = connection()
-
 
         print('Session_id: ' + self._h2o_session.session_id())
 
@@ -130,9 +128,8 @@ class H2OHandler(object):
         assert isinstance(valid_frame, DataFrame) or valid_frame is None
         assert isinstance(analysis_list, list)
 
-        #analysis_id = analysis_id  # "customer_" + #random + #timestamp
+
         status = -1  # Operation Code
-        #analysis_list = analysis_list  # [(ar(incomplete).json, normalizations_sets.json)]
         model_list = list()
         analysis_timestamp = str(time.time())
 
@@ -225,6 +222,9 @@ class H2OHandler(object):
                     mkdir(model_path, 0o0777)
                 save_model(model=self._model_base, path=model_path, force=True)
 
+                # Generatin params_keys
+                final_ar_model['ignored_parameters'], \
+                final_ar_model['full_parameters_stack'] = self._generate_params()
 
                 # Generating json ar.json
                 # setting load_path
@@ -409,7 +409,22 @@ class H2OHandler(object):
             elif not isinstance(value, dict) and parameter not in ['model_checksum', 'frame_checksum', 'description']:
                 model_metrics[parameter] = value
 
-        return model_metrics.copy()
+        return model_metrics
+
+    def _generate_params(self):
+        """
+        Generate model params for this model.
+
+        :param base parmas_struct:
+        :return dict(full_stack_parameters)
+                """
+        params = self._model_base.get_params()
+        full_stack_params = OrderedDict()
+        print(type(params))
+        for key, values in params.items():
+            if key not in ['model_id', 'training_frame', 'validation_frame', 'response_column']:
+                full_stack_params[key] = values['actual_value']
+        return ('Not implemented yet', full_stack_params)
 
     def get_metric(self, algorithm_description, metric, source):  # not tested
         try:
