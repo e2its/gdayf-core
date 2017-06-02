@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
 import pandas as pd
-import json
-from collections import OrderedDict
 from gdayf.common.dfmetada import DFMetada
 
 
