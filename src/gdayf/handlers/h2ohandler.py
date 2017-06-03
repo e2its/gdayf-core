@@ -26,7 +26,7 @@ from os import path as path
 from shutil import copyfile
 import copy
 
-__name__ = 'H2OHandler'
+__name__ = 'engine.h2o'
 
 class H2OHandler(object):
     """

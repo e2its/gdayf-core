@@ -1,0 +1,31 @@
+{
+  "logging":
+  {
+    "version": 1,
+    "disable_existing_loggers": false,
+    "formatters": {
+        "standard": {
+            "format": "%(asctime)s\t%(levelname)s\t%(name)s\t%(module)s\t%(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S"
+        }
+    },
+    "handlers": {
+        "base": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "formatter": "standard",
+            "filename": "D:\\Data\\logs\\1-DayF-info.log",
+            "level" : "DEBUG",
+            "maxBytes": 10485760,
+            "backupCount": 5,
+            "encoding": "utf8"
+          }
+    },
+    "loggers": {
+        "dayf_logger": {
+            "handlers": ["base"],
+            "level": "INFO",
+            "propagate": "no"
+        }
+    }
+    }
+}

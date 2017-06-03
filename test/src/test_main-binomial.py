@@ -1,6 +1,6 @@
 if __name__ == "__main__":
 
-    from gdayf.handlers.h2ohandler import H2OHandler
+    from handlers.h2ohandler import H2OHandler
     from pandas import DataFrame as DataFrame
     from pandas import concat as concat
     import numpy as np
