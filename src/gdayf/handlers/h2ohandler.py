@@ -25,8 +25,9 @@ from os import makedirs as mkdir
 from os import path as path
 from shutil import copyfile
 import copy
+from gdayf.logs.logshandler import LogsHandler
 
-__name__ = 'engine.h2o'
+__name__ = 'engines'
 
 class H2OHandler(object):
     """
@@ -101,16 +102,18 @@ class H2OHandler(object):
         except:
             init(url=self.url, nthreads=self.nthreads, ice_root=self.ice_root, max_mem_size=self.max_mem_size)
             self._h2o_session = connection()
-
-        print('Session_id: ' + self._h2o_session.session_id())
+        self._logging = LogsHandler()
+        self._logging.log_exec('DayF', self._h2o_session.session_id(), 'Connected to active cluster and ready')
 
     def __del__(self):
         self._h2o_session.close()
+        del self._logging
 
     @classmethod
     def shutdown_cluster(cls):
         try:
             cluster().shutdown()
+
         except:
             print('H20-cluster not working')
 
@@ -132,9 +135,15 @@ class H2OHandler(object):
         status = -1  # Operation Code
         model_list = list()
         analysis_timestamp = str(time.time())
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                              'Starting analysis')
 
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                              'Parsing from pandas to H2OFrame ' + 'training_frame')
         training_frame = H2OFrame(python_obj=training_frame)
         if valid_frame is not None:
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                  'Parsing from pandas to H2OFrame ' + 'validation_frame')
             valid_frame = H2OFrame(python_obj=valid_frame)
 
         for algorithm_description, normalization in analysis_list:
@@ -159,8 +168,12 @@ class H2OHandler(object):
 
             if normalization is not None:
                 struct_ns = json.load(normalization, object_pairs_hook=OrderedDict)
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                      'Executing Normalizations: ' + struct_ns)
             else:
                 struct_ns = None
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                      'No Normalizations Required')
 
             assert isinstance(struct_ar, OrderedDict)
             assert isinstance(struct_ns, OrderedDict) or normalization is None
@@ -202,7 +215,8 @@ class H2OHandler(object):
 
                 model_command.append(")")
                 model_command = ''.join(model_command)
-                print(model_command)
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                      "Generating Model: " + model_command)
 
                 #Modify when hdfs method will be implemented actually first value must be localfs
 
@@ -210,10 +224,14 @@ class H2OHandler(object):
                 if self._debug:
                             connection().start_logging('DEBUG_' + final_ar_model['log_path'][0]['value'])
                 self._model_base = eval(model_command)
+
                 if valid_frame is not None:
                     self._model_base.train(x=x, y=y, training_frame=training_frame, validation_frame=valid_frame)
                 else:
                     self._model_base.train(x=x, y=y, training_frame=training_frame)
+
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                      "Trained Model: " + model_command)
                 if self._debug:
                     connection().stop_logging()
 
@@ -222,7 +240,8 @@ class H2OHandler(object):
                     mkdir(model_path, 0o0777)
                 save_model(model=self._model_base, path=model_path, force=True)
 
-                # Generatin params_keys
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                       model_id + " :Generating Execution log ")
                 final_ar_model['ignored_parameters'], \
                 final_ar_model['full_parameters_stack'] = self._generate_params()
 
@@ -302,6 +321,12 @@ class H2OHandler(object):
                         None
                 self._store_files(json_files, final_ar_model)
 
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                      "Model %s Generated" % model_id)
+                for handler in self._logging.logger.handlers:
+                    handler.flush()
+
+
                 model_list.append(final_ar_model)
 
             return analysis_id, model_list
@@ -319,10 +344,15 @@ class H2OHandler(object):
         while counter_storage < len(struct_ar['load_path']) and load_fails:
             while counter_hash < len(struct_ar['load_path'][counter_storage]['hash_list']) and \
                     hash_fails:
-                print('generated_key %s' % self._hash_keys(struct_ar['load_path'][counter_storage]['hash_list']
-                                                           [counter_hash]['type'],
-                                                           struct_ar['load_path'][counter_storage]['value']))
-                print('storage_key %s' % struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['value'])
+
+                self._logging.log_exec('Predict', self._h2o_session.session_id,
+                                       "Model hash keys (stored, %s) (generated, %s)" %
+                                       (struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['value'],
+                                        self._hash_keys(struct_ar['load_path'][counter_storage]['hash_list']
+                                                        [counter_hash]['type'],
+                                                        struct_ar['load_path'][counter_storage]['value'])
+                                        ))
+
                 if self._hash_keys(struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['type'],
                                    struct_ar['load_path'][counter_storage]['value']) == \
                         struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['value']:
@@ -331,14 +361,18 @@ class H2OHandler(object):
                     try:
                         self._model_base = load_model(struct_ar['load_path'][counter_storage]['value'])
                     except:
-                        print('Model json: invalid')
+                        self._logging.log_error('root', self._h2o_session.session_id,
+                                               "Invalid model on:  %s" %
+                                                struct_ar['load_path'][counter_storage]['value'])
                 else:
                     counter_hash += 1
             counter_hash = 0
             counter_storage += 1
 
         if load_fails:
-            return ('Necesario cargar un modelo valid o ar.json valido')
+            self._logging.log_error('root', self._h2o_session.session_id,
+                                  "Invalid models on:  %s" % struct_ar['load_path'])
+            return 1
 
 
         predict_frame = H2OFrame(python_obj=dataframe)
@@ -350,6 +384,9 @@ class H2OHandler(object):
         struct_ar['type'] = 'predict'
         struct_ar['timestamp'] = model_timestamp
         struct_ar['metrics'] = OrderedDict()
+        self._logging.log_exec(struct_ar['model_id'], self._h2o_session.session_id,
+                              "Generating model performance metrics %s "
+                               % struct_ar['model_parameters']['h2o'][0]['model'])
         struct_ar['metrics']['predict'] = self._generate_metrics(predict_frame, source=None)
 
         # writing ar.json file
@@ -366,6 +403,13 @@ class H2OHandler(object):
             elif each_storage_type['type'] == 'mongoDB':
                 None
         self._store_files(json_files, struct_ar)
+
+        self._logging.log_exec(struct_ar['model_id'], self._h2o_session.session_id,
+                              "starting Prediction over Model %s "
+                               % (struct_ar['model_parameters']['h2o'][0]['model']))
+
+        for handler in self._logging.logger.handlers:
+            handler.flush()
 
         return (self._model_base.predict(predict_frame).as_data_frame(use_pandas=True), struct_ar)
 
