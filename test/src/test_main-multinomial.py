@@ -3,10 +3,10 @@ if __name__ == "__main__":
     from gdayf.handlers.h2ohandler import H2OHandler
     from pandas import DataFrame as DataFrame
     from pandas import concat as concat
-    import json
     import numpy as np
     import os
     from six.moves import cPickle as pickle
+    from time import time
 
     def reformat(dataset, labels):
         dataset = DataFrame(dataset.reshape((-1, image_size * image_size)).astype(np.float32))
@@ -37,7 +37,7 @@ if __name__ == "__main__":
         del save  # hint to help gc free up memory
 
     train_dataset = train_dataset[-20001:-1]
-    train_labels = train_labels[-20001:-1]
+    train_labels = train_labels[-100001:-1]
 
     print('Training set', train_dataset.shape, train_labels.shape)
     print('Validation set', valid_dataset.shape, valid_labels.shape)
@@ -58,14 +58,15 @@ if __name__ == "__main__":
     print('Test set', pd_test_dataset.shape)
 
 
-    json_file = open(r'D:\e2its-dayf.svn\gdayf\branches\0.0.2-jlsanchez\test\json\algorithm_result(ar)-multinomial.json')
+    json_file = open(r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\test\json\algorithm_result(ar)-multinomial.json')
     analysis_list = [(json_file, None)]
 
     print(analysis_list)
 
     analysis_models = H2OHandler()
-    analysis_results = analysis_models.order_training(analysis_id='PoC_binomial', training_frame=pd_train_dataset,
-                                                      valid_frame=pd_train_dataset, analysis_list=analysis_list)
+    analysis_results = analysis_models.order_training(analysis_id='PoC-multinmomial_' + str(time()),
+                                                      training_frame=concat([pd_train_dataset, pd_valid_dataset], axis=0),
+                                                      analysis_list=analysis_list)
 
     for file in os.listdir(r'D:\Data\models\h2o\PoC-multinomial\train\json'):
         analysis_models = H2OHandler()

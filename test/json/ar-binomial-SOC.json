@@ -1,0 +1,158 @@
+{
+  "model_id":"PoC-binomial",
+  "version": "0.0.2",
+  "type" : null,
+  "objective_column" : "Not used",
+  "timestamp": null,
+  "load_path": [
+    {"value": "models" , "type":"localfs",
+      "hash_list":[
+        {"value": null, "type":"MD5"},
+        {"value": null, "type":"SHA256"}
+      ]
+    },
+    {"value": "replica/models" , "type":"localfs",
+      "hash_list":[
+        {"value": null, "type":"MD5"},
+        {"value": null, "type":"SHA256"}
+      ]
+    }
+  ],
+  "metrics" : null,
+  "normalizations_set" : null,
+  "data_initial" : "dataframe_metadata-structure.json",
+  "data_normalized" : null,
+  "model_parameters" : {
+    "h2o" : [
+      { "model": "H2OGradientBoostingEstimator",
+        "id" : "number",
+        "module" : "h2o.estimators.gbm",
+        "types": [
+          {"type" : "binomial", "active" : true, "valued": "enum"}
+        ],
+        "parameters" :{
+          "model_id":{"value":0, "seleccionable":false, "type":"str"},
+          "training_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "validation_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "nfolds": {"value":2, "seleccionable":true, "type":"int"},
+          "keep_cross_validation_predictions":{"value":true, "seleccionable":true, "type":"boolean"},
+          "keep_cross_validation_fold_assignment":{"value":true, "seleccionable":true, "type":"boolean"},
+          "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
+          "score_tree_interval": {"value":1000, "seleccionable":true, "type":"int"},
+          "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
+          "response_column": {"value":"HomeWin", "seleccionable":true, "type":"str"},
+          "ignored_columns": {"value":["FTHG", "FTAG", "FTR", "HTHG", "HTAG", "HTR","HS", "AS", "HST", "AST",
+              "HF", "AF","HC", "AC", "HY", "AY", "HR", "AR","ScoreDraw","Date"], "seleccionable":true, "type":"List[str]"},
+          "ignore_const_cols": {"value":true, "seleccionable":true, "type":"boolean"},
+          "balance_classes": {"value":true, "seleccionable":true, "type":"boolean"},
+          "max_after_balance_size": {"value":5.0, "seleccionable":true, "type":"float"},
+          "max_hit_ratio_k": {"value":3, "seleccionable":true, "type":"int"},
+          "ntrees": {"value":5, "seleccionable":true, "type":"int"},
+          "max_depth": {"value":10, "seleccionable":true, "type":"int"},
+          "max_runtime_secs": {"value":100, "seleccionable":true, "type":"float"},
+          "learn_rate": {"value":0.05, "seleccionable":true, "type":"float(0.0, 1.0)"},
+          "learn_rate_annealing": {"value":1.0, "seleccionable":true, "type":"float(0.0, 1.0)"},
+          "distribution": {"value":"bernoulli", "seleccionable":true, "type":["auto", "bernoulli", "multinomial", "gaussian", "poisson", "gamma", "tweedie", "laplace", "quantile", "huber"]}        }
+      },
+      { "model" : "H2OGeneralizedLinearEstimator",
+        "id" : "number",
+        "module" : "h2o.estimators.glm",
+        "types": [
+          {"type" : "binomial", "active" : true, "valued": "enum"}
+        ],
+        "parameters" : {
+          "model_id":{"value":0, "seleccionable":false, "type":"str"},
+          "training_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "validation_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "nfolds": {"value":2, "seleccionable":true, "type":"int"},
+          "seed": {"value":-1, "seleccionable":true, "type":"int"},
+          "keep_cross_validation_predictions": {"value":true, "seleccionable":true, "type":"boolean"},
+          "keep_cross_validation_fold_assignment": {"value":true, "seleccionable":true, "type":"boolean"},
+          "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
+          "response_column": {"value":"HomeWin", "seleccionable":true, "type":"str"},
+          "ignored_columns": {"value":["FTHG", "FTAG", "FTR", "HTHG", "HTAG", "HTR","HS", "AS", "HST", "AST",
+              "HF", "AF","HC", "AC", "HY", "AY", "HR", "AR","ScoreDraw","Date"], "seleccionable":true, "type":"List[str]"},
+          "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
+          "family": {"value":"binomial", "seleccionable":true, "type":["gaussian", "binomial", "quasibinomial", "multinomial", "poisson", "gamma", "tweedie"]},
+          "solver": {"value":"auto", "seleccionable":true, "type":["auto", "irlsm", "l_bfgs", "coordinate_descent_naive", "coordinate_descent"]},
+          "alpha": {"value":1, "seleccionable":true, "type":"List[float]"},
+          "standardize": {"value":false, "seleccionable":true, "type":"boolean"},
+          "balance_classes": {"value":true, "seleccionable":true, "type":"boolean"},
+          "max_hit_ratio_k": {"value":3, "seleccionable":true, "type":"int"},
+          "max_runtime_secs": {"value":100, "seleccionable":true, "type":"float"}
+        }
+      },
+      { "model":"H2ODeepLearningEstimator",
+        "id" : "number",
+        "module" : "h2o.estimators.deeplearning",
+        "types": [
+          {"type" : "binomial", "active" : true, "valued": "enum"}
+        ],
+        "parameters" : {
+          "model_id":{"value":0, "seleccionable":false, "type":"str"},
+          "training_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "validation_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "nfolds": {"value":2, "seleccionable":true, "type":"int"},
+          "keep_cross_validation_predictions": {"value":true, "seleccionable":true, "type":"boolean"},
+          "keep_cross_validation_fold_assignment": {"value":true, "seleccionable":true, "type":"boolean"},
+          "response_column": {"value":"HomeWin", "seleccionable":true, "type":"str"},
+          "ignored_columns": {"value":["FTHG", "FTAG", "FTR", "HTHG", "HTAG", "HTR","HS", "AS", "HST", "AST",
+              "HF", "AF","HC", "AC", "HY", "AY", "HR", "AR","ScoreDraw","Date"], "seleccionable":true, "type":"List[str]"},
+          "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
+          "max_confusion_matrix_size": {"value":20, "seleccionable":true, "type":"int"},
+          "max_hit_ratio_k": {"value":3, "seleccionable":true, "type":"int"},
+          "standardize": {"value":false, "seleccionable":true, "type":"boolean"},
+          "activation": {"value":"rectifier", "seleccionable":true, "type":["tanh", "tanh_with_dropout", "rectifier", "rectifier_with_dropout", "maxout", "maxout_with_dropout"]},
+          "hidden": {"value":[200,200], "seleccionable":true, "type":"List[int]"},
+          "epochs": {"value":10.0, "seleccionable":true, "type":"float"},
+          "train_samples_per_iteration": {"value":128, "seleccionable":true, "type":"int"},
+          "target_ratio_comm_to_comp": {"value":0.5, "seleccionable":true, "type":"float"},
+          "adaptive_rate": {"value":true, "seleccionable":true, "type":"boolean"},
+          "l2": {"value":0.005, "seleccionable":true, "type":"float"},
+          "distribution": {"value":"bernoulli", "seleccionable":true, "type":["auto", "bernoulli", "multinomial", "gaussian", "poisson", "gamma", "tweedie", "laplace", "quantile", "huber"]},
+          "max_runtime_secs": {"value":100.0, "seleccionable":true, "type":"float"},
+          "mini_batch_size": {"value":128, "seleccionable":false, "type":"int"},
+          "rate": {"value":0.05, "seleccionable":true, "type":"float"},
+          "rate_annealing": {"value":1e-04, "seleccionable":true, "type":"float"},
+          "elastic_averaging": {"value":true, "seleccionable":false, "type":"boolean"}
+        }
+      },
+      { "model" : "H2ORandomForestEstimator",
+        "id" : "number",
+        "module" : "h2o.estimators.random_forest",
+        "types": [
+          {"type" : "binomial", "active" : true, "valued": "enum"}
+        ],
+        "parameters" : {
+          "model_id":{"value":0, "seleccionable":false, "type":"str"},
+          "training_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "validation_frame": {"value":null, "seleccionable":false, "type":"H2OFrame"},
+          "nfolds": {"value":2, "seleccionable":true, "type":"int"},
+          "keep_cross_validation_predictions": {"value":true, "seleccionable":true, "type":"boolean"},
+          "keep_cross_validation_fold_assignment": {"value":true, "seleccionable":true, "type":"boolean"},
+          "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
+          "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
+          "response_column": {"value":"HomeWin", "seleccionable":true, "type":"str"},
+          "ignored_columns": {"value":["FTHG", "FTAG", "FTR", "HTHG", "HTAG", "HTR","HS", "AS", "HST", "AST",
+              "HF", "AF","HC", "AC", "HY", "AY", "HR", "AR","ScoreDraw","Date"], "seleccionable":true, "type":"List[str]"},
+          "balance_classes": {"value":true, "seleccionable":true, "type":"boolean"},
+          "max_hit_ratio_k": {"value":3, "seleccionable":true, "type":"int"},
+          "ntrees": {"value":5, "seleccionable":true, "type":"int"},
+          "max_depth": {"value":10, "seleccionable":true, "type":"int"},
+          "max_runtime_secs": {"value":100, "seleccionable":true, "type":"float"}
+        }
+      }
+    ]
+  },
+  "ignored_parameters" : null,
+  "full_parameters_stack" :  null,
+  "log_path" : [
+    {"value": "log" , "type":"localfs"},
+    {"value": "replica/log" , "type":"localfs"}
+  ],
+  "json_path" : [
+    {"value": "json" , "type":"localfs"},
+    {"value": "replica/json" , "type":"localfs"}
+  ],
+  "status": [null]
+}
