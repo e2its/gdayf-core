@@ -4,6 +4,7 @@ if __name__ == "__main__":
     from gdayf.handlers.inputhandler import inputHandlerCSV
     from pandas import DataFrame as DataFrame
     from pandas import concat as concat
+    from time import time
     import os
 
     source_data = list()
@@ -24,13 +25,14 @@ if __name__ == "__main__":
     analysis_list = [(json_file, None)]
 
     analysis_models = H2OHandler()
-    analysis_results = analysis_models.order_training(analysis_id='PoC_binomial', training_frame=pd_train_dataset,
+    analysis_results = analysis_models.order_training(analysis_id='PoC_binomial-SOC'+str(time()),
+                                                      training_frame=pd_train_dataset,
                                                       analysis_list=analysis_list)
     del analysis_models
 
     analysis_models = H2OHandler()
-    for file in os.listdir(r'D:\Data\models\h2o\PoC-binomial\train\json'):
-        json_file = open(r'D:\Data\models\h2o\PoC-binomial\train\json' + '/' + file)
+    for file in os.listdir(r'D:\Data\models\h2o\PoC-binomial-SOC\train\json'):
+        json_file = open(r'D:\Data\models\h2o\PoC-binomial-SOC\train\json' + '/' + file)
         analysis_results = analysis_models.predict(pd_test_dataset, json_file)
     del analysis_models
 

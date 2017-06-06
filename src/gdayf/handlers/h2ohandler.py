@@ -90,7 +90,7 @@ class H2OHandler(object):
         self.path_localfs = r'D:/Data/models'
         self.path_hdfs = None
         self.url = 'http://127.0.0.1:54321'
-        self.nthreads = 6
+        self.nthreads = 4
         self.ice_root = r'D:/Data/logs'
         self.max_mem_size = '8G'
         self.start_h2o = True
@@ -125,32 +125,43 @@ class H2OHandler(object):
             elif hash_type == 'SHA256':
                 return sha256(open(filename, 'rb').read()).hexdigest()
 
-    def order_training(self, analysis_id, training_frame, valid_frame, analysis_list):
+    def order_training(self, analysis_id, training_frame, analysis_list):
         assert isinstance(analysis_id, str)
         assert isinstance(training_frame, DataFrame)
-        assert isinstance(valid_frame, DataFrame) or valid_frame is None
+        # Not used now assert isinstance(valid_frame, DataFrame) or valid_frame is None
         assert isinstance(analysis_list, list)
+        # python train parameters effective
+        train_parameters_list = ['max_runtime_secs', 'fold_column',
+                                 'weights_column', 'offset_column',
+                                 'ignore_columns']
 
 
         status = -1  # Operation Code
+        valid_frame = None
         model_list = list()
         analysis_timestamp = str(time.time())
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                               'Starting analysis')
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                              'Parsing from pandas to H2OFrame ' + 'training_frame')
-        training_frame = H2OFrame(python_obj=training_frame)
-        if valid_frame is not None:
+        if training_frame.count(axis=0).all() > 100000:
+            training_frame, valid_frame = \
+                H2OFrame(python_obj=training_frame).split_frame(ratios=[.85],
+                                                                destination_frames=['training_frame_' + analysis_id,
+                                                                                    'valid_frame_' + analysis_id])
             self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                  'Parsing from pandas to H2OFrame ' + 'validation_frame')
-            valid_frame = H2OFrame(python_obj=valid_frame)
+                                  'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
+                                   ') validating_frame(' + str(valid_frame.nrows) + ')')
+        else:
+            training_frame = \
+                H2OFrame(python_obj=training_frame, destination_frame='training_frame_' + analysis_id)
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                  'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
+                                   ')')
 
         for algorithm_description, normalization in analysis_list:
 
             # Initializing base structures
             struct_ar = json.load(algorithm_description, object_pairs_hook=OrderedDict)
-            #print(struct_ar)
 
             # Generating base_path
             load_path = list()
@@ -186,35 +197,61 @@ class H2OHandler(object):
                 model_timestamp = str(time.time())
 
                 y = each_model['parameters']['response_column']['value']
-                x = training_frame.col_names
-                x.remove(y)
+                # 06/06/2017: Use ignore_columns instead X on train
+                '''x = training_frame.col_names
+                x.remove(y)'''
 
                 if each_model['types'][0]['active']:
                     if each_model['types'][0]['type'] in ['binomial', 'multinomial']:
-                        training_frame[y] = training_frame[y].asfactor()
-                        if valid_frame is not None:
-                            valid_frame[y] = valid_frame[y].asfactor()
+                        if isinstance(training_frame[y], int):
+                            training_frame[y] = training_frame[y].asfactor()
+                            if valid_frame is not None:
+                                valid_frame[y] = valid_frame[y].asfactor()
+                        else:
+                            training_frame[y] = training_frame[y].ascharacter().asfactor()
+                            if valid_frame is not None:
+                                valid_frame[y] = valid_frame[y].asfactor()
 
                 model_command = list()
                 model_command.append(each_model['model'])
                 model_command.append("(")
                 model_command.append("training_frame=training_frame")
 
+                train_command = list()
+                # 06/06/2017: Use ignore_columns instead X on train
+                '''train_command.append("self._model_base.train(x=%s, y=\'%s\', " % (x, y))'''
+
+                train_command.append("self._model_base.train(y=\'%s\', " % y)
+                train_command.append("training_frame=training_frame")
+
                 if valid_frame is not None:
                     model_command.append(", validation_frame=valid_frame")
+                    train_command.append(", validation_frame=valid_frame")
 
                 model_id = each_model['model'] + '_' + model_timestamp
                 model_command.append(", model_id='%s'" % model_id)
 
                 for key, value in each_model['parameters'].items():
                     if value['seleccionable']:
+
                         if isinstance(value['value'], str):
-                            model_command.append(", %s=\'%s\'" % (key, value['value']))
+                            if key in train_parameters_list and value is not None:
+                                train_command.append(", %s=\'%s\'" % (key, value['value']))
+                            else:
+                                model_command.append(", %s=\'%s\'" % (key, value['value']))
                         else:
-                            model_command.append(", %s=%s" % (key, value['value']))
+                            if key in train_parameters_list and value is not None:
+                                train_command.append(", %s=%s" % (key, value['value']))
+                            else:
+                                model_command.append(", %s=%s" % (key, value['value']))
+
 
                 model_command.append(")")
                 model_command = ''.join(model_command)
+
+                train_command.append(")")
+                train_command = ''.join(train_command)
+
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                       "Generating Model: " + model_command)
 
@@ -225,13 +262,9 @@ class H2OHandler(object):
                             connection().start_logging('DEBUG_' + final_ar_model['log_path'][0]['value'])
                 self._model_base = eval(model_command)
 
-                if valid_frame is not None:
-                    self._model_base.train(x=x, y=y, training_frame=training_frame, validation_frame=valid_frame)
-                else:
-                    self._model_base.train(x=x, y=y, training_frame=training_frame)
-
+                eval(train_command)
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                      "Trained Model: " + model_command)
+                                       ("Trained Model: %s :" % model_id) + train_command)
                 if self._debug:
                     connection().stop_logging()
 
@@ -375,7 +408,7 @@ class H2OHandler(object):
             return 1
 
 
-        predict_frame = H2OFrame(python_obj=dataframe)
+        predict_frame = H2OFrame(python_obj=dataframe, destination_frame='predict_frame' + struct_ar['model_id'])
 
         y = struct_ar['model_parameters']['h2o'][0]['parameters']['response_column']['value']
         if struct_ar['model_parameters']['h2o'][0]['types'][0]['type'] in ['binomial', 'multinomial']:
@@ -386,7 +419,7 @@ class H2OHandler(object):
         struct_ar['metrics'] = OrderedDict()
         self._logging.log_exec(struct_ar['model_id'], self._h2o_session.session_id,
                               "Generating model performance metrics %s "
-                               % struct_ar['model_parameters']['h2o'][0]['model'])
+                               % struct_ar['model_parameters']['h2o'][0]['parameters']['model_id'])
         struct_ar['metrics']['predict'] = self._generate_metrics(predict_frame, source=None)
 
         # writing ar.json file
@@ -406,7 +439,7 @@ class H2OHandler(object):
 
         self._logging.log_exec(struct_ar['model_id'], self._h2o_session.session_id,
                               "starting Prediction over Model %s "
-                               % (struct_ar['model_parameters']['h2o'][0]['model']))
+                               % (struct_ar['model_parameters']['h2o'][0]['parameters']['model_id']))
 
         for handler in self._logging.logger.handlers:
             handler.flush()
@@ -464,7 +497,6 @@ class H2OHandler(object):
                 """
         params = self._model_base.get_params()
         full_stack_params = OrderedDict()
-        print(type(params))
         for key, values in params.items():
             if key not in ['model_id', 'training_frame', 'validation_frame', 'response_column']:
                 full_stack_params[key] = values['actual_value']

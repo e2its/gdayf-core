@@ -1,5 +1,5 @@
 {
-  "model_id":"PoC-binomial",
+  "model_id":"PoC-binomial-SOC",
   "version": "0.0.2",
   "type" : null,
   "objective_column" : "Not used",
