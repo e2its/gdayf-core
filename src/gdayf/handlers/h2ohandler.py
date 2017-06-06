@@ -5,29 +5,21 @@ from h2o.estimators.random_forest import H2ORandomForestEstimator
 from h2o.model.metrics_base import H2OBinomialModelMetrics as H2OBinomialModelMetrics
 from h2o.model.metrics_base import H2OMultinomialModelMetrics as H2OMultinomialModelMetrics
 from h2o.model.metrics_base import H2ORegressionModelMetrics as H2ORegressionModelMetrics
-
 from h2o import save_model as save_model
 from h2o import load_model as load_model
 from h2o import init as init
 from h2o import connect as connect
 from h2o import connection as connection
 from h2o import cluster as cluster
-
-
 from h2o import H2OFrame as H2OFrame
 from pandas import DataFrame as DataFrame
 import json
 import time
 from collections import OrderedDict as OrderedDict
-from hashlib import md5 as md5
-from hashlib import sha256 as sha256
-from os import makedirs as mkdir
-from os import path as path
-from shutil import copyfile
 import copy
 from gdayf.logs.logshandler import LogsHandler
 
-__name__ = 'engines'
+__name__ = 'engines.h2o'
 
 class H2OHandler(object):
     """
@@ -102,7 +94,7 @@ class H2OHandler(object):
         except:
             init(url=self.url, nthreads=self.nthreads, ice_root=self.ice_root, max_mem_size=self.max_mem_size)
             self._h2o_session = connection()
-        self._logging = LogsHandler()
+        self._logging = LogsHandler(__name__)
         self._logging.log_exec('DayF', self._h2o_session.session_id(), 'Connected to active cluster and ready')
 
     def __del__(self):
@@ -117,13 +109,6 @@ class H2OHandler(object):
         except:
             print('H20-cluster not working')
 
-    @staticmethod
-    def _hash_keys(hash_type, filename):
-
-            if hash_type == 'MD5':
-                return md5(open(filename, 'rb').read()).hexdigest()
-            elif hash_type == 'SHA256':
-                return sha256(open(filename, 'rb').read()).hexdigest()
 
     def order_training(self, analysis_id, training_frame, analysis_list):
         assert isinstance(analysis_id, str)
@@ -512,53 +497,3 @@ class H2OHandler(object):
             return struct_ar['metrics']['source'][metric]
         except:
             return 'Not Found'
-
-    @staticmethod
-    def _replicate_file(type_dest, path_dest, type_source, path_source):
-        if type_source == 'localfs':
-            if type_dest == 'localfs':
-                if not path.exists(path.dirname(path_dest)):
-                    mkdir(path.dirname(path_dest), 0o0777)
-                copyfile(path_source, path_dest)
-            elif type_dest == 'hdfs':
-                None
-            elif type_dest == 'mongoDB':
-                None
-        elif type_source == 'hdfs':
-            if type_dest == 'localfs':
-                None
-            elif type_dest == 'hdfs':
-                None
-            elif type_dest == 'mongoDB':
-                None
-        elif type_source == 'mongoDB':
-            if type_dest == 'localfs':
-                None
-            elif type_dest == 'hdfs':
-                None
-            elif type_dest == 'mongoDB':
-                None
-
-    @staticmethod
-    def _store_files(json_files, struct_ar):
-        for each_storage_type in json_files:
-            if each_storage_type['type'] == 'localfs':
-                file = open(each_storage_type['value'], 'w')
-                json.dump(struct_ar, file, indent=4)
-                file.close()
-            elif each_storage_type['type'] == 'hdfs':
-                None
-            elif each_storage_type['type'] == 'mongoDB':
-                None
-
-    @staticmethod
-    def _store_files(json_files, struct_ar):
-        for each_storage_type in json_files:
-            if each_storage_type['type'] == 'localfs':
-                file = open(each_storage_type['value'], 'w')
-                json.dump(struct_ar, file, indent=4)
-                file.close()
-            elif each_storage_type['type'] == 'hdfs':
-                None
-            elif each_storage_type['type'] == 'mongoDB':
-                None

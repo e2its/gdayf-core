@@ -1,20 +1,24 @@
 #!/usr/bin/python3
 
-import json
+from json import dump
 from collections import OrderedDict
 
 
-class DFMetada:
+class DFMetada(OrderedDict):
     def __init__(self):
-        True
+        super().__init__()
+        self['type'] = None
+        self['rowcount'] = None
+        self['cols'] = None
+        self['timeformat'] = 'dd-mm-yyyy HH:mm:ss:ms'
+        self['columns'] = list()
 
     def getDataFrameMetadata(self, dataframe, typedf):
-        md = OrderedDict()
-        md['type'] = '%s' % typedf
-        md['rowcount'] = dataframe.shape[0] - 1
-        md['cols'] = dataframe.shape[1]
-        md['timeformat'] = 'dd-mm-yyyy HH:mm:ss:ms'
-        columnlist = []
+        self['type'] = '%s' % typedf
+        self['rowcount'] = dataframe.shape[0] - 1
+        self['cols'] = dataframe.shape[1]
+        self['timeformat'] = 'dd-mm-yyyy HH:mm:ss:ms'
+        self['columns'] = list()
         for col in dataframe.columns:
             summary = dataframe[col].describe()
             auxdict = OrderedDict()
@@ -28,6 +32,12 @@ class DFMetada:
             auxdict['zeros'] = str(dataframe[col][dataframe[col] == 0].count())
             auxdict['missed'] = str(
                 dataframe[col].isnull().values.ravel().sum())
-            columnlist.append(auxdict)
-        md['columns'] = columnlist
-        return json.dumps(md, indent=4)
+            self['columns'].append(auxdict)
+
+        return dump(self, indent=4)
+
+    def pop(self, key, default=None):
+        return 1
+
+    def popitem(self, last=True):
+        return 1

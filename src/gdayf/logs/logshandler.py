@@ -7,10 +7,10 @@ __name__ = 'logs'
 
 class LogsHandler (object):
 
-    def __init__(self,
+    def __init__(self, module_name,
                  filename=r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\src\gdayf\conf\config.json'):
         self._filename = filename
-        self.logger = logging.getLogger(__name__)
+        self.logger = logging.getLogger(module_name)
         self.logger.setLevel('DEBUG')
         if os.path.exists(filename):
             with open(filename, 'rt') as f:
