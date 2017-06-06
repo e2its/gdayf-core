@@ -8,7 +8,11 @@
         "type" : "normalization_metadata.json"
       },
       {"name" : "INICIO",
-        "type" : "normalization_metadata.json"
+        "type" : "normalization",
+         "class" : "working_range",
+         "objective" : {
+          "minval" : -1.0,
+          "maxval" : 1.0
       },
       {"name" : "COD_float",
         "type" : "normalization_metadata.json"
