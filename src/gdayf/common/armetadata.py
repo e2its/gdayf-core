@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from gdayf.common.storagemetadata import StorageMetada
+from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.dfmetada import DFMetada
 from json import dump
 
