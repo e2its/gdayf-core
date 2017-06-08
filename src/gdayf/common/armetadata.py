@@ -7,13 +7,13 @@ from json import dump
 class ArMetadata (OrderedDict):
 
     def __init__(self):
-        super().__init__()
+        super(ArMetadata, self).__init__()
         self['model_id'] = None
         self['version'] = None
         self['type'] = None
         self['objective_column'] = None
         self['timestamp'] = None
-        self['load_path'] = StorageMetada('models')
+        self['load_path'] = StorageMetadata('models')
         self['metrics'] = None
         self['normalizations_set'] = None
         self['data_initial'] = DFMetada()

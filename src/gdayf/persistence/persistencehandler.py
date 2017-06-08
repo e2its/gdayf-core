@@ -1,20 +1,19 @@
 from json import dump
 from os import path as path
 from shutil import copyfile
-from hashlib import md5 as md5
-from hashlib import sha256 as sha256
 from gdayf.common.storagemetadata import StorageMetadata
+from os import makedirs
+from os import path as ospath
+
 
 class PersistenceHandler(object):
     def __init__(self):
          None
 
-    @staticmethod
-    def replicate_file(type_dest, path_dest, type_source, path_source):
-
+    '''def replicate_file(self, type_dest, path_dest, type_source, path_source):
         if type_source == 'localfs':
             if type_dest == 'localfs':
-                mkdir(path.dirname(path_dest), 0o0777)
+                self.mkdir(path.dirname(path_dest), 0o0777)
                 copyfile(path_source, path_dest)
             elif type_dest == 'hdfs':
                 None
@@ -34,7 +33,7 @@ class PersistenceHandler(object):
                 None
             elif type_dest == 'mongoDB':
                 None
-
+    '''
     @staticmethod
     def store_json(storage_json, ar_json):
 
@@ -51,14 +50,15 @@ class PersistenceHandler(object):
                 None
 
     @staticmethod
-    def hash_key(hash_type, filename):
-            if hash_type == 'MD5':
-                try:
-                    return md5(open(filename, 'rb').read()).hexdigest()
-                except IOError:
-                    return None
-            elif hash_type == 'SHA256':
-                try:
-                    return sha256(open(filename, 'rb').read()).hexdigest()
-                except IOError:
-                    return None
+    def mkdir(type, path, grants):
+        if type == 'localfs':
+            try:
+                if not ospath.exists(path):
+                    makedirs(path, grants)
+                return 0
+            except IOError:
+                return 1
+        elif type == 'hdfs':
+            return 1
+        elif type == 'monoDB':
+            return 1

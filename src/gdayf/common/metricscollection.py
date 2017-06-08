@@ -2,8 +2,8 @@ from collections import OrderedDict
 
 
 class MetricCollection (OrderedDict):
-    def __init__(self, modeltype):
-        super().__init__()
+    def __init__(self):
+        super(MetricCollection, self).__init__()
         self['train'] = None
         self['valid'] = None
         self['xval'] = None

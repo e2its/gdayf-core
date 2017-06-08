@@ -1,4 +1,18 @@
-{
+{ "frameworks":
+  {"h2o":
+    {
+      "path_localfs" : "D:/Data/models",
+      "path_hdfs" : null,
+      "path_mongoDB" : null,
+      "primary_path" : "path_localfs",
+      "url" : "http://127.0.0.1:54321",
+      "nthreads" : 4,
+      "ice_root" : "D:/Data/logs",
+      "max_mem_size" : "8G",
+      "start_h2o" : true,
+      "debug" : true
+    }
+  },
   "logging":
   {
     "version": 1,

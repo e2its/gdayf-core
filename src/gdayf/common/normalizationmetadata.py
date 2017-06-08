@@ -3,4 +3,4 @@ from collections import OrderedDict
 
 class NormalizationMetadata(OrderedDict):
     def __init__(self):
-        super().__init__()
+        super(NormalizationMetadata, self).__init__()

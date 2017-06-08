@@ -8,12 +8,12 @@ __name__ = 'logs'
 class LogsHandler (object):
 
     def __init__(self, module_name,
-                 filename=r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\src\gdayf\conf\config.json'):
-        self._filename = filename
+                 configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\src\gdayf\conf\config.json'):
+        self._configfile = configfile
         self.logger = logging.getLogger(module_name)
         self.logger.setLevel('DEBUG')
-        if os.path.exists(filename):
-            with open(filename, 'rt') as f:
+        if os.path.exists(configfile):
+            with open(configfile, 'rt') as f:
                 config = load(f)
             logging.config.dictConfig(config['logging'])
         else:

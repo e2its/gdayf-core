@@ -12,6 +12,7 @@ from h2o import connect as connect
 from h2o import connection as connection
 from h2o import cluster as cluster
 from h2o import H2OFrame as H2OFrame
+from h2o.exceptions import H2OError
 from pandas import DataFrame as DataFrame
 import json
 import time
@@ -20,7 +21,6 @@ import copy
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.common.armetadata import ArMetadata
 from gdayf.common.normalizationset import NormalizationSet
-from gdayf.common.utils import mkdir
 from gdayf.common.binomialmetricmetadata import BinomialMetricMetadata
 from gdayf.common.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.common.regressionmetricmetadata import RegressionMetricMetadata
@@ -28,10 +28,12 @@ from gdayf.common.metricmetadata import MetricMetadata
 from gdayf.common.metricscollection import MetricCollection
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.storagemetadata import StorageMetadata
+from gdayf.common.utils import hash_key
 from os.path import dirname
-
+from os import path
 
 __name__ = 'engines.h2o'
+
 
 class H2OHandler(object):
     """
@@ -89,18 +91,27 @@ class H2OHandler(object):
 
     """
 
-    def __init__(self):
-        self._model_base = None
-        self.path_localfs = r'D:/Data/models'
-        self.path_hdfs = None
-        self.primary_path = self.path_localfs
-        self.url = 'http://127.0.0.1:54321'
-        self.nthreads = 4
-        self.ice_root = r'D:/Data/logs'
-        self.max_mem_size = '8G'
-        self.start_h2o = True
-        self._debug = False
+    def __init__(self, configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\src\gdayf\conf\config.json'):
         self._framework = 'h2o'
+        self._configfile = configfile
+        if path.exists(configfile):
+            with open(configfile, 'rt') as f:
+                config = json.load(f, object_hook=OrderedDict, encoding='utf8')
+                self.path_localfs = config['frameworks'][self._framework]['path_localfs']
+                self.path_hdfs = config['frameworks'][self._framework]['path_hdfs']
+                self.path_mongoDB = config['frameworks'][self._framework]['path_mongoDB']
+                self.primary_path = \
+                    config['frameworks'][self._framework][config['frameworks'][self._framework]['primary_path']]
+                self.url = config['frameworks'][self._framework]['url']
+                self.nthreads = config['frameworks'][self._framework]['nthreads']
+                self.ice_root = config['frameworks'][self._framework]['ice_root']
+                self.max_mem_size = config['frameworks'][self._framework]['max_mem_size']
+                self.start_h2o = config['frameworks'][self._framework]['start_h2o']
+                self._debug = config['frameworks'][self._framework]['debug']
+        else:
+            return Exception('Invalid config file: %s for H2OHandler' % configfile)
+        self._model_base = None
+
         self._persistence = PersistenceHandler()
 
         try:
@@ -123,7 +134,8 @@ class H2OHandler(object):
         except:
             print('H20-cluster not working')
 
-    def generate_base_path(self, base_ar):
+    def generate_base_path(self, base_ar, type_):
+        assert type_ in ['PoC', 'train', 'predict']
         if self.primary_path == self.path_mongoDB:
             return None
         elif self.primary_path == self.path_hdfs:
@@ -137,7 +149,7 @@ class H2OHandler(object):
             load_path.append('/')
             load_path.append(base_ar['model_id'])
             load_path.append('/')
-            load_path.append('train')
+            load_path.append(type_)
             load_path.append('/')
             return ''.join(load_path)
 
@@ -157,96 +169,106 @@ class H2OHandler(object):
                         model_command.append(", %s=%s" % (key, value['value']))
 
     @staticmethod
-    def need_factor(each_model, training_frame, valid_frame, y):
-        if each_model['types'][0]['type'] in ['binomial', 'multinomial']:
+    def need_factor(model, y, training_frame=None, valid_frame=None, predict_frame=None):
+        if model['types'][0]['type'] in ['binomial', 'multinomial']:
             if isinstance(training_frame[y], int):
-                training_frame[y] = training_frame[y].asfactor()
+                if training_frame is not None:
+                    training_frame[y] = training_frame[y].asfactor()
                 if valid_frame is not None:
                     valid_frame[y] = valid_frame[y].asfactor()
+                if predict_frame is not None:
+                    predict_frame[y] = training_frame[y].asfactor()
             else:
-                training_frame[y] = training_frame[y].ascharacter().asfactor()
+                if training_frame is not None:
+                    training_frame[y] = training_frame[y].ascharacter().asfactor()
                 if valid_frame is not None:
-                    valid_frame[y] = valid_frame[y].asfactor()
+                    valid_frame[y] = valid_frame[y].ascharacter().asfactor()
+                if predict_frame is not None:
+                    valid_frame[y] = valid_frame[y].ascharacter().asfactor()
 
     def predict(self, dataframe, algorithm_description):
         model_timestamp = str(time.time())
 
-        struct_ar = json.load(algorithm_description, object_pairs_hook=OrderedDict)
+        base_ar = json.load(algorithm_description, object_pairs_hook=OrderedDict)
+        antype = base_ar['model_parameters']['h2o'][0]['types'][0]['type']
         load_fails = True
-        hash_fails = True
         counter_storage = 0
-        counter_hash = 0
 
-        assert isinstance(struct_ar['load_path'], list)
-        while counter_storage < len(struct_ar['load_path']) and load_fails:
-            while counter_hash < len(struct_ar['load_path'][counter_storage]['hash_list']) and \
-                    hash_fails:
+        assert isinstance(base_ar['load_path'], list)
+        while counter_storage < len(base_ar['load_path']) and load_fails:
+            self._logging.log_exec('Predict', self._h2o_session.session_id,
+                                   "Model hash keys (stored, %s) (generated, %s)" %
+                                   (base_ar['load_path'][counter_storage]['hash_value'],
+                                    hash_key(base_ar['load_path'][counter_storage]['hash_type'],
+                                                    base_ar['load_path'][counter_storage]['value'])
+                                    ))
 
-                self._logging.log_exec('Predict', self._h2o_session.session_id,
-                                       "Model hash keys (stored, %s) (generated, %s)" %
-                                       (struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['value'],
-                                        self._persistence.hash_keys(struct_ar['load_path'][counter_storage]['hash_list']
-                                                        [counter_hash]['type'],
-                                                        struct_ar['load_path'][counter_storage]['value'])
-                                        ))
-
-                if self._hash_keys(struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['type'],
-                                   struct_ar['load_path'][counter_storage]['value']) == \
-                        struct_ar['load_path'][counter_storage]['hash_list'][counter_hash]['value']:
-                    load_fails = False
-                    hash_fails = False
-                    try:
-                        self._model_base = load_model(struct_ar['load_path'][counter_storage]['value'])
-                    except:
-                        self._logging.log_error('root', self._h2o_session.session_id,
-                                                "Invalid model on:  %s" %
-                                                struct_ar['load_path'][counter_storage]['value'])
-                else:
-                    counter_hash += 1
-            counter_hash = 0
+            if hash_key(base_ar['load_path'][counter_storage]['hash_type'],
+                        base_ar['load_path'][counter_storage]['value']) == \
+                    base_ar['load_path'][counter_storage]['hash_value']:
+                load_fails = False
+                try:
+                    self._model_base = load_model(base_ar['load_path'][counter_storage]['value'])
+                except H2OError:
+                    self._logging.log_error('root', self._h2o_session.session_id,
+                                            "Invalid model on:  %s" %
+                                            base_ar['load_path'][counter_storage]['value'])
             counter_storage += 1
 
         if load_fails:
             self._logging.log_error('root', self._h2o_session.session_id,
-                                    "Invalid models on:  %s" % struct_ar['load_path'])
+                                    "Invalid models on:  %s" % base_ar['load_path'])
             return 1
 
-        predict_frame = H2OFrame(python_obj=dataframe, destination_frame='predict_frame' + struct_ar['model_id'])
+        predict_frame = H2OFrame(python_obj=dataframe, destination_frame='predict_frame' + base_ar['model_id'])
 
-        y = struct_ar['model_parameters']['h2o'][0]['parameters']['response_column']['value']
-        if struct_ar['model_parameters']['h2o'][0]['types'][0]['type'] in ['binomial', 'multinomial']:
-            predict_frame[y].asfactor()
+        objective_column = base_ar['objective_column']
+        self.need_factor(base_ar['model_parameters']['h2o'][0], objective_column, predict_frame=predict_frame)
 
-        struct_ar['type'] = 'predict'
-        struct_ar['timestamp'] = model_timestamp
-        struct_ar['metrics'] = OrderedDict()
-        self._logging.log_exec(struct_ar['model_id'], self._h2o_session.session_id,
+        base_ar['type'] = 'predict'
+        base_ar['timestamp'] = model_timestamp
+        self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
                                "Generating model performance metrics %s "
-                               % struct_ar['model_parameters']['h2o'][0]['parameters']['model_id'])
-        struct_ar['metrics']['predict'] = self._generate_metrics(predict_frame, source=None)
+                               % base_ar['model_parameters']['h2o'][0]['parameters']['model_id'])
+
+        base_ar['metrics'][base_ar['type']] = self._generate_metrics(dataframe=predict_frame,
+                                                                     source=None, antype=antype)
+        print(self._generate_metrics(dataframe=predict_frame,
+                               source=None, antype=antype))
+
+        if self._debug:
+            for each_storage_type in base_ar['log_path']:
+                self._persistence.mkdir(type=each_storage_type['type'],
+                                        path=dirname(each_storage_type['value'].replace('train', 'predict')),
+                                        grants=0o0777)
+                each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
+                    .replace('.log', '_' + model_timestamp + '.log')
+
+            connection().start_logging(base_ar['log_path'][0]['value'])
+        self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
+                               "starting Prediction over Model %s "
+                               % (base_ar['model_parameters']['h2o'][0]['parameters']['model_id']))
+        prediction_dataframe = self._model_base.predict(predict_frame).as_data_frame(use_pandas=True)
+
+        if self._debug:
+            connection().stop_logging()
 
         # writing ar.json file
-        json_files = list()
-        for each_storage_type in struct_ar['json_path']:
-            if each_storage_type['type'] == 'localfs':
-                mkdir(dirname(each_storage_type['value'].replace('train', 'predict')), 0o0777)
-                each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
-                    .replace('.json', '_' + model_timestamp + '.json')
-                json_files.append(each_storage_type)
-            elif each_storage_type['type'] == 'hdfs':
-                None
-            elif each_storage_type['type'] == 'mongoDB':
-                None
-        self._persistence.store_json(json_files, struct_ar)
+        json_files = StorageMetadata()
+        for each_storage_type in base_ar['json_path']:
+            self._persistence.mkdir(type=each_storage_type['type'],
+                                    path=dirname(each_storage_type['value'].replace('train', 'predict')),
+                                    grants=0o0777)
+            each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
+                .replace('.json', '_' + model_timestamp + '.json')
+            json_files.append(value=each_storage_type['value'], fstype=each_storage_type['type'],
+                              hash_type=each_storage_type['hash_type'])
 
-        self._logging.log_exec(struct_ar['model_id'], self._h2o_session.session_id,
-                               "starting Prediction over Model %s "
-                               % (struct_ar['model_parameters']['h2o'][0]['parameters']['model_id']))
-
+        self._persistence.store_json(json_files, base_ar)
         for handler in self._logging.logger.handlers:
             handler.flush()
 
-        return (self._model_base.predict(predict_frame).as_data_frame(use_pandas=True), struct_ar)
+        return prediction_dataframe, base_ar
 
     def _generate_metrics(self, dataframe, source, antype):
         """
@@ -293,7 +315,11 @@ class H2OHandler(object):
                             metrics=each_parameter).table.as_data_frame().to_json(orient='split')
                 model_metrics[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
             else:
-                model_metrics[parameter] = perf_metrics._metric_json[parameter]
+                try:
+                    model_metrics[parameter] = perf_metrics._metric_json[parameter]
+                except KeyError:
+                    None
+
 
         return model_metrics
 
@@ -358,13 +384,13 @@ class H2OHandler(object):
         for algorithm_description, normalization in analysis_list:
 
             # Initializing base structures
-            base_ar = json.load(algorithm_description, object_pairs_hook=ArMetadata)
+            base_ar = json.load(algorithm_description, object_pairs_hook=OrderedDict)
             objective_column = base_ar['objective_column']
 
             # Generating base_path
-            base_path = self.generate_base_path(base_ar)
+            base_path = self.generate_base_path(base_ar, base_ar['type'])
             '''A eliminar con persistenciaHandler'''
-            mkdir(base_path, 0o0777)
+            self._persistence.mkdir(type=self.primary_path, path=base_path, grants=0o0777)
 
             if normalization is not None:
                 base_ns = json.load(normalization, object_pairs_hook=NormalizationSet)
@@ -375,7 +401,7 @@ class H2OHandler(object):
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                       'No Normalizations Required')
 
-            assert isinstance(base_ar, ArMetadata)
+            assert isinstance(base_ar, OrderedDict)
             assert isinstance(base_ns, NormalizationSet) or normalization is None
 
             for each_model in base_ar['model_parameters']['h2o']:
@@ -384,39 +410,14 @@ class H2OHandler(object):
                 final_ar_model['type'] = 'train'
                 final_ar_model['timestamp'] = analysis_timestamp
                 model_timestamp = str(time.time())
-                model_path = base_path + final_ar_model['load_path'][0]['value']
-
-                #Generating Paths
-                # Generating log_path
-                final_ar_model['log_path'] = StorageMetadata()
-                for each_storage_type in base_ar['log_path']:
-                    final_ar_model['log_path'].append(model_path + each_storage_type['value'] +
-                                                      '/' + model_id + '.log', each_storage_type['type'])
-                    mkdir(model_path + '/' + model_id + '/' + each_storage_type['value'] + '/' + model_id + '.log',
-                          0o0777)
-
-                # Generating load_path
-                final_ar_model['load_path'] = StorageMetadata()
-                for each_storage_type in base_ar['load_path']:
-                    final_ar_model['load_path'].append(model_path + '/' + model_id, each_storage_type['type'])
-                    mkdir(model_path + '/' + model_id, 0o0777)
-
-                # Generating json_path
-
-                # writing ar.json file
-                final_ar_model['json_path'] = StorageMetadata
-                for each_storage_type in base_ar['load_path']:
-                    final_ar_model['json_path'].append(model_path + each_storage_type['value'] +
-                                                       '/' + model_id + '.log', each_storage_type['type'])
-                    mkdir(model_path + '/' + model_id + '/' + each_storage_type['value'] + '/' + model_id + '.log',
-                          0o0777)
-                    self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
+                model_id = each_model['model'] + '_' + model_timestamp
+                model_path = base_path + base_ar['load_path'][0]['value'] + '/'
+                analysis_type = each_model['types'][0]['active']
 
                 ''' Generating and executing Models '''
                 # 06/06/2017: Use ignore_columns instead X on train
 
-                if each_model['types'][0]['active']:
-                    self.need_factor(each_model, training_frame, valid_frame, objective_column)
+                self.need_factor(each_model, training_frame, valid_frame, objective_column)
 
                 '''Generate commands: model and model.train()'''
                 model_command = list()
@@ -431,7 +432,7 @@ class H2OHandler(object):
                 if valid_frame is not None:
                     model_command.append(", validation_frame=valid_frame")
                     train_command.append(", validation_frame=valid_frame")
-                model_id = each_model['model'] + '_' + model_timestamp
+
                 model_command.append(", model_id='%s'" % model_id)
                 self.generate_commands_parameters(each_model, model_command, train_command, train_parameters_list)
                 model_command.append(")")
@@ -443,7 +444,15 @@ class H2OHandler(object):
                                       "Generating Model: " + model_command)
                 # Generating model
                 if self._debug:
-                            connection().start_logging('DEBUG_' + final_ar_model['log_path'][0]['value'])
+                    final_ar_model['log_path'] = StorageMetadata()
+                    for each_storage_type in base_ar['log_path']:
+                        log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
+                        self._persistence.mkdir(type=each_storage_type['type'], path=dirname(log_path),
+                                                grants=0o0777)
+                        final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
+                                                          hash_type=each_storage_type['hash_type'])
+
+                    connection().start_logging(final_ar_model['log_path'][0]['value'])
                 self._model_base = eval(model_command)
                 eval(train_command)
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
@@ -451,8 +460,14 @@ class H2OHandler(object):
                 if self._debug:
                     connection().stop_logging()
 
-                mkdir(model_path, 0o0777)
-                save_model(model=self._model_base, path=model_path, force=True)
+                # Generating load_path
+                final_ar_model['load_path'] = StorageMetadata()
+                for each_storage_type in base_ar['load_path']:
+                    load_path = base_path + each_storage_type['value'] + '/'
+                    self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
+                    save_model(model=self._model_base, path=load_path, force=True)
+                    final_ar_model['load_path'].append(value=load_path + model_id, fstype=each_storage_type['type'],
+                                                       hash_type=each_storage_type['hash_type'])
 
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                        model_id + " :Saved Model ")
@@ -468,16 +483,25 @@ class H2OHandler(object):
 
                 # Generating metrics
                 final_ar_model['metrics'] = MetricCollection()
-                final_ar_model['metrics']['train'] = self._generate_metrics(dataframe=None, source='train')
+                final_ar_model['metrics']['train'] = self._generate_metrics(dataframe=None, source='train',
+                                                                            antype=analysis_type)
                 if valid_frame is not None:
-                    final_ar_model['metrics']['valid'] = self._generate_metrics(dataframe=None, source='valid')
-                final_ar_model['metrics']['xval'] = self._generate_metrics(dataframe=None, source='xval')
+                    final_ar_model['metrics']['valid'] = self._generate_metrics(dataframe=None, source='valid',
+                                                                                antype=analysis_type)
+                final_ar_model['metrics']['xval'] = self._generate_metrics(dataframe=None, source='xval',
+                                                                           antype=analysis_type)
 
+                # writing ar.json file
+                final_ar_model['json_path'] = StorageMetadata()
+                for each_storage_type in base_ar['json_path']:
+                    json_path = base_path + each_storage_type['value'] + '/' + model_id + '.json'
+                    final_ar_model['json_path'].append(value=json_path, fstype=each_storage_type['type'],
+                                                       hash_type=each_storage_type['hash_type'])
+                    self._persistence.mkdir(type=each_storage_type['type'], path=dirname(json_path), grants=0o0777)
+                    self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                      "Model %s Generated" % model_id)
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Generated" % model_id)
                 for handler in self._logging.logger.handlers:
                     handler.flush()
                 model_list.append(final_ar_model)
-
             return analysis_id, model_list

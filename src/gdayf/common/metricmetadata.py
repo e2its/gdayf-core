@@ -3,7 +3,7 @@ from collections import OrderedDict
 
 class MetricMetadata(OrderedDict):
     def __init__(self):
-        super().__init__()
+        super(MetricMetadata, self).__init__()
         self['MSE'] = None
         self['mean_residual_deviance'] = None
         self['nobs'] = None

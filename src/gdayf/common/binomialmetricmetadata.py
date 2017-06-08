@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 class BinomialMetricMetadata(MetricMetadata):
     def __init__(self):
-        super().__init__()
+        super(BinomialMetricMetadata, self).__init__()
         self['AUC'] = None
         self['gains_lift_table'] = OrderedDict()
         self['Gini'] = None

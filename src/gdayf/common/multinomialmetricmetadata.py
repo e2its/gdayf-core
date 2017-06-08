@@ -4,7 +4,7 @@ from collections import OrderedDict
 
 class MultinomialMetricMetadata(MetricMetadata):
     def __init__(self):
-        super().__init__()
+        super(MultinomialMetricMetadata, self).__init__()
         self['hit_ratio_table'] = OrderedDict()
         self['cm'] = OrderedDict()
 

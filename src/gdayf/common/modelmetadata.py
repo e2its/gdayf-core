@@ -3,4 +3,4 @@ from collections import OrderedDict
 
 class ModelMetadata(OrderedDict):
     def __init__(self):
-        super().__init__()
+        super(ModelMetadata, self).__init__()
