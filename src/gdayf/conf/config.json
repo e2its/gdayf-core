@@ -10,7 +10,8 @@
       "ice_root" : "D:/Data/logs",
       "max_mem_size" : "8G",
       "start_h2o" : true,
-      "debug" : true
+      "debug" : true,
+      "save_model" : "NATIVE"
     }
   },
   "logging":

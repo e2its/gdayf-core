@@ -108,6 +108,7 @@ class H2OHandler(object):
                 self.max_mem_size = config['frameworks'][self._framework]['max_mem_size']
                 self.start_h2o = config['frameworks'][self._framework]['start_h2o']
                 self._debug = config['frameworks'][self._framework]['debug']
+                self._save_model = config['frameworks'][self._framework]['save_model']
         else:
             return Exception('Invalid config file: %s for H2OHandler' % configfile)
         self._model_base = None
@@ -169,22 +170,23 @@ class H2OHandler(object):
                         model_command.append(", %s=%s" % (key, value['value']))
 
     @staticmethod
-    def need_factor(model, y, training_frame=None, valid_frame=None, predict_frame=None):
-        if model['types'][0]['type'] in ['binomial', 'multinomial']:
-            if isinstance(training_frame[y], int):
-                if training_frame is not None:
+    def need_factor(atype, y, training_frame=None, valid_frame=None, predict_frame=None):
+        if atype in ['binomial', 'multinomial']:
+            if training_frame is not None:
+                if isinstance(training_frame[y], (int, float)):
                     training_frame[y] = training_frame[y].asfactor()
-                if valid_frame is not None:
-                    valid_frame[y] = valid_frame[y].asfactor()
-                if predict_frame is not None:
-                    predict_frame[y] = training_frame[y].asfactor()
-            else:
-                if training_frame is not None:
+                else:
                     training_frame[y] = training_frame[y].ascharacter().asfactor()
-                if valid_frame is not None:
+            if valid_frame is not None:
+                if isinstance(valid_frame[y], (int, float)):
+                    valid_frame[y] = valid_frame[y].asfactor()
+                else:
                     valid_frame[y] = valid_frame[y].ascharacter().asfactor()
-                if predict_frame is not None:
-                    valid_frame[y] = valid_frame[y].ascharacter().asfactor()
+            if predict_frame is not None:
+                if isinstance(predict_frame[y], (int, float)):
+                    predict_frame[y] = predict_frame[y].asfactor()
+                else:
+                    predict_frame[y] = predict_frame[y].ascharacter().asfactor()
 
     def predict(self, dataframe, algorithm_description):
         model_timestamp = str(time.time())
@@ -208,7 +210,11 @@ class H2OHandler(object):
                     base_ar['load_path'][counter_storage]['hash_value']:
                 load_fails = False
                 try:
-                    self._model_base = load_model(base_ar['load_path'][counter_storage]['value'])
+                    if self._get_ext() == '.pojo':
+                        '''Not implemented yet'''
+                        None
+                    else:
+                        self._model_base = load_model(base_ar['load_path'][counter_storage]['value'])
                 except H2OError:
                     self._logging.log_error('root', self._h2o_session.session_id,
                                             "Invalid model on:  %s" %
@@ -223,7 +229,8 @@ class H2OHandler(object):
         predict_frame = H2OFrame(python_obj=dataframe, destination_frame='predict_frame' + base_ar['model_id'])
 
         objective_column = base_ar['objective_column']
-        self.need_factor(base_ar['model_parameters']['h2o'][0], objective_column, predict_frame=predict_frame)
+        self.need_factor(atype=base_ar['model_parameters']['h2o'][0]['types'][0]['type'],
+                         y=objective_column, predict_frame=predict_frame)
 
         base_ar['type'] = 'predict'
         base_ar['timestamp'] = model_timestamp
@@ -238,12 +245,11 @@ class H2OHandler(object):
 
         if self._debug:
             for each_storage_type in base_ar['log_path']:
-                self._persistence.mkdir(type=each_storage_type['type'],
-                                        path=dirname(each_storage_type['value'].replace('train', 'predict')),
-                                        grants=0o0777)
                 each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
                     .replace('.log', '_' + model_timestamp + '.log')
 
+            self._persistence.mkdir(type=base_ar['log_path'][0]['type'], grants=0o0777,
+                                    path=dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
         self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
                                "starting Prediction over Model %s "
@@ -252,13 +258,12 @@ class H2OHandler(object):
 
         if self._debug:
             connection().stop_logging()
+            self._persistence.store_file(filename=base_ar['log_path'][0]['value'],
+                                         storage_json=base_ar['log_path'])
 
         # writing ar.json file
         json_files = StorageMetadata()
         for each_storage_type in base_ar['json_path']:
-            self._persistence.mkdir(type=each_storage_type['type'],
-                                    path=dirname(each_storage_type['value'].replace('train', 'predict')),
-                                    grants=0o0777)
             each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
                 .replace('.json', '_' + model_timestamp + '.json')
             json_files.append(value=each_storage_type['value'], fstype=each_storage_type['type'],
@@ -269,6 +274,12 @@ class H2OHandler(object):
             handler.flush()
 
         return prediction_dataframe, base_ar
+
+    def _get_ext(self):
+        if self._save_model == 'POJO':
+            return '.pojo'
+        else:
+            return '.model'
 
     def _generate_metrics(self, dataframe, source, antype):
         """
@@ -299,28 +310,7 @@ class H2OHandler(object):
                 perf_metrics = self._model_base.model_performance(xval=True)
             else:
                 perf_metrics = self._model_base.model_performance(train=True)
-
-        for parameter, _ in model_metrics.items():
-            if parameter in ['hit_ratio_table', 'gains_lift_table', 'max_criteria_and_metric_scores']:
-                model_metrics[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
-            elif parameter in ['cm']:
-                model_metrics[parameter] = \
-                    perf_metrics._metric_json[parameter]['table'].as_data_frame().to_json(orient='split')
-            elif parameter in ['thresholds_and_metric_scores']:
-                model_metrics['cm'] = OrderedDict()
-                for each_parameter in ['min_per_class_accuracy', 'absolute_mcc', 'precision', 'accuracy',
-                                       'f0point5', 'f2', 'f1', 'mean_per_class_accuracy']:
-                    model_metrics['cm'][each_parameter] = \
-                        perf_metrics.confusion_matrix(
-                            metrics=each_parameter).table.as_data_frame().to_json(orient='split')
-                model_metrics[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
-            else:
-                try:
-                    model_metrics[parameter] = perf_metrics._metric_json[parameter]
-                except KeyError:
-                    None
-
-
+        model_metrics.set_metrics(perf_metrics)
         return model_metrics
 
     def _generate_params(self):
@@ -355,8 +345,7 @@ class H2OHandler(object):
         assert isinstance(analysis_list, list)
         # python train parameters effective
         train_parameters_list = ['max_runtime_secs', 'fold_column',
-                                 'weights_column', 'offset_column',
-                                 'ignore_columns']
+                                 'weights_column', 'offset_column']
 
 
         status = -1  # Operation Code
@@ -389,9 +378,6 @@ class H2OHandler(object):
 
             # Generating base_path
             base_path = self.generate_base_path(base_ar, base_ar['type'])
-            '''A eliminar con persistenciaHandler'''
-            self._persistence.mkdir(type=self.primary_path, path=base_path, grants=0o0777)
-
             if normalization is not None:
                 base_ns = json.load(normalization, object_pairs_hook=NormalizationSet)
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
@@ -411,13 +397,22 @@ class H2OHandler(object):
                 final_ar_model['timestamp'] = analysis_timestamp
                 model_timestamp = str(time.time())
                 model_id = each_model['model'] + '_' + model_timestamp
-                model_path = base_path + base_ar['load_path'][0]['value'] + '/'
-                analysis_type = each_model['types'][0]['active']
+
+                #model_path = base_path + base_ar['load_path'][0]['value'] + '/'
+                analysis_type = each_model['types'][0]['type']
 
                 ''' Generating and executing Models '''
-                # 06/06/2017: Use ignore_columns instead X on train
+                # 06/06/2017: Use X less ignored_columns on train
+                x = training_frame.col_names
+                x.remove(objective_column)
+                try:
+                    for ignore_col in each_model['parameters']['ignored_columns']['value']:
+                        x.remove(ignore_col)
+                except KeyError:
+                    None
 
-                self.need_factor(each_model, training_frame, valid_frame, objective_column)
+                self.need_factor(atype=each_model['types'][0]['type'], training_frame=training_frame,
+                                 valid_frame=valid_frame, y=objective_column)
 
                 '''Generate commands: model and model.train()'''
                 model_command = list()
@@ -426,14 +421,13 @@ class H2OHandler(object):
                 model_command.append("training_frame=training_frame")
                 train_command = list()
                 # 06/06/2017: Use ignore_columns instead X on train
-                '''train_command.append("self._model_base.train(x=%s, y=\'%s\', " % (x, y))'''
-                train_command.append("self._model_base.train(y=\'%s\', " % objective_column)
+                train_command.append("self._model_base.train(x=%s, y=\'%s\', " % (x, objective_column))
+                '''train_command.append("self._model_base.train(y=\'%s\', " % objective_column)'''
                 train_command.append("training_frame=training_frame")
                 if valid_frame is not None:
                     model_command.append(", validation_frame=valid_frame")
                     train_command.append(", validation_frame=valid_frame")
-
-                model_command.append(", model_id='%s'" % model_id)
+                model_command.append(", model_id=\'%s%s\'" % (model_id, self._get_ext()))
                 self.generate_commands_parameters(each_model, model_command, train_command, train_parameters_list)
                 model_command.append(")")
                 model_command = ''.join(model_command)
@@ -441,17 +435,16 @@ class H2OHandler(object):
                 train_command = ''.join(train_command)
 
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                      "Generating Model: " + model_command)
+                                       "Generating Model: " + model_command)
                 # Generating model
                 if self._debug:
                     final_ar_model['log_path'] = StorageMetadata()
                     for each_storage_type in base_ar['log_path']:
                         log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
-                        self._persistence.mkdir(type=each_storage_type['type'], path=dirname(log_path),
-                                                grants=0o0777)
                         final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
                                                           hash_type=each_storage_type['hash_type'])
-
+                    self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'], grants=0o0777,
+                                            path=dirname(final_ar_model['log_path'][0]['value']))
                     connection().start_logging(final_ar_model['log_path'][0]['value'])
                 self._model_base = eval(model_command)
                 eval(train_command)
@@ -459,15 +452,24 @@ class H2OHandler(object):
                                        ("Trained Model: %s :" % model_id) + train_command)
                 if self._debug:
                     connection().stop_logging()
+                    self._persistence.store_file(filename=final_ar_model['log_path'][0]['value'],
+                                                 storage_json=final_ar_model['log_path'])
 
                 # Generating load_path
                 final_ar_model['load_path'] = StorageMetadata()
                 for each_storage_type in base_ar['load_path']:
                     load_path = base_path + each_storage_type['value'] + '/'
                     self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
-                    save_model(model=self._model_base, path=load_path, force=True)
-                    final_ar_model['load_path'].append(value=load_path + model_id, fstype=each_storage_type['type'],
+                    if self._get_ext() == '.pojo':
+                        '''Not implemented yet'''
+                        None
+                    else:
+                        save_model(model=self._model_base, path=load_path, force=True)
+
+                    final_ar_model['load_path'].append(value=load_path + model_id + self._get_ext(),
+                                                       fstype=each_storage_type['type'],
                                                        hash_type=each_storage_type['hash_type'])
+
 
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                        model_id + " :Saved Model ")
@@ -479,10 +481,11 @@ class H2OHandler(object):
                 # Generating model parameters
                 final_ar_model['model_parameters']['h2o'] = list()
                 final_ar_model['model_parameters']['h2o'].append(each_model.copy())
-                final_ar_model['model_parameters']['h2o'][0]['parameters']['model_id'] = model_id
+                final_ar_model['model_parameters']['h2o'][0]['parameters']['model_id'] = model_id + self._get_ext()
 
                 # Generating metrics
                 final_ar_model['metrics'] = MetricCollection()
+                print(analysis_type)
                 final_ar_model['metrics']['train'] = self._generate_metrics(dataframe=None, source='train',
                                                                             antype=analysis_type)
                 if valid_frame is not None:
@@ -497,9 +500,7 @@ class H2OHandler(object):
                     json_path = base_path + each_storage_type['value'] + '/' + model_id + '.json'
                     final_ar_model['json_path'].append(value=json_path, fstype=each_storage_type['type'],
                                                        hash_type=each_storage_type['hash_type'])
-                    self._persistence.mkdir(type=each_storage_type['type'], path=dirname(json_path), grants=0o0777)
-                    self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
-
+                self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Generated" % model_id)
                 for handler in self._logging.logger.handlers:
                     handler.flush()

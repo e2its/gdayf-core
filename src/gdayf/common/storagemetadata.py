@@ -16,12 +16,11 @@ class StorageMetadata (list):
         fs['type'] = fstype
         fs['value'] = value
         fs['hash_type'] = hash_type
+
         if path.exists(value):
             fs['hash_value'] = hash_key(hash_type=hash_type, filename=fs['value'])
         else:
             fs['hash_value'] = None
         super(StorageMetadata, self).append(fs)
-
-
 
 
