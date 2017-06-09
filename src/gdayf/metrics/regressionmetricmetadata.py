@@ -1,4 +1,4 @@
-from gdayf.common.metricmetadata import MetricMetadata
+from gdayf.metrics.metricmetadata import MetricMetadata
 
 
 class RegressionMetricMetadata(MetricMetadata):

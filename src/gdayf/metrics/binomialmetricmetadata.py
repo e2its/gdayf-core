@@ -1,5 +1,6 @@
-from gdayf.common.metricmetadata import MetricMetadata
 from collections import OrderedDict
+
+from gdayf.metrics.metricmetadata import MetricMetadata
 
 
 class BinomialMetricMetadata(MetricMetadata):

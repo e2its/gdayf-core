@@ -1,7 +1,11 @@
 from collections import OrderedDict
-from gdayf.common.storagemetadata import StorageMetadata
-from gdayf.common.dfmetada import DFMetada
 from json import dump
+
+from gdayf.common.dfmetada import DFMetada
+from gdayf.common.normalizationset import NormalizationSet
+from gdayf.common.storagemetadata import StorageMetadata
+from gdayf.metrics.metricmetadata import MetricMetadata
+from gdayf.models.modelmetadata import ModelMetadata
 
 
 class ArMetadata (OrderedDict):
@@ -14,15 +18,15 @@ class ArMetadata (OrderedDict):
         self['objective_column'] = None
         self['timestamp'] = None
         self['load_path'] = StorageMetadata('models')
-        self['metrics'] = None
-        self['normalizations_set'] = None
+        self['metrics'] = MetricMetadata()
+        self['normalizations_set'] = NormalizationSet()
         self['data_initial'] = DFMetada()
         self['data_normalized'] = DFMetada()
-        self['model_parameters'] = None
+        self['model_parameters'] = ModelMetadata()
         self['ignored_parameters'] = None
         self['full_parameters_stack'] = None
-        self['log_path'] = StorageMetada('logs')
-        self['json_path'] = StorageMetada('json')
+        self['log_path'] = StorageMetadata('logs')
+        self['json_path'] = StorageMetadata('json')
         self['status'] = -1
 
     def get_json(self):

@@ -1,36 +1,34 @@
+import copy
+import json
+import time
+from collections import OrderedDict as OrderedDict
+from os.path import dirname
+from pandas import DataFrame as DataFrame
+
+from h2o import H2OFrame as H2OFrame
+from h2o import cluster as cluster
+from h2o import connect as connect
+from h2o import connection as connection
+from h2o import init as init
+from h2o import load_model as load_model
+from h2o import save_model as save_model
+from h2o.exceptions import H2OError
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.estimators.glm import H2OGeneralizedLinearEstimator
 from h2o.estimators.deeplearning import H2ODeepLearningEstimator
 from h2o.estimators.random_forest import H2ORandomForestEstimator
-from h2o.model.metrics_base import H2OBinomialModelMetrics as H2OBinomialModelMetrics
-from h2o.model.metrics_base import H2OMultinomialModelMetrics as H2OMultinomialModelMetrics
-from h2o.model.metrics_base import H2ORegressionModelMetrics as H2ORegressionModelMetrics
-from h2o import save_model as save_model
-from h2o import load_model as load_model
-from h2o import init as init
-from h2o import connect as connect
-from h2o import connection as connection
-from h2o import cluster as cluster
-from h2o import H2OFrame as H2OFrame
-from h2o.exceptions import H2OError
-from pandas import DataFrame as DataFrame
-import json
-import time
-from collections import OrderedDict as OrderedDict
-import copy
-from gdayf.logs.logshandler import LogsHandler
-from gdayf.common.armetadata import ArMetadata
+
 from gdayf.common.normalizationset import NormalizationSet
-from gdayf.common.binomialmetricmetadata import BinomialMetricMetadata
-from gdayf.common.multinomialmetricmetadata import MultinomialMetricMetadata
-from gdayf.common.regressionmetricmetadata import RegressionMetricMetadata
-from gdayf.common.metricmetadata import MetricMetadata
-from gdayf.common.metricscollection import MetricCollection
-from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.utils import hash_key
-from os.path import dirname
-from os import path
+from gdayf.logs.logshandler import LogsHandler
+from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
+from gdayf.metrics.metricmetadata import MetricMetadata
+from gdayf.metrics.metricscollection import MetricCollection
+from gdayf.metrics.regressionmetricmetadata import RegressionMetricMetadata
+from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
+from gdayf.persistence.persistencehandler import PersistenceHandler
+from gdayf.conf.loadconfig import LoadConfig
 
 __name__ = 'engines.h2o'
 
@@ -91,33 +89,28 @@ class H2OHandler(object):
 
     """
 
-    def __init__(self, configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\src\gdayf\conf\config.json'):
+    def __init__(self):
         self._framework = 'h2o'
-        self._configfile = configfile
-        if path.exists(configfile):
-            with open(configfile, 'rt') as f:
-                config = json.load(f, object_hook=OrderedDict, encoding='utf8')
-                self.path_localfs = config['frameworks'][self._framework]['path_localfs']
-                self.path_hdfs = config['frameworks'][self._framework]['path_hdfs']
-                self.path_mongoDB = config['frameworks'][self._framework]['path_mongoDB']
-                self.primary_path = \
-                    config['frameworks'][self._framework][config['frameworks'][self._framework]['primary_path']]
-                self.url = config['frameworks'][self._framework]['url']
-                self.nthreads = config['frameworks'][self._framework]['nthreads']
-                self.ice_root = config['frameworks'][self._framework]['ice_root']
-                self.max_mem_size = config['frameworks'][self._framework]['max_mem_size']
-                self.start_h2o = config['frameworks'][self._framework]['start_h2o']
-                self._debug = config['frameworks'][self._framework]['debug']
-                self._save_model = config['frameworks'][self._framework]['save_model']
-        else:
-            return Exception('Invalid config file: %s for H2OHandler' % configfile)
+        self._config = LoadConfig().get_config()
+        self.path_localfs = self._config['frameworks'][self._framework]['conf']['path_localfs']
+        self.path_hdfs =self._config['frameworks'][self._framework]['conf']['path_hdfs']
+        self.path_mongoDB = self._config['frameworks'][self._framework]['conf']['path_mongoDB']
+        self.primary_path = \
+            self._config['frameworks'][self._framework]['conf'] \
+            [self._config['frameworks'][self._framework]['conf']['primary_path']]
+        self.url = self._config['frameworks'][self._framework]['conf']['url']
+        self.nthreads = self._config['frameworks'][self._framework]['conf']['nthreads']
+        self.ice_root = self._config['frameworks'][self._framework]['conf']['ice_root']
+        self.max_mem_size = self._config['frameworks'][self._framework]['conf']['max_mem_size']
+        self.start_h2o = self._config['frameworks'][self._framework]['conf']['start_h2o']
+        self._debug = self._config['frameworks'][self._framework]['conf']['debug']
+        self._save_model = self._config['frameworks'][self._framework]['conf']['save_model']
+
         self._model_base = None
-
         self._persistence = PersistenceHandler()
-
         try:
             self._h2o_session = connect(url=self.url)
-        except:
+        except H2OError:
             init(url=self.url, nthreads=self.nthreads, ice_root=self.ice_root, max_mem_size=self.max_mem_size)
             self._h2o_session = connection()
         self._logging = LogsHandler(__name__)

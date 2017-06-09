@@ -1,23 +1,17 @@
 import logging
 import logging.config
 import os
-from json import load
+from gdayf.conf.loadconfig import LoadConfig
 __name__ = 'logs'
 
 
 class LogsHandler (object):
 
-    def __init__(self, module_name,
-                 configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\src\gdayf\conf\config.json'):
-        self._configfile = configfile
+    def __init__(self, module_name):
+        self._conf = LoadConfig().get_config()
         self.logger = logging.getLogger(module_name)
         self.logger.setLevel('DEBUG')
-        if os.path.exists(configfile):
-            with open(configfile, 'rt') as f:
-                config = load(f)
-            logging.config.dictConfig(config['logging'])
-        else:
-            logging.basicConfig(level='ERROR')
+        logging.config.dictConfig(self._conf['logging'])
 
     def __del__(self):
         logging.shutdown()
