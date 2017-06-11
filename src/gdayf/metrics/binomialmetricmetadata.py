@@ -20,10 +20,6 @@ class BinomialMetricMetadata(MetricMetadata):
         self['cm']['f0point5'] = OrderedDict()
         self['cm']['f2'] = OrderedDict()
         self['cm']['f1'] = OrderedDict()
-        self['cm']['mean_per_class_accuracy'] = OrderedDict()
-
-    def set_accuracy(self, threshold):
-        None
 
     def set_precision(self, threshold):
         None

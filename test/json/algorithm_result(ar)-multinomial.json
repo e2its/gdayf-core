@@ -12,7 +12,9 @@
       "hash_value": null, "hash_type":"SHA256"
     }
   ],
-  "metrics" : null,
+  "metrics" : {
+  "execution": null, "model": null
+  } ,
   "normalizations_set" : null,
   "data_initial" : "dataframe_metadata-structure.json",
   "data_normalized" : null,

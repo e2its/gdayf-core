@@ -4,6 +4,7 @@ import time
 from collections import OrderedDict as OrderedDict
 from os.path import dirname
 from pandas import DataFrame as DataFrame
+from pandas import Index as Index
 
 from h2o import H2OFrame as H2OFrame
 from h2o import cluster as cluster
@@ -13,6 +14,7 @@ from h2o import init as init
 from h2o import load_model as load_model
 from h2o import save_model as save_model
 from h2o.exceptions import H2OError
+from h2o import download_pojo
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.estimators.glm import H2OGeneralizedLinearEstimator
 from h2o.estimators.deeplearning import H2ODeepLearningEstimator
@@ -24,11 +26,12 @@ from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
-from gdayf.metrics.metricscollection import MetricCollection
+from gdayf.metrics.executionmetricscollection import MetricCollection
 from gdayf.metrics.regressionmetricmetadata import RegressionMetricMetadata
 from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
+
 
 __name__ = 'engines.h2o'
 
@@ -231,10 +234,12 @@ class H2OHandler(object):
                                "Generating model performance metrics %s "
                                % base_ar['model_parameters']['h2o'][0]['parameters']['model_id'])
 
-        base_ar['metrics'][base_ar['type']] = self._generate_metrics(dataframe=predict_frame,
-                                                                     source=None, antype=antype)
-        print(self._generate_metrics(dataframe=predict_frame,
-                               source=None, antype=antype))
+        base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=predict_frame,
+                                                                               source=None, antype=antype)
+        print(self._generate_execution_metrics(dataframe=predict_frame,
+                                               source=None, antype=antype))
+
+        base_ar['metrics']['accuracy'] = self._accuracy(objective_column, predict_frame, antype=antype)
 
         if self._debug:
             for each_storage_type in base_ar['log_path']:
@@ -274,9 +279,9 @@ class H2OHandler(object):
         else:
             return '.model'
 
-    def _generate_metrics(self, dataframe, source, antype):
+    def _generate_execution_metrics(self, dataframe, source, antype):
         """
-        Generate model metrics for this model on test_data.
+        Generate model execution metrics for this model on test_data, train, valid frame or crossvalidation.
 
         :param H2OFrame test_data: Data set for which model metrics shall be computed against. All three of train,
             valid and xval arguments are ignored if test_data is not None.
@@ -305,6 +310,22 @@ class H2OHandler(object):
                 perf_metrics = self._model_base.model_performance(train=True)
         model_metrics.set_metrics(perf_metrics)
         return model_metrics
+
+    def _generate_model_metrics(self):
+        return self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split')
+
+    def _accuracy(self, objective, dataframe, antype):
+        if antype == 'regression':
+            accuracy = dataframe[objective].apply(lambda x: x * (1 - 0.001)) <= \
+                       self._model_base.predict(dataframe)[0] <= \
+                       dataframe[objective].apply(lambda x: x * (1 + 0.001))
+            print(accuracy)
+        else:
+            accuracy = self._model_base.predict(dataframe)[0] == dataframe[objective]
+        print(accuracy.sum())
+        print(accuracy.nrows)
+        return accuracy.sum() / accuracy.nrows
+
 
     def _generate_params(self):
         """
@@ -454,8 +475,8 @@ class H2OHandler(object):
                     load_path = base_path + each_storage_type['value'] + '/'
                     self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
                     if self._get_ext() == '.pojo':
-                        '''Not implemented yet'''
-                        None
+                        '''Not tested'''
+                        download_pojo(model=self._model_base, path=load_path, get_jar=True)
                     else:
                         save_model(model=self._model_base, path=load_path, force=True)
 
@@ -476,16 +497,30 @@ class H2OHandler(object):
                 final_ar_model['model_parameters']['h2o'].append(each_model.copy())
                 final_ar_model['model_parameters']['h2o'][0]['parameters']['model_id'] = model_id + self._get_ext()
 
-                # Generating metrics
-                final_ar_model['metrics'] = MetricCollection()
+                # Generating execution metrics
+                final_ar_model['metrics']['execution'] = MetricCollection()
                 print(analysis_type)
-                final_ar_model['metrics']['train'] = self._generate_metrics(dataframe=None, source='train',
-                                                                            antype=analysis_type)
+
+                final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
+                                                                                                   source='train',
+                                                                                                   antype=analysis_type)
                 if valid_frame is not None:
-                    final_ar_model['metrics']['valid'] = self._generate_metrics(dataframe=None, source='valid',
-                                                                                antype=analysis_type)
-                final_ar_model['metrics']['xval'] = self._generate_metrics(dataframe=None, source='xval',
-                                                                           antype=analysis_type)
+                    final_ar_model['metrics']['execution']['valid'] = \
+                        self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
+                    final_ar_model['metrics']['accuracy'] = \
+                        self._accuracy(objective_column, training_frame.rbind(valid_frame), antype=analysis_type)
+                    print(self._accuracy(objective_column, training_frame.rbind(valid_frame), antype=analysis_type))
+                else:
+                    final_ar_model['metrics']['accuracy'] = \
+                        self._accuracy(objective_column, training_frame, antype=analysis_type)
+                    print(self._accuracy(objective_column, training_frame, antype=analysis_type))
+                final_ar_model['metrics']['execution']['xval'] = \
+                    self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
+
+
+                # Generating model metrics
+                print(self._generate_model_metrics())
+                final_ar_model['metrics']['model'] = self._generate_model_metrics()
 
                 # writing ar.json file
                 final_ar_model['json_path'] = StorageMetadata()

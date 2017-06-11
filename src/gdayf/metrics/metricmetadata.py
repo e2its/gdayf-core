@@ -14,8 +14,7 @@ class MetricMetadata(OrderedDict):
         self['RMSE'] = None
         self['MAE'] = None
         self['scoring_time'] = None
-        self['accuracy'] = None
-        self['precision'] = None
+
 
     def pop(self, key, default=None):
         return 1

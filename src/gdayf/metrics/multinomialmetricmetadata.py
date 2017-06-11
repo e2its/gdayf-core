@@ -9,9 +9,6 @@ class MultinomialMetricMetadata(MetricMetadata):
         self['hit_ratio_table'] = OrderedDict()
         self['cm'] = OrderedDict()
 
-    def set_accuracy(self, threshold):
-        None
-
     def set_precision(self, threshold):
         None
 
