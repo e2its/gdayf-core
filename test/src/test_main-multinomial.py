@@ -36,8 +36,8 @@ if __name__ == "__main__":
         test_labels = save['test_labels']
         del save  # hint to help gc free up memory
 
-    train_dataset = train_dataset[-20001:-1]
-    train_labels = train_labels[-100001:-1]
+    train_dataset = train_dataset[-100001:-1]
+    train_labels  = train_labels[-100001:-1]
 
     print('Training set', train_dataset.shape, train_labels.shape)
     print('Validation set', valid_dataset.shape, valid_labels.shape)

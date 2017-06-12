@@ -276,6 +276,8 @@ class H2OHandler(object):
     def _get_ext(self):
         if self._save_model == 'POJO':
             return '.pojo'
+        elif self._save_model == 'MOJO':
+            return '.mojo'
         else:
             return '.model'
 
@@ -314,16 +316,22 @@ class H2OHandler(object):
     def _generate_model_metrics(self):
         return self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split')
 
+    def _generate_importance_variables(self):
+        aux = OrderedDict()
+        try:
+            for each_value in self._model_base.varimp():
+                aux[each_value[0]] = each_value[2]
+        except TypeError:
+            None
+        return aux
+
     def _accuracy(self, objective, dataframe, antype):
         if antype == 'regression':
             accuracy = dataframe[objective].apply(lambda x: x * (1 - 0.001)) <= \
                        self._model_base.predict(dataframe)[0] <= \
                        dataframe[objective].apply(lambda x: x * (1 + 0.001))
-            print(accuracy)
         else:
             accuracy = self._model_base.predict(dataframe)[0] == dataframe[objective]
-        print(accuracy.sum())
-        print(accuracy.nrows)
         return accuracy.sum() / accuracy.nrows
 
 
@@ -475,8 +483,12 @@ class H2OHandler(object):
                     load_path = base_path + each_storage_type['value'] + '/'
                     self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
                     if self._get_ext() == '.pojo':
-                        '''Not tested'''
                         download_pojo(model=self._model_base, path=load_path, get_jar=True)
+                    elif self._get_ext() == '.mojo':
+                        '''MOJOs are currently supported for Distributed Random Forest, 
+                        Gradient Boosting Machine, 
+                        Deep Water, GLM, GLRM and word2vec models only.'''
+                        self._model_base.download_mojo(path=load_path, get_genmodel_jar=True)
                     else:
                         save_model(model=self._model_base, path=load_path, force=True)
 
@@ -501,26 +513,38 @@ class H2OHandler(object):
                 final_ar_model['metrics']['execution'] = MetricCollection()
                 print(analysis_type)
 
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                       "Generating Model %s Execution Metrics" % model_id)
+
                 final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
                                                                                                    source='train',
                                                                                                    antype=analysis_type)
+                final_ar_model['metrics']['execution']['xval'] = \
+                    self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
+
                 if valid_frame is not None:
                     final_ar_model['metrics']['execution']['valid'] = \
                         self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
                     final_ar_model['metrics']['accuracy'] = \
                         self._accuracy(objective_column, training_frame.rbind(valid_frame), antype=analysis_type)
-                    print(self._accuracy(objective_column, training_frame.rbind(valid_frame), antype=analysis_type))
                 else:
                     final_ar_model['metrics']['accuracy'] = \
                         self._accuracy(objective_column, training_frame, antype=analysis_type)
-                    print(self._accuracy(objective_column, training_frame, antype=analysis_type))
-                final_ar_model['metrics']['execution']['xval'] = \
-                    self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
 
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Accuracy: %s " %
+                                       (model_id, final_ar_model['metrics']['accuracy']))
 
                 # Generating model metrics
-                print(self._generate_model_metrics())
                 final_ar_model['metrics']['model'] = self._generate_model_metrics()
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Metrics: %s " %
+                                       (model_id, final_ar_model['metrics']['model']))
+
+                # Generating Variable importance
+                final_ar_model['metrics']['var_importance'] = self._generate_importance_variables()
+                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                       "Model %s Variable Importance: %s " %
+                                       (model_id, final_ar_model['metrics']['var_importance']))
+
 
                 # writing ar.json file
                 final_ar_model['json_path'] = StorageMetadata()
