@@ -7,8 +7,9 @@ class Normalizer:
     def __init__(self):
         True
 
-    def normalizeDataFrame(self, dataframe, normalizemd):
+    def normalizeDataFrame(self, df, normalizemd):
         if (normalizemd['type'] == 'pandas'):
+            dataframe = df.copy()
             for col in normalizemd['columns']:
                 if (col['class'] == 'mean'):
                     dataframe[col['name']] = self.normalizeMean(dataframe[col['name']],
@@ -37,7 +38,7 @@ class Normalizer:
                 else:
                     print("Nothing to Normalize")
 
-                return dataframe
+            return dataframe
 
     def normalizeMean(self, dataframe, mean=0, std=1):
         True
@@ -46,14 +47,12 @@ class Normalizer:
         assert(maxval > minval)
         if (dataframe.dtype != np.object):
             dataframe = (maxval - minval) * ((dataframe - dataframe.min()) / (dataframe.max() - dataframe.min())) + maxval
-        return dataframe
 
     def normalizeAggregation(self, dataframe, br=0.25):
         if (dataframe.dtype != np.object):
             buckets = int(1 / br)
             q, bins = pd.qcut(dataframe.iloc[:], buckets, retbins=True)
             dataframe[dataframe <= bins[1]] = int(dataframe[dataframe <= bins[1]].mean())
-        return dataframe
 
     def normalizeBinaryEncoding(self, dataframe):
-        return dataframe
+        True
