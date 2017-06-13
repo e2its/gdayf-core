@@ -40,19 +40,19 @@ class Normalizer:
 
             return dataframe
 
-    def normalizeMean(self, dataframe, mean=0, std=1):
-        True
-
     def normalizeWorkingRange(self, dataframe, minval=0, maxval=1):
         assert(maxval > minval)
-        if (dataframe.dtype != np.object):
+        if (dataframe[dataframe.columns[0]].dtype != np.object):
             dataframe = (maxval - minval) * ((dataframe - dataframe.min()) / (dataframe.max() - dataframe.min())) + maxval
 
     def normalizeAggregation(self, dataframe, br=0.25):
-        if (dataframe.dtype != np.object):
+        if (dataframe[dataframe.columns[0]].dtype != np.object):
             buckets = int(1 / br)
             q, bins = pd.qcut(dataframe.iloc[:], buckets, retbins=True)
-            dataframe[dataframe <= bins[1]] = int(dataframe[dataframe <= bins[1]].mean())
+            if (dataframe[dataframe.columns[0]].dtype != np.int):
+                dataframe[dataframe <= bins[1]] = np.int(dataframe[dataframe <= bins[1]].mean())
+            else:
+                dataframe[dataframe <= bins[1]] = dataframe[dataframe <= bins[1]].mean()
 
     def normalizeBinaryEncoding(self, dataframe):
-        True
+        return True
