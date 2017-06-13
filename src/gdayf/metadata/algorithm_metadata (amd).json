@@ -21,7 +21,7 @@
         "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
         "fold_column": {"value":null, "seleccionable":true, "type":"str"},
         "response_column": {"value":null, "seleccionable":false, "type":"str"},
-        "ignored_columns": {"value":null, "seleccionable":true, "type":"List[str]"},
+        "ignored_columns": {"value":null, "seleccionable":false, "type":"List[str]"},
         "ignore_const_cols": {"value":true, "seleccionable":true, "type":"boolean"},
         "offset_column": {"value":null, "seleccionable":true, "type":"str"},
         "weights_column": {"value":null, "seleccionable":true, "type":"str"},

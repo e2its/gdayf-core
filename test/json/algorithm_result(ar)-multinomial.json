@@ -1,24 +1,20 @@
 {
   "model_id":"PoC-multinomial",
   "version": "0.0.2",
-  "type" : null,
-  "objective_column" : "Not used",
+  "type" : "train",
+  "objective_column" : "objective0",
   "timestamp": null,
   "load_path": [
     {"value": "models" , "type":"localfs",
-      "hash_list":[
-        {"value": null, "type":"MD5"},
-        {"value": null, "type":"SHA256"}
-      ]
+      "hash_value": null, "hash_type":"MD5"
     },
     {"value": "replica/models" , "type":"localfs",
-      "hash_list":[
-        {"value": null, "type":"MD5"},
-        {"value": null, "type":"SHA256"}
-      ]
+      "hash_value": null, "hash_type":"SHA256"
     }
   ],
-  "metrics" : null,
+  "metrics" : {
+  "execution": null, "model": null
+  } ,
   "normalizations_set" : null,
   "data_initial" : "dataframe_metadata-structure.json",
   "data_normalized" : null,
@@ -40,7 +36,7 @@
           "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
           "score_tree_interval": {"value":1000, "seleccionable":true, "type":"int"},
           "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
-          "response_column": {"value":"objective0", "seleccionable":true, "type":"str"},
+          "response_column": {"value":"objective0", "seleccionable":false, "type":"str"},
           "ignore_const_cols": {"value":true, "seleccionable":true, "type":"boolean"},
           "balance_classes": {"value":true, "seleccionable":true, "type":"boolean"},
           "max_after_balance_size": {"value":5.0, "seleccionable":true, "type":"float"},
@@ -68,7 +64,7 @@
           "keep_cross_validation_predictions": {"value":true, "seleccionable":true, "type":"boolean"},
           "keep_cross_validation_fold_assignment": {"value":true, "seleccionable":true, "type":"boolean"},
           "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
-          "response_column": {"value":"objective0", "seleccionable":true, "type":"str"},
+          "response_column": {"value":"objective0", "seleccionable":false, "type":"str"},
           "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
           "family": {"value":"multinomial", "seleccionable":true, "type":["gaussian", "binomial", "quasibinomial", "multinomial", "poisson", "gamma", "tweedie"]},
           "solver": {"value":"auto", "seleccionable":true, "type":["auto", "irlsm", "l_bfgs", "coordinate_descent_naive", "coordinate_descent"]},
@@ -92,7 +88,7 @@
           "nfolds": {"value":2, "seleccionable":true, "type":"int"},
           "keep_cross_validation_predictions": {"value":true, "seleccionable":true, "type":"boolean"},
           "keep_cross_validation_fold_assignment": {"value":true, "seleccionable":true, "type":"boolean"},
-          "response_column": {"value":"objective0", "seleccionable":true, "type":"str"},
+          "response_column": {"value":"objective0", "seleccionable":false, "type":"str"},
           "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
           "max_confusion_matrix_size": {"value":20, "seleccionable":true, "type":"int"},
           "max_hit_ratio_k": {"value":3, "seleccionable":true, "type":"int"},
@@ -107,6 +103,7 @@
           "distribution": {"value":"multinomial", "seleccionable":true, "type":["auto", "bernoulli", "multinomial", "gaussian", "poisson", "gamma", "tweedie", "laplace", "quantile", "huber"]},
           "max_runtime_secs": {"value":100.0, "seleccionable":true, "type":"float"},
           "mini_batch_size": {"value":128, "seleccionable":false, "type":"int"},
+          "variable_importances": {"value":true, "seleccionable":false, "type":"boolean"},
           "elastic_averaging": {"value":true, "seleccionable":false, "type":"boolean"}
         }
       },
@@ -125,7 +122,7 @@
           "keep_cross_validation_fold_assignment": {"value":true, "seleccionable":true, "type":"boolean"},
           "score_each_iteration": {"value":true, "seleccionable":true, "type":"boolean"},
           "fold_assignment": {"value":"auto", "seleccionable":true, "type":["auto", "random", "modulo", "stratified"]},
-          "response_column": {"value":"objective0", "seleccionable":true, "type":"str"},
+          "response_column": {"value":"objective0", "seleccionable":false, "type":"str"},
           "balance_classes": {"value":true, "seleccionable":true, "type":"boolean"},
           "max_hit_ratio_k": {"value":3, "seleccionable":true, "type":"int"},
           "ntrees": {"value":5, "seleccionable":true, "type":"int"},
@@ -138,12 +135,20 @@
   "ignored_parameters" : null,
   "full_parameters_stack" :  null,
   "log_path" : [
-    {"value": "log" , "type":"localfs"},
-    {"value": "replica/log" , "type":"localfs"}
+    {"value": "log" , "type":"localfs",
+      "hash_value": null, "hash_type":"MD5"
+    },
+    {"value": "replica/log" , "type":"localfs",
+      "hash_value": null, "hash_type":"SHA256"
+    }
   ],
   "json_path" : [
-    {"value": "json" , "type":"localfs"},
-    {"value": "replica/json" , "type":"localfs"}
+    {"value": "json" , "type":"localfs",
+      "hash_value": null, "hash_type":"MD5"
+    },
+    {"value": "replica/json" , "type":"localfs",
+      "hash_value": null, "hash_type":"SHA256"
+    }
   ],
   "status": [null]
 }
