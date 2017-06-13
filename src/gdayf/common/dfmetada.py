@@ -18,7 +18,6 @@ class DFMetada(OrderedDict):
         self['rowcount'] = dataframe.shape[0] - 1
         self['cols'] = dataframe.shape[1]
         self['timeformat'] = 'dd-mm-yyyy HH:mm:ss:ms'
-        self['columns'] = list()
         for col in dataframe.columns:
             summary = dataframe[col].describe()
             auxdict = OrderedDict()
@@ -34,7 +33,8 @@ class DFMetada(OrderedDict):
                 dataframe[col].isnull().values.ravel().sum())
             self['columns'].append(auxdict)
 
-        return dump(self, indent=4)
+        return None
+        #return dump(self, indent=4)
 
     def pop(self, key, default=None):
         return 1

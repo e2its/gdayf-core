@@ -1037,7 +1037,7 @@
               "type": "boolean"
             },
             "variable_importances": {
-              "value": false,
+              "value": true,
               "seleccionable": true,
               "type": "boolean"
             },

@@ -12,6 +12,7 @@ if __name__ == "__main__":
     source_data.append("ENB2012_data.csv")
 
     pd_train_dataset = inputHandlerCSV().inputCSV(filename=''.join(source_data))
+    pd_test_dataset = pd_train_dataset.sample(frac=0.2)
     print('Training set dimensions:', pd_train_dataset.shape)
 
     json_file = open(r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\test\json\ar-regression-ENE.json')
@@ -27,7 +28,7 @@ if __name__ == "__main__":
     for file in os.listdir(r'D:\Data\models\h2o\PoC-regression-ENE\train\json'):
         analysis_models = H2OHandler()
         json_file = open(r'D:\Data\models\h2o\PoC-regression-ENE\train\json' + '/' + file)
-        analysis_results = analysis_models.predict(pd_train_dataset, json_file)
+        analysis_results = analysis_models.predict(pd_test_dataset, json_file)
 
 
 
