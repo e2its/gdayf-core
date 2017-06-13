@@ -25,7 +25,7 @@
    or fixed frecuency"
   }
   {"type" : "bucketing",
-   "class" : "agregation",
+   "class" : "aggregation",
    "objective" : {
       "bucket_ratio" : 0.25,
     },
