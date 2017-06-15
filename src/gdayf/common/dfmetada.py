@@ -1,12 +1,12 @@
 #!/usr/bin/python3
 
-from json import dump
+from json import dumps
 from collections import OrderedDict
 
 
 class DFMetada(OrderedDict):
     def __init__(self):
-        super().__init__()
+        OrderedDict.__init__(self)
         self['type'] = None
         self['rowcount'] = None
         self['cols'] = None
@@ -33,11 +33,14 @@ class DFMetada(OrderedDict):
                 dataframe[col].isnull().values.ravel().sum())
             self['columns'].append(auxdict)
 
-        return None
-        #return dump(self, indent=4)
+        return dumps(self, indent=4)
 
     def pop(self, key, default=None):
         return 1
 
     def popitem(self, last=True):
         return 1
+
+if __name__ == "__main__":
+    m = DFMetada()
+    print(m)
