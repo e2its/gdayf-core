@@ -1,11 +1,11 @@
-from collections import OrderedDict
-##  Define comomn execution base structure as OrderedDict() of common datasets
+## @package gdayf.metrics.executionmetriccollection
+# Define common execution base structure as OrderedDict() of common datasets
 #  on an unified way
-
+from collections import OrderedDict
 
 # Class Base for Execution metricts as OrderedDict
 #
-class MetricCollection (OrderedDict):
+class ExecutionMetricCollection (OrderedDict):
     ## Constructor initialize all to None
     # parama: self object pointer
     def __init__(self):

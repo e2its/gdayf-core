@@ -6,7 +6,8 @@ from gdayf.common.utils import hash_key
 from pathlib import Path
 
 
-##  Define all objects, functions and structures related to physically store information on persistence system
+## @package gdayf.persistence.persistencehandler
+# Define all objects, functions and structures related to physically store information on persistence system
 #  on an unified way
 
 ## Class to manage trasient information between all persistence options and models on an unified way

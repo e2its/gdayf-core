@@ -1,11 +1,12 @@
+## @package gdayf.models.h2oframeworkmetadata
+#  Define Base H2OFramework methods and members
+#  on an unified way.
 from gdayf.models.frameworkmetadata import FrameworkMetadata
 import copy
-##  Define Base H2OFramework methods and members
-#  on an unified way.
+
 
 ## Generate Framework base Class and base members
 # Initialize ['h2o'] to list()
-
 class H2OFrameworkMetadata (FrameworkMetadata):
     ## Constructor
     def __init__(self):

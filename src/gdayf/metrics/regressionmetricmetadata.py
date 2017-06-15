@@ -1,7 +1,8 @@
-from gdayf.metrics.metricmetadata import MetricMetadata
-
-##  Define Regression Metric object as OrderedDict() of common measures for all frameworks
+## @package gdayf.metrics.regressionmetricmetadata
+# Define Regression Metric object as OrderedDict() of common measures for all frameworks
 #  on an unified way
+
+from gdayf.metrics.metricmetadata import MetricMetadata
 
 
 # Class Base for Regression metricts as OrderedDict

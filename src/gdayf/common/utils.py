@@ -1,9 +1,10 @@
+## @package gdayf.common.utils
+# Define all objects, functions and structs related to common utilities not associated to one concrete object
+# and able to be reused on whole context
+
 from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
-
-## Define all objects, functions and structured related to common utilities not associated to one concrete object
-# and able to be reused on whole context
 
 
 ## Function oriented to get the hash_key for a file

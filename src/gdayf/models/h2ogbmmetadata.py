@@ -1,11 +1,12 @@
+## @package gdayf.models.h2ogbmmetadata
+# Define GBM Model for H2OFramework
+
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
 
-##  Define GBM Model for H2OFramework
 
 ## Generate H2O Model base Class and initialize base members
 # Load default parameters for Models H2OGbmMetadata
 # Initialized model to default parameters for Model H2OGbmMetadata
-
 class H2OGbmMetadata (H2OModelMetadata):
     ## Constructor
     def __init__(self):

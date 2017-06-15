@@ -1,7 +1,10 @@
+## @package gdayf.models.frameworkmetadata
+# Define Base Framework methods and members
+#  on an unified way.
+
 from collections import OrderedDict
 from gdayf.conf.loadconfig import LoadConfig
-##  Define Base Framework methods and members
-#  on an unified way.
+
 
 ## Generate Framework base Class and base members
 class FrameworkMetadata (OrderedDict):

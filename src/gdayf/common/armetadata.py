@@ -1,3 +1,7 @@
+## @package gdayf.common.armetadata
+# Define all objects, functions and structured related to Analysis_Results for one execution (final json structure)
+# on OrderedDict format
+
 from collections import OrderedDict
 from json import dump
 from gdayf.common.dfmetada import DFMetada
@@ -6,11 +10,8 @@ from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
 from gdayf.models.frameworkmetadata import FrameworkMetadata
 
-## Define all objects, functions and structured related to Analysis_Results for one execution (final json structure)
-# on OrderedDict format
 
-
-## Class ArMetadata manage the Analysis results structe on OrderedDict format and exportable to json
+## Class ArMetadata manage the Analysis results structs on OrderedDict format and exportable to json
 class ArMetadata (OrderedDict):
 
     ## The constructor

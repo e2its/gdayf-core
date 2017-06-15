@@ -1,3 +1,11 @@
+## @package gdayf.handlers.h2ohandler
+# Define all objects, functions and structures related to executing actions or activities over h2o.ai framework
+#
+# Main class H2OHandler. Lets us execute analysis, make prediction and execute multi-packet operations structures on
+# format [(Analysis_results.json, normalization_sets.json) ]
+# Analysis_results.json could contain executions models for various different model or parameters
+
+
 import copy
 import json
 import time
@@ -25,20 +33,12 @@ from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
-from gdayf.metrics.executionmetricscollection import MetricCollection
+from gdayf.metrics.executionmetriccollection import ExecutionMetricCollection
 from gdayf.metrics.regressionmetricmetadata import RegressionMetricMetadata
 from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.dfmetada import DFMetada
-
-
-## @package gdayf.handlers.h2ohandler
-# Define all objects, functions and structures related to executing actions or activities over h2o.ai framework
-#
-# Main class H2OHandler. Lets us execute analysis, make prediction and execute multi-packet operations structures on
-# format [(Analysis_results.json, normalization_sets.json) ]
-# Analysis_results.json could contain executions models for various different model or parameters
 
 
 ## Main Class H2OHandler
@@ -479,7 +479,7 @@ class H2OHandler(object):
                 final_ar_model['model_parameters']['h2o'][0]['parameters']['model_id'] = model_id + self._get_ext()
 
                 # Generating execution metrics
-                final_ar_model['metrics']['execution'] = MetricCollection()
+                final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
                 print(analysis_type)
 
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,

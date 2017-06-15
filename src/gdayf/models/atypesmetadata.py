@@ -1,6 +1,7 @@
 from collections import OrderedDict
 
-##  Define Analysis Types for DayF product
+## @package gdayf.models.atypesmetadata
+# Define Analysis Types for DayF product
 #  on an unified way
 
 ## Generate OrderedDict() from analysis types accepted

@@ -1,12 +1,11 @@
+## @package gdayf.models.modelmetadata
+# Define Base Model methods and members
+#  on an unified way. Base for all Models
 import copy
 from gdayf.conf.loadconfig import LoadConfig
 
-##  Define Base Model methods and members
-#  on an unified way. Base for all Models
 
 ## Generate Model base Class and base members
-
-
 class ModelMetadata(object):
     ## Constructor
     def __init__(self):

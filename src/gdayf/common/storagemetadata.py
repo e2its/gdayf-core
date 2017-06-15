@@ -1,9 +1,10 @@
+## @package gdayf.common.storagemetadata
+# Define all objects, functions and structured related to adding storage information metadata (json structure)
+# on list[OrderedDict] format
+
 from gdayf.common.utils import hash_key
 from collections import OrderedDict
 from os import path
-
-## Define all objects, functions and structured related to adding storage information metadata (json structure)
-# on list[OrderedDict] format
 
 
 ## Class storage metadata

@@ -1,7 +1,10 @@
+## @package gdayf.metrics.multinomialmetricmetadata
+# Define Multinomial Metric object as OrderedDict() of common measures for all frameworks
+#  on an unified way
+
 from collections import OrderedDict
 from gdayf.metrics.metricmetadata import MetricMetadata
-##  Define Multinomial Metric object as OrderedDict() of common measures for all frameworks
-#  on an unified way
+
 
 
 # Class Base for Multinomial metricts as OrderedDict

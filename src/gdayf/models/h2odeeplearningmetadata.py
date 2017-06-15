@@ -1,10 +1,12 @@
-from gdayf.models.h2omodelmetadata import H2OModelMetadata
+## @package gdayf.models.h2odeeplearningmetadata
+# Define DeepLearning Model for H2OFramework
 
-##  Define DeepLearning Model for H2OFramework
+from gdayf.models.h2omodelmetadata import H2OModelMetadata
 
 ## Generate H2O Model base Class and initialize base members
 # Load default parameters for Models H2OGbmMetadata
 # Initialized model to default parameters for Model H2ODeeplearningMetadata
+
 
 class H2ODeeplearningMetadata (H2OModelMetadata):
     def __init__(self):

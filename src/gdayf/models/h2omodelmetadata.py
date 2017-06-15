@@ -1,7 +1,9 @@
+## @package gdayf.models.h2omodelmetadata
+# Define Base Model for H2OFramework
+#  on an unified way. Base for all Models
+
 from gdayf.models.modelmetadata import ModelMetadata
 
-##  Define Base Model for H2OFramework
-#  on an unified way. Base for all Models
 
 ## Generate H2O Model base Class and initialize base members
 class H2OModelMetadata(ModelMetadata):

@@ -1,10 +1,12 @@
+## @package gdayf.conf.loadconfig 
+# Define all objects, functions and structs related to load on system all configuration parameter from config.json
+
 from collections import OrderedDict
 import json
 from os import path
 
-## Define all objects, functions and structures related to load on system all configuration parameter from config.json
 
-## Class Getting the config file place on default location and load all parameters on an internal variable
+## Class Getting the config file place on default location and load all parameters on an internal variables
 # named self._config on OrderedDict() format
 class LoadConfig(object):
     _config = None
