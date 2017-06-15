@@ -32,10 +32,7 @@ from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.dfmetada import DFMetada
-from gdayf.common.utils import generate_commands_parameters
-from gdayf.common.utils import need_factor
-from gdayf.common.utils import get_tolerance
-
+from gdayf.handlers.h2ohandler import generate_commands_parameters, need_factor, get_tolerance
 
 __name__ = 'engines.h2o'
 
@@ -191,7 +188,7 @@ class H2OHandler(object):
                 perf_metrics = self._model_base.model_performance(xval=True)
             else:
                 perf_metrics = self._model_base.model_performance(train=True)
-        model_metrics.set_metrics(perf_metrics)
+        model_metrics.set_h2ometrics(perf_metrics)
         return model_metrics
 
     def _generate_model_metrics(self):
@@ -333,7 +330,7 @@ class H2OHandler(object):
                     None
 
                 need_factor(atype=each_model['types'][0]['type'], training_frame=training_frame,
-                                 valid_frame=valid_frame, y=objective_column)
+                            valid_frame=valid_frame, objective_column=objective_column)
 
                 '''Generate commands: model and model.train()'''
                 model_command = list()
@@ -531,7 +528,7 @@ class H2OHandler(object):
         predict_frame = H2OFrame(python_obj=predict_frame, destination_frame='predict_frame' + base_ar['model_id'])
 
         need_factor(atype=base_ar['model_parameters']['h2o'][0]['types'][0]['type'],
-                         y=objective_column, predict_frame=predict_frame)
+                    objective_column=objective_column, predict_frame=predict_frame)
 
         base_ar['type'] = 'predict'
         base_ar['timestamp'] = model_timestamp
