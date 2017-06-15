@@ -4,7 +4,6 @@ import time
 from collections import OrderedDict as OrderedDict
 from os.path import dirname
 from pandas import DataFrame as DataFrame
-from pandas import Index as Index
 
 from h2o import H2OFrame as H2OFrame
 from h2o import cluster as cluster
@@ -32,13 +31,35 @@ from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.dfmetada import DFMetada
-from gdayf.common.utils import generate_commands_parameters
-from gdayf.common.utils import need_factor
-from gdayf.common.utils import get_tolerance
 
 
-__name__ = 'engines.h2o'
+## @package gdayf.handlers.h2ohandler
+# Define all objects, functions and structures related to executing actions or activities over h2o.ai framework
+#
+# Main class H2OHandler. Lets us execute analysis, make prediction and execute multi-packet operations structures on
+# format [(Analysis_results.json, normalization_sets.json) ]
+# Analysis_results.json could contain executions models for various different model or parameters
 
+
+## Main Class H2OHandler
+#
+# Activities:
+# Order_analysis: Execute analysis or set of analysis for same normalization and same objectives.
+# Make predictions
+# log events
+# load models
+# recover_models
+# save pojo and mojo models
+# execute cross-validations
+# Generate final ar_structure.json including:
+# Connect to cluster o initialize it
+# parameters
+# model_execution_metrics
+# model_scoring
+# variable importance
+# Load paths
+# Json paths
+# Debugger Logs path
 
 class H2OHandler(object):
     """
@@ -95,8 +116,11 @@ class H2OHandler(object):
         1: Error
 
     """
-
+    ## Constructor
+    # Initialize all framework variables and starts or connect to h2o cluster
+    # Aditionally starts PersistenceHandler and logsHandler
     def __init__(self):
+        print(__name__)
         self._framework = 'h2o'
         self._config = LoadConfig().get_config()
         self.path_localfs = self._config['frameworks'][self._framework]['conf']['path_localfs']
@@ -121,20 +145,27 @@ class H2OHandler(object):
             init(url=self.url, nthreads=self.nthreads, ice_root=self.ice_root, max_mem_size=self.max_mem_size)
             self._h2o_session = connection()
         self._logging = LogsHandler(__name__)
-        self._logging.log_exec('DayF', self._h2o_session.session_id(), 'Connected to active cluster and ready')
+        self._logging.log_exec('gDayF', self._h2o_session.session_id(), 'Connected to active cluster and ready')
 
+    ## Destructor
     def __del__(self):
         self._h2o_session.close()
-        del self._logging
+        #del self._logging
 
+    ## Class Method for cluster shutdown
+    # @param cls class pointer
     @classmethod
     def shutdown_cluster(cls):
         try:
             cluster().shutdown()
-
         except:
             print('H20-cluster not working')
 
+    ## Generate base path to store all files [models, logs, json] relative to it
+    # @param self object pointer
+    # @param base_ar initial ar.json template pass to object instance
+    # @param type_ type of analysis to execute
+    # @return base path string
     def generate_base_path(self, base_ar, type_):
         assert type_ in ['PoC', 'train', 'predict']
         if self.primary_path == self.path_mongoDB:
@@ -154,6 +185,9 @@ class H2OHandler(object):
             load_path.append('/')
             return ''.join(load_path)
 
+    ## Generate extension for diferente saving modes
+    # @param self object pointer
+    # @return ['.pojo', '.mojo', '.model']
     def _get_ext(self):
         if self._save_model == 'POJO':
             return '.pojo'
@@ -162,6 +196,12 @@ class H2OHandler(object):
         else:
             return '.model'
 
+    ## Generate execution metrics for the correct model
+    # @param self object pointer
+    # @param dataframe H2OFrame for prediction metrics
+    # @param source [train, val, xval]
+    # @param  antype Atypemetadata().get_artypes() values allowed
+    # @return model_metrics Subclass Metrics Metadata
     def _generate_execution_metrics(self, dataframe, source, antype):
         """
         Generate model execution metrics for this model on test_data, train, valid frame or crossvalidation.
@@ -191,24 +231,41 @@ class H2OHandler(object):
                 perf_metrics = self._model_base.model_performance(xval=True)
             else:
                 perf_metrics = self._model_base.model_performance(train=True)
-        model_metrics.set_metrics(perf_metrics)
+        model_metrics.set_h2ometrics(perf_metrics)
         return model_metrics
 
+    ## Generate model summary metrics
+    # @param self object pointer
+    # @return json_pandas_dataframe structure orient=split
     def _generate_model_metrics(self):
         return self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split')
 
+    ## Generate variable importance metrics
+    # @param self object pointer
+    # @return OrderedDict() for variable importance Key=column name
     def _generate_importance_variables(self):
         aux = OrderedDict()
         try:
             for each_value in self._model_base.varimp():
                 aux[each_value[0]] = each_value[2]
         except TypeError:
-            None
+            pass
         return aux
 
+    ## Generate model scoring_history metrics
+    # @param self object pointer
+    # @return json_pandas_dataframe structure orient=split
     def _generate_scoring_history(self):
         return self._model_base.scoring_history().drop("", axis=1).to_json(orient='split')
 
+    ## Generate accuracy metrics for model
+    #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
+    # on dataframe objective's column
+    # @param self object pointer
+    # @param dataframe H2OFrame
+    # @param  antype Atypemetadata().get_artypes() values allowed
+    # @param tolerance (optional) default value 0.0. Only for regression
+    # @return float accuracy of model
     def _accuracy(self, objective, dataframe, antype, tolerance=0.0):
         if antype == 'regression':
             fmin = eval("lambda x: x - " + str(tolerance))
@@ -220,31 +277,44 @@ class H2OHandler(object):
             accuracy = self._model_base.predict(dataframe)[0] == dataframe[objective]
         return accuracy.sum() / accuracy.nrows
 
+    ## Generate model full values parameters for execution analysis
+    # @param self object pointer
+    # @return (status (success 0, error 1) ,OrderedDict())
     def _generate_params(self):
         """
         Generate model params for this model.
-
-        :param base parmas_struct:
-        :return dict(full_stack_parameters)
-                """
+        :return (status (success 0, error 1) , OrderedDict(full_stack_parameters))
+        """
         params = self._model_base.get_params()
         full_stack_params = OrderedDict()
         for key, values in params.items():
             if key not in ['model_id', 'training_frame', 'validation_frame', 'response_column']:
                 full_stack_params[key] = values['actual_value']
-        return ('Not implemented yet', full_stack_params)
+        return (0, full_stack_params)
 
+    ## Get one especific metric for execution metrics
+    # Not tested yet
+    # @param algorithm_description (subclass executionmetricscollection) or compatible OrderedDict()
+    # @param metric String metric key name
+    # @param source [train, val, xval]
+    # @ return (Variable) metrics value or String "Not Found"
     def get_metric(self, algorithm_description, metric, source):  # not tested
         try:
             struct_ar = OrderedDict(json.load(algorithm_description))
-            model_metrics = struct_ar['metrics']['source']
         except:
             return ('Necesario cargar un modelo valid o ar.json valido')
         try:
-            return struct_ar['metrics']['source'][metric]
-        except:
+            return struct_ar['metrics'][source][metric]
+        except KeyError:
             return 'Not Found'
 
+    ## Main method to execute sets of analysis and normalizations base on params
+    # @param self object pointer
+    # @param analysis_id String (Aalysis identificator)
+    # @param training_frame pandas.DataFrame
+    # @param analysis_list (ar_template.json, normalization_sets.json) on (ArMetadata type,  NormalizationMetadata)
+    # or compatible tuple (OrderedDict(), OrderedDict())
+    # @return (String, [ArMetadata]) equivalent to (analysis_id, List[analysis_results])
     def order_training(self, analysis_id, training_frame, analysis_list):
         assert isinstance(analysis_id, str)
         assert isinstance(training_frame, DataFrame)
@@ -263,9 +333,9 @@ class H2OHandler(object):
         df_metadata.getDataFrameMetadata(dataframe=training_frame, typedf='pandas')
         print("DFMetadata: %s" % df_metadata)
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                              'Dataframe_structure: %s' % df_metadata)
+                               'Dataframe_structure: %s' % df_metadata)
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                              'Starting analysis')
+                               'Starting analysis')
 
         if training_frame.count(axis=0).all() > 100000:
             training_frame, valid_frame = \
@@ -273,13 +343,13 @@ class H2OHandler(object):
                                                                 destination_frames=['training_frame_' + analysis_id,
                                                                                     'valid_frame_' + analysis_id])
             self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                  'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
+                                   'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
                                    ') validating_frame(' + str(valid_frame.nrows) + ')')
         else:
             training_frame = \
                 H2OFrame(python_obj=training_frame, destination_frame='training_frame_' + analysis_id)
             self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                  'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
+                                   'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
                                    ')')
 
         for algorithm_description, normalization in analysis_list:
@@ -289,7 +359,7 @@ class H2OHandler(object):
             objective_column = base_ar['objective_column']
 
             tolerance = None
-            tolerance = get_tolerance(df_metadata['columns'], objective_column)
+            tolerance = get_tolerance(df_metadata['columns'], objective_column, 0.005)
             print(tolerance)
 
             base_ar['data_initial'] = df_metadata
@@ -303,7 +373,7 @@ class H2OHandler(object):
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                       'Executing Normalizations: ' + base_ns)
                 '''Include normalizations a registry activities'''
-                '''tolerance = (nf_metadata[objective_column]["max"] - nf_metadata[objective_column]["min"])*0.005'''
+                '''Assign data_normalized  base_ar['data_normalized']'''
             else:
                 base_ns = None
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
@@ -330,10 +400,10 @@ class H2OHandler(object):
                     for ignore_col in each_model['parameters']['ignored_columns']['value']:
                         x.remove(ignore_col)
                 except KeyError:
-                    None
+                    pass
 
                 need_factor(atype=each_model['types'][0]['type'], training_frame=training_frame,
-                                 valid_frame=valid_frame, y=objective_column)
+                            valid_frame=valid_frame, objective_column=objective_column)
 
                 '''Generate commands: model and model.train()'''
                 model_command = list()
@@ -463,7 +533,13 @@ class H2OHandler(object):
                 model_list.append(final_ar_model)
             return analysis_id, model_list
 
-
+    ## Main method to execute predictions over traning models
+    # Take the ar.json for and execute predictions including its metrics a storage paths
+    # @param self object pointer
+    # @param predict_frame pandas.DataFrame
+    # @param algorithm_description ArMetadata.json path
+    # or compatible tuple (OrderedDict(), OrderedDict())
+    # @return (String, [ArMetadata]) equivalent to (analysis_id, List[analysis_results])
     def predict(self, predict_frame, algorithm_description):
         model_timestamp = str(time.time())
 
@@ -472,6 +548,7 @@ class H2OHandler(object):
         load_fails = True
         counter_storage = 0
 
+        #Checking file source versus hash_value
         assert isinstance(base_ar['load_path'], list)
         while counter_storage < len(base_ar['load_path']) and load_fails:
             self._logging.log_exec('Predict', self._h2o_session.session_id,
@@ -488,7 +565,7 @@ class H2OHandler(object):
                 try:
                     if self._get_ext() == '.pojo':
                         '''Not implemented yet'''
-                        None
+                        pass
                     else:
                         self._model_base = load_model(base_ar['load_path'][counter_storage]['value'])
                 except H2OError:
@@ -504,25 +581,22 @@ class H2OHandler(object):
 
         objective_column = base_ar['objective_column']
 
-        # Establishing tolerance
-        tolerance = None
-
-        if base_ar["data_normalized"] is None:
-            tolerance = get_tolerance(base_ar["data_initial"]['columns'], objective_column)
-        else:
-            tolerance = get_tolerance(base_ar["data_normalized"]['columns'], objective_column)
+        # Recovering tolerance
+        tolerance = get_tolerance(base_ar["data_initial"]['columns'], objective_column, tolerance=0.005)
 
         df_metadata = DFMetada()
         df_metadata.getDataFrameMetadata(dataframe=predict_frame, typedf='pandas')
         self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
                               'Predict dataframe_structure: %s'% df_metadata)
+
         base_ar['data_initial'] = df_metadata
+
         if base_ar['normalizations_set'] is not None:
             base_ns = json.load(base_ar['normalizations_set'], object_pairs_hook=NormalizationSet)
             self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
                                    'Executing Normalizations: ' + base_ns)
             '''Include normalizations a registry activities'''
-            '''tolerance = (nf_metadata[objective_column]["max"] - nf_metadata[objective_column]["min"])*0.005'''
+            '''Assign data_normalized  base_ar['data_normalized']'''
         else:
             self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
                                    'No Normalizations Required')
@@ -531,7 +605,7 @@ class H2OHandler(object):
         predict_frame = H2OFrame(python_obj=predict_frame, destination_frame='predict_frame' + base_ar['model_id'])
 
         need_factor(atype=base_ar['model_parameters']['h2o'][0]['types'][0]['type'],
-                         y=objective_column, predict_frame=predict_frame)
+                    objective_column=objective_column, predict_frame=predict_frame)
 
         base_ar['type'] = 'predict'
         base_ar['timestamp'] = model_timestamp
@@ -580,3 +654,73 @@ class H2OHandler(object):
             handler.flush()
 
         return prediction_dataframe, base_ar
+
+
+## auxiliary function (procedure) to generate model and train chain paramters to execute models
+# Modify model_command and train_command String to complete for eval()
+# @param each_model object pointer
+# @param model_command String with model command definition base structure
+# @param train_command String with train command base structure
+# @param train_parameters_list list(ATypesMetadata) or compatible OrderedDict()
+def generate_commands_parameters(each_model, model_command, train_command, train_parameters_list):
+    for key, value in each_model['parameters'].items():
+        if value['seleccionable']:
+            if isinstance(value['value'], str):
+                if key in train_parameters_list and value is not None:
+                    train_command.append(", %s=\'%s\'" % (key, value['value']))
+                else:
+                    model_command.append(", %s=\'%s\'" % (key, value['value']))
+            else:
+                if key in train_parameters_list and value is not None:
+                    train_command.append(", %s=%s" % (key, value['value']))
+                else:
+                    model_command.append(", %s=%s" % (key, value['value']))
+
+
+## Auxiliary function to convert numerical and string columns on H2OFrame to enum (factor)
+# for classification analysis
+# Returns H2OFrames modified if apply for classification objectives
+# @param atype String in ATypeMetadata().get_artypes(cls)
+# @param objective_column String Column Objective
+# @param training_frame H2OFrame for training (optional)
+# @param valid_frame H2OFrame for validation (optional)
+# @param predict_frame H2OFrame for prediction (optional)
+def need_factor(atype, objective_column, training_frame=None, valid_frame=None, predict_frame=None):
+    if atype in ['binomial', 'multinomial']:
+        if training_frame is not None:
+            if isinstance(training_frame[objective_column], (int, float)):
+                training_frame[objective_column] = training_frame[objective_column].asfactor()
+            else:
+                training_frame[objective_column] = training_frame[objective_column].ascharacter().asfactor()
+        if valid_frame is not None:
+            if isinstance(valid_frame[objective_column], (int, float)):
+                valid_frame[objective_column] = valid_frame[objective_column].asfactor()
+            else:
+                valid_frame[objective_column] = valid_frame[objective_column].ascharacter().asfactor()
+        if predict_frame is not None:
+            if isinstance(predict_frame[objective_column], (int, float)):
+                predict_frame[objective_column] = predict_frame[objective_column].asfactor()
+            else:
+                predict_frame[objective_column] = predict_frame[objective_column].ascharacter().asfactor()
+
+
+## Auxiliary function to get the level of tolerance for regression analysis
+# @param columns list() of OrderedDict() [{Column description}]
+# @param objective_column String Column Objective
+# @param tolerance  float [0.0, 1.0]  (optional)
+# @return float value for tolerance
+def get_tolerance(columns, objective_column, tolerance=0.0):
+    min_val = None
+    max_val = None
+    for each_column in columns:
+        if each_column["name"] == objective_column:
+            min_val = float(each_column["min"])
+            max_val = float(each_column["max"])
+    if min_val is None or max_val is None:
+        threshold = 0
+    else:
+        threshold = (max_val - min_val) * tolerance
+    print('min: %s' % min_val)
+    print('max: %s' % max_val)
+    print('tolerance: %s' % tolerance)
+    return threshold

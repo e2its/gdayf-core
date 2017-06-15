@@ -3,7 +3,7 @@ from collections import OrderedDict
 class ParameterMetadata(OrderedDict):
 
     def __init__(self, value, seleccionable=True, type=None):
-        super(ParameterMetadata, self).__init__()
+        OrderedDict.__init__(self)
         self['value'] = value
         self['seleccionable'] = bool(seleccionable)
         self['type'] = str(type)

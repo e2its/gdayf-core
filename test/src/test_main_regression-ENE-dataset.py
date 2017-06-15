@@ -25,10 +25,10 @@ if __name__ == "__main__":
                                                       training_frame=pd_train_dataset,
                                                       analysis_list=analysis_list)
 
-    for file in os.listdir(r'D:\Data\models\h2o\PoC-regression-ENE\train\json'):
+    '''for file in os.listdir(r'D:\Data\models\h2o\PoC-regression-ENE\train\json'):
         analysis_models = H2OHandler()
         json_file = open(r'D:\Data\models\h2o\PoC-regression-ENE\train\json' + '/' + file)
-        analysis_results = analysis_models.predict(pd_test_dataset, json_file)
+        analysis_results = analysis_models.predict(pd_test_dataset, json_file)'''
 
 
 

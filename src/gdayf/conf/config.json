@@ -1436,7 +1436,7 @@
       "info": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "D:\\Data\\logs\\1-DayF-info.log",
+        "filename": "D:\\Data\\logs\\1-gDayF-info.log",
         "level": "INFO",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -1445,14 +1445,14 @@
       "debug": {
         "class": "logging.FileHandler",
         "formatter": "standard",
-        "filename": "D:\\Data\\logs\\2-DayF-debug.log",
+        "filename": "D:\\Data\\logs\\2-gDayF-debug.log",
         "level": "DEBUG",
         "encoding": "utf8"
       },
       "error": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "D:\\Data\\logs\\3-DayF-error.log",
+        "filename": "D:\\Data\\logs\\3-gDayF-error.log",
         "level": "ERROR",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -1460,25 +1460,25 @@
       }
     },
     "loggers": {
-      "logs.logHandler": {
+      "gdayf.logs.logshandler": {
         "handlers": [
           "error"
         ],
         "propagate": true
       },
-      "logs": {
+      "gdayf.logs": {
         "handlers": [
           "info"
         ],
         "propagate": false
       },
-      "engines.H2OHandler": {
+      "gdayf.handlers.h2ohandler": {
         "handlers": [
           "error"
         ],
         "propagate": true
       },
-      "engines.h2o": {
+      "gdayf.handlers": {
         "handlers": [
           "info"
         ],

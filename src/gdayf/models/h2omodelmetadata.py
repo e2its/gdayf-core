@@ -1,14 +1,17 @@
-from gdayf.conf.loadconfig import LoadConfig
-import copy
+from gdayf.models.modelmetadata import ModelMetadata
 
+##  Define Base Model for H2OFramework
+#  on an unified way. Base for all Models
 
-class H2OModelMetadata(object):
+## Generate H2O Model base Class and initialize base members
+class H2OModelMetadata(ModelMetadata):
+    ## Constructor
     def __init__(self):
-        self._config = None
-        self.model = None
+        ModelMetadata.__init__(self)
+        # @var _config
+        # Initialized _config to h2o all models default values
+        self._config = self._config['h2o']
 
-    def get_model(self):
-        return self.model
-
-    def get_copy_model(self):
-        return copy.deepcopy(self.model)
+if __name__ == "__main__":
+    m = H2OModelMetadata()
+    print(m.get_default())
