@@ -39,27 +39,9 @@ from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.dfmetada import DFMetada
+from gdayf.handlers.h2ohandler import generate_commands_parameters, need_factor, get_tolerance
 
-## Main Class H2OHandler
-#
-# Activities:
-# Order_analysis: Execute analysis or set of analysis for same normalization and same objectives.
-# Make predictions
-# log events
-# load models
-# recover_models
-# save pojo and mojo models
-# execute cross-validations
-# Generate final ar_structure.json including:
-# Connect to cluster o initialize it
-# parameters
-# model_execution_metrics
-# model_scoring
-# variable importance
-# Load paths
-# Json paths
-# Debugger Logs path
-
+__name__ = 'engines.h2o'
 class H2OHandler(object):
     """
     H2OHandler
