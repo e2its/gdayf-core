@@ -5,7 +5,7 @@ from gdayf.common.dfmetada import DFMetada
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
-from gdayf.models.modelmetadata import ModelMetadata
+from gdayf.models.frameworkmetadata import ModelMetadata
 
 
 class ArMetadata (OrderedDict):
