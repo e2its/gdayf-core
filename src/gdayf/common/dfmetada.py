@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 
-from json import dumps
+from json import dumps, loads
 from collections import OrderedDict
+from gdayf.common.utils import dtypes
+import operator
 
 
 class DFMetada(OrderedDict):
@@ -31,9 +33,17 @@ class DFMetada(OrderedDict):
             auxdict['zeros'] = str(dataframe[col][dataframe[col] == 0].count())
             auxdict['missed'] = str(
                 dataframe[col].isnull().values.ravel().sum())
+            auxdict['cardinality'] = str(int(dataframe[col].value_counts().describe()['count']))
+            hist = dataframe[col].value_counts().to_dict()
+            auxdict['histogram'] = OrderedDict()
+            for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
+                if int(auxdict['cardinality']) < 200:
+                    auxdict['histogram'][str(tupla[0])] = str(tupla[1])
+            auxdict['distribution'] = 'Not implemented yet'
             self['columns'].append(auxdict)
-
-        return dumps(self, indent=4)
+        self['correlation'] = dataframe.corr().to_dict()
+        #return dumps(self, indent=4)
+        return self
 
     def pop(self, key, default=None):
         return 1
@@ -42,5 +52,18 @@ class DFMetada(OrderedDict):
         return 1
 
 if __name__ == "__main__":
+    from gdayf.handlers.inputhandler import inputHandlerCSV
+    from pandas import concat
+    import operator
+    source_data = list()
+    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
+    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
+    source_data.append("CODE/h2o-bk/datasets/")
+
+    pd_train_dataset = concat([inputHandlerCSV().inputCSV(''.join(source_data) + "football.train2.csv"),
+                               inputHandlerCSV().inputCSV(''.join(source_data) + "football.valid2.csv")],
+                              axis=0)
+
     m = DFMetada()
-    print(m)
+    print(m.getDataFrameMetadata(pd_train_dataset, 'pandas'))
+

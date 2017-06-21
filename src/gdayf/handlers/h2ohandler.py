@@ -39,7 +39,6 @@ from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.dfmetada import DFMetada
-from gdayf.handlers.h2ohandler import generate_commands_parameters, need_factor, get_tolerance
 
 __name__ = 'engines.h2o'
 class H2OHandler(object):

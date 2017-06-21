@@ -8,7 +8,7 @@ from gdayf.common.dfmetada import DFMetada
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
-from gdayf.models.frameworkmetadata import ModelMetadata
+from gdayf.models.frameworkmetadata import FrameworkMetadata
 
 
 ## Class ArMetadata manage the Analysis results structs on OrderedDict format and exportable to json

@@ -10,10 +10,12 @@ from gdayf.conf.loadconfig import LoadConfig
 class FrameworkMetadata (OrderedDict):
     ## Constructor
     def __init__(self):
-        # @var _config
-        # Load default parameters for Models
-        self._config = LoadConfig().get_config()['frameworks']
+        # Load default parameters for Models as OrderedDict
+        config = LoadConfig().get_config()['frameworks']
+        for key, value in config.items():
+            self[key] = value
+
 
 if __name__ == "__main__":
     m = FrameworkMetadata()
-    print (m._config)
+    print (m['h2o'])
