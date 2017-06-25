@@ -47,7 +47,8 @@ class H2OHandler(object):
 
     Train: Get some analysis list of tuplas (analysis_results.json +  (algorithm + normalzations over a Dataframe) and launch de analysis on H2O platform
     predict: Get some list of [analysis_results.json] and load and execute algorithm
-    Algorithms and model operation:
+    
+    Model's Catalog:
 
     "H2OGradientBoostingEstimator" :{
       "id" : "number",
@@ -116,6 +117,8 @@ class H2OHandler(object):
         self.start_h2o = self._config['frameworks'][self._framework]['conf']['start_h2o']
         self._debug = self._config['frameworks'][self._framework]['conf']['debug']
         self._save_model = self._config['frameworks'][self._framework]['conf']['save_model']
+        self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
+
 
         self._model_base = None
         self._persistence = PersistenceHandler()
@@ -162,6 +165,8 @@ class H2OHandler(object):
             load_path.append(base_ar['model_id'])
             load_path.append('/')
             load_path.append(type_)
+            load_path.append('/')
+            load_path.append(str(base_ar['timestamp']))
             load_path.append('/')
             return ''.join(load_path)
 
@@ -311,7 +316,7 @@ class H2OHandler(object):
         # Loading_data structure
         df_metadata = DFMetada()
         df_metadata.getDataFrameMetadata(dataframe=training_frame, typedf='pandas')
-        print("DFMetadata: %s" % df_metadata)
+
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                'Dataframe_structure: %s' % df_metadata)
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
@@ -335,16 +340,17 @@ class H2OHandler(object):
         for algorithm_description, normalization in analysis_list:
 
             # Initializing base structures
-            base_ar = json.load(algorithm_description, object_pairs_hook=OrderedDict)
+            base_ar = algorithm_description
             objective_column = base_ar['objective_column']
 
             tolerance = None
-            tolerance = get_tolerance(df_metadata['columns'], objective_column, 0.005)
+            tolerance = get_tolerance(df_metadata['columns'], objective_column, self._tolerance)
             print(tolerance)
 
             base_ar['data_initial'] = df_metadata
 
             # Generating base_path
+            print(base_ar['type'])
             base_path = self.generate_base_path(base_ar, base_ar['type'])
 
             # Applying Normalizations
@@ -380,6 +386,8 @@ class H2OHandler(object):
                     for ignore_col in each_model['parameters']['ignored_columns']['value']:
                         x.remove(ignore_col)
                 except KeyError:
+                    pass
+                except TypeError:
                     pass
 
                 need_factor(atype=each_model['types'][0]['type'], training_frame=training_frame,

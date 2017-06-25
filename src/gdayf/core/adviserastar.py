@@ -11,46 +11,50 @@ from gdayf.common.dfmetada import DFMetada
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.models.atypesmetadata import ATypesMetadata
 from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
+from gdayf.models.h2omodelmetadata import H2OModelMetadata
 from gdayf.common.utils import dtypes
 from collections import OrderedDict
 from time import time
-import json
+from json import dumps
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
 # Normal: One A* analysis for all models based until max_deep with early_stopping
 # Paranoiac: One A* algorithm per model analysis until max_deep without early stoping
 class AdviserAStar(object):
-    _NORMAL = 1
-    _FAST = 0
-    _PARANOIAC = 2
+    NORMAL = 1
+    FAST = 0
+    PARANOIAC = 2
     deepness = 0
 
     ## Constructor
     # @param self object pointer
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
-    def __init__(self, analysis_id, deep_impact=5):
+    def __init__(self, analysis_id, deep_impact=5, metric='accuracy'):
         self.analysis_id = analysis_id
+        self.timestamp = time()
+        self.an_objective = None
         self.deep_impact = deep_impact
-        self.analysis_recommendation_order = PriorityQueue()
+        self.analysis_recommendation_order = list()
         self.ar_execution_models = list()
+        self.metric = metric
 
     ## Main method oriented to execute smart analysis
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
     # @param atype [NORMAL, FAST, PARANOIAC]
     # @param objective_column string indicating objective column
-    # @param analysis_id string indicating primary model or box identification
     # @param an_objective atype[type]
     # @return ArMetadata()'s Prioritized queue
-    def set_recommendations(self, dataframe_metadata, objective_column, analysis_id, an_objective, atype=_NORMAL):
-        if atype == self._FAST:
-            return self.analysisfast(dataframe_metadata, objective_column, analysis_id, an_objective)
-        elif atype == self._NORMAL:
-            return self.analysisnormal(dataframe_metadata, objective_column, analysis_id, an_objective)
-        elif atype == self._PARANOIAC:
-            return self.analysisparanoiac(dataframe_metadata, objective_column, analysis_id, an_objective)
+    def set_recommendations(self, dataframe_metadata, objective_column, atype=NORMAL):
+        self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
+        if atype == self.FAST:
+            return self.analysisfast(dataframe_metadata, objective_column)
+        elif atype == self.NORMAL:
+            return self.analysisnormal(dataframe_metadata, objective_column)
+        elif atype == self.PARANOIAC:
+            return self.analysisparanoiac(dataframe_metadata, objective_column)
 
     ## Method oriented to execute smart fast analysis
     # @param self object pointer
@@ -59,23 +63,23 @@ class AdviserAStar(object):
     # @param analysis_id string indicating primary model or box identification
     # @param an_objective atype[type]
     # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
-    def analysisfast(self, dataframe_metadata, objective_column, analysis_id, an_objective):
+    def analysisfast(self, dataframe_metadata, objective_column):
         ar_structure = ArMetadata()
-        ar_structure['model_id'] = analysis_id
+        ar_structure['model_id'] = self.analysis_id
         ar_structure['version'] = '0.0.1'
-        ar_structure['type'] = None
         ar_structure['objective_column'] = objective_column
-        ar_structure['timestamp'] = time()
+        ar_structure['timestamp'] = self.timestamp
         ar_structure['normalizations_set'] = None
         ar_structure['data_initial'] = dataframe_metadata
         ar_structure['data_normalized'] = None
-        ar_structure['model_parameters'] = self.get_candidate_models(an_objective)
+        ar_structure['model_parameters'] = self.get_candidate_models(self.an_objective, self.FAST)
         ar_structure['ignored_parameters'] = None
         ar_structure['full_parameters_stack'] = None
         ar_structure['status'] = -1
 
         self.ar_execution_models.append((ar_structure, None))
-        return analysis_id, self.ar_execution_models
+        print(type(self.ar_execution_models))
+        return self.analysis_id, self.ar_execution_models
         
 
     ## Method oriented to execute smart normal analysis
@@ -85,8 +89,23 @@ class AdviserAStar(object):
     # @param analysis_id string indicating primary model or box identification
     # @param an_objective atype[type]
     # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
-    def analysisnormal(self, dataframe_metadata, objective_column, analysis_id, an_objective):
-        pass
+    def analysisnormal(self, dataframe_metadata, objective_column):
+        ar_structure = ArMetadata()
+        ar_structure['model_id'] = self.analysis_id
+        ar_structure['version'] = '0.0.1'
+        ar_structure['objective_column'] = objective_column
+        ar_structure['timestamp'] = self.timestamp
+        ar_structure['normalizations_set'] = None
+        ar_structure['data_initial'] = dataframe_metadata
+        ar_structure['data_normalized'] = None
+        ar_structure['model_parameters'] = self.get_candidate_models(self.an_objective, self.NORMAL)
+        ar_structure['ignored_parameters'] = None
+        ar_structure['full_parameters_stack'] = None
+        ar_structure['status'] = -1
+
+        self.ar_execution_models.append((ar_structure, None))
+        print(type(self.ar_execution_models))
+        return self.analysis_id, self.ar_execution_models
 
     ## Method oriented to execute smart paranoiac analysis
     # @param self object pointer
@@ -95,8 +114,23 @@ class AdviserAStar(object):
     # @param analysis_id string indicating primary model or box identification
     # @param an_objective atype[type]
     # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
-    def analysisparanoiac(self, dataframe_metadata, objective_column, analysis_id, an_objective):
-        pass
+    def analysisparanoiac(self, dataframe_metadata, objective_column):
+        ar_structure = ArMetadata()
+        ar_structure['model_id'] = self.analysis_id
+        ar_structure['version'] = '0.0.1'
+        ar_structure['objective_column'] = objective_column
+        ar_structure['timestamp'] = self.timestamp
+        ar_structure['normalizations_set'] = None
+        ar_structure['data_initial'] = dataframe_metadata
+        ar_structure['data_normalized'] = None
+        ar_structure['model_parameters'] = self.get_candidate_models(self.an_objective, self.PARANOIAC)
+        ar_structure['ignored_parameters'] = None
+        ar_structure['full_parameters_stack'] = None
+        ar_structure['status'] = -1
+
+        self.ar_execution_models.append((ar_structure, None))
+        print(type(self.ar_execution_models))
+        return self.analysis_id, self.ar_execution_models
 
     ## Method oriented to get frameworks default values from config
     # @param self object pointer
@@ -126,28 +160,53 @@ class AdviserAStar(object):
     ## Method oriented to analyze choose models candidate and select analysis objective
     # @param self object pointer
     # @param atype ATypesMetadata
+    # @param amode Analysismode
     # @return FrameworkMetadata()
-    def get_candidate_models(self, atype):
+    def get_candidate_models(self, atype, amode):
         defaultframeworks = self.load_frameworks()
         ar_models = OrderedDict()
         for fw, parameters in defaultframeworks.items():
             if fw == 'h2o':
                 wfw = H2OFrameworkMetadata(defaultframeworks)
                 for each_model in wfw.get_default():
-
-                    for each_type in each_model['types']:
-                        if each_type['type'] == atype[0]['type'] and each_type['active']:
-                            each_model['types'] = [each_type]
-                            wfw.append(each_model)
-                    print(json.dumps(wfw.models, indent=4))
+                    modelbase = H2OModelMetadata()
+                    wfw.append(modelbase.generate_models(each_model['model'], atype, amode))
+                ar_models['h2o'] = wfw.get_models()
         return ar_models
 
+    ##Method get accuracy for generic model
+    @ staticmethod
+    def get_accuracy(model):
+        try:
+            print('Accuracy:' + str(model['metrics']['accuracy']))
+            return float(model['metrics']['accuracy'])
+        except KeyError:
+            return 0.0
+
+    ##Method get rmse for generic model
+    @staticmethod
+    def get_rmse(model):
+        try:
+            print('RMSE:' + str(model['metrics']['execution']['train']['RMSE']))
+            return float(model['metrics']['execution']['train']['RMSE'])
+        except KeyError:
+            return 0.0
+
+    ## Method managing scoring algorithm results
+    # params: results for Handlers (gdayf.handlers)
+    # @param analysis_id
+    # @param list for models analized
+    def priorize_models(self, analysis_id, model_list):
+        if self.metric == 'accuracy':
+            return sorted(model_list, key=self.get_accuracy, reverse=True)
+        elif self.metric == 'rmse':
+            return sorted(model_list, key=self.get_rmse)
+        else:
+            return model_list
 
 if __name__ == '__main__':
     from gdayf.handlers.inputhandler import inputHandlerCSV
     from pandas import concat
-    import operator
-    import json
     source_data = list()
     source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
     source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
@@ -158,18 +217,12 @@ if __name__ == '__main__':
                               axis=0)
 
     m = DFMetada()
-    adv = AdviserAStar('football_csv')
+    adv = AdviserAStar('football_csv', metric='accuracy')
 
     df = m.getDataFrameMetadata(pd_train_dataset, 'pandas')
-    an_objective = adv.get_analysis_objective(df, objective_column='HomeWin')
-    print(an_objective)
     ana, lista = adv.set_recommendations(dataframe_metadata=df,
-                                  objective_column='HomeWin',
-                                  analysis_id='POC-binomial-SOC',
-                                  an_objective=an_objective,
-                                  atype=adv._FAST
-                                  )
-
-    print (json.dumps(lista, indent=4))
+                                         objective_column='HomeWin',
+                                         atype=adv.FAST
+                                         )
 
 

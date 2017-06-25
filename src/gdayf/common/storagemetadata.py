@@ -3,6 +3,7 @@
 # on list[OrderedDict] format
 
 from gdayf.common.utils import hash_key
+from gdayf.conf.loadconfig import LoadConfig
 from collections import OrderedDict
 from os import path
 
@@ -38,4 +39,26 @@ class StorageMetadata (list):
             fs['hash_value'] = None
         super(StorageMetadata, self).append(fs)
 
+    ## method used to get realtive path from config.json
+    # @param self object pointer location (optional)
+    # @return relative path string
+    def get_load_path(self):
+        return LoadConfig().get_config()['storage']['load_path']
 
+    ## method used to get realtive path from config.json
+    # @param self object pointer location (optional)
+    # @return relative path string
+    def get_log_path(self):
+        return LoadConfig().get_config()['storage']['log_path']
+
+    ## method used to get realtive path from config.json
+    # @param self object pointer location (optional)
+    # @return relative path string
+    def get_json_path(self):
+        return LoadConfig().get_config()['storage']['json_path']
+
+
+if __name__ == '__main__':
+    print(get_load_path())
+    print(get_log_path())
+    print(get_json_path())

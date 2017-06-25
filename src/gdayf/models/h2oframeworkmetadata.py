@@ -2,6 +2,7 @@
 #  Define Base H2OFramework methods and members
 #  on an unified way.
 from gdayf.models.frameworkmetadata import FrameworkMetadata
+from collections import OrderedDict
 import copy
 
 

@@ -3,6 +3,7 @@
 from json import dumps, loads
 from collections import OrderedDict
 from gdayf.common.utils import dtypes
+from copy import deepcopy
 import operator
 
 
@@ -34,14 +35,24 @@ class DFMetada(OrderedDict):
             auxdict['missed'] = str(
                 dataframe[col].isnull().values.ravel().sum())
             auxdict['cardinality'] = str(int(dataframe[col].value_counts().describe()['count']))
-            hist = dataframe[col].value_counts().to_dict()
             auxdict['histogram'] = OrderedDict()
-            for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
-                if int(auxdict['cardinality']) < 200:
+            if int(auxdict['cardinality']) < 100:
+                hist = dataframe[col].value_counts().to_dict()
+                for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                     auxdict['histogram'][str(tupla[0])] = str(tupla[1])
+            else:
+                    auxHist = dataframe[col].value_counts()
+                    auxdict['histogram']['max'] = str(auxHist.max())
+                    auxdict['histogram']['min'] = str(auxHist.min())
+                    auxdict['histogram']['mean'] = str(auxHist.mean())
+                    auxdict['histogram']['std'] = str(auxHist.std())
             auxdict['distribution'] = 'Not implemented yet'
             self['columns'].append(auxdict)
         self['correlation'] = dataframe.corr().to_dict()
+        for key, value in deepcopy(self['correlation']).items():
+            for subkey, subvalue in value.items():
+                if (0.7 >= subvalue >= -0.7) or (key == subkey):
+                    self['correlation'][key].pop(subkey)
         #return dumps(self, indent=4)
         return self
 
@@ -65,5 +76,5 @@ if __name__ == "__main__":
                               axis=0)
 
     m = DFMetada()
-    print(m.getDataFrameMetadata(pd_train_dataset, 'pandas'))
+    print(dumps(m.getDataFrameMetadata(pd_train_dataset, 'pandas'), indent=4))
 

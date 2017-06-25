@@ -30,3 +30,5 @@ class RegressionMetricMetadata(MetricMetadata):
                 self[parameter] = perf_metrics._metric_json[parameter]
             except KeyError:
                 pass
+            except AttributeError:
+                pass

@@ -16,7 +16,6 @@ class LogsHandler (object):
         # @var _config
         # protected variable for loading and store DayF whole configuration parameters
         self._conf = LoadConfig().get_config()['logging']
-        print(self._conf)
         # @var logger
         # variable for setting log global handlers
         self.logger = logging.getLogger(module)
