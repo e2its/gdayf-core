@@ -35,23 +35,21 @@ class H2OModelMetadata(ModelMetadata):
                     if key == 'parameters':
                         self.model[key] = OrderedDict()
                         for subkey, subvalue in value.items():
-                            if subkey not in  ['others', 'stopping', 'distribution']:
+                            if subkey not in ['stopping', 'distribution']:
                                 for parm, parm_value in subvalue.items():
-                                    self.model[key][parm] = parm_value
-
-                            elif subkey == 'others':
-                                for others_parm, others_value in subvalue.items():
-                                    if others_value['seleccionable']:
-                                        self.model[key][others_parm] = others_value
+                                    if parm_value['seleccionable']:
+                                        self.model[key][parm] = parm_value
 
                             elif subkey == 'stopping':
-                                if amode != 2:
+                                if amode in [0, 3]: #[FAST, POC]
                                     for parm, parm_value in subvalue.items():
-                                        self.model[key][parm] = parm_value
+                                        if parm_value['seleccionable']:
+                                            self.model[key][parm] = parm_value
 
                             elif subkey == 'distribution':
                                 for parm, parm_value in subvalue.items():
-                                    self.model[key][parm] = parm_value
+                                    if parm_value['seleccionable']:
+                                        self.model[key][parm] = parm_value
                                     if parm == 'family':
                                         if distribution in ['binomial', 'multinomial']:
                                             self.model[key][parm]['value'] = distribution
@@ -75,7 +73,7 @@ if __name__ == "__main__":
     m = H2OModelMetadata()
     models = ['H2ODeepLearningEstimator', 'H2OGradientBoostingEstimator',
               'H2OGeneralizedLinearEstimator', 'H2ORandomForestEstimator']
-    amodes = [0, 1, 2]
+    amodes = [2, 3]
     atypes = [
                 [
                     {
@@ -103,5 +101,6 @@ if __name__ == "__main__":
         for atype in atypes:
             for amode in amodes:
                 modelbase = H2OModelMetadata()
-                print(dumps(modelbase.generate_models(each_model, atype),indent=4))
+                print (amode)
+                print(dumps(modelbase.generate_models(each_model, atype, amode),indent=4))
 

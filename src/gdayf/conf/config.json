@@ -236,10 +236,7 @@
                 "type": [
                   "laplace",
                   "poisson",
-                  "gamma",
-                  "tweedie",
-                  "quantile",
-                  "huber"
+                  "gamma"
                 ]
               },
               "tweedie_power": {
@@ -930,10 +927,8 @@
                 "value": "gaussian",
                 "seleccionable": true,
                 "type": [
-                  "tweedie",
-                  "laplace",
-                  "quantile",
-                  "huber"
+                  "poisson",
+                  "laplace"
                 ]
               },
               "tweedie_power": {

@@ -23,7 +23,7 @@ if __name__ == "__main__":
     adviser = AdviserAStar(analysis_id=analysis_id, metric='accuracy')
     df = DFMetada().getDataFrameMetadata(pd_train_dataset, 'pandas')
     _, analysis_list = adviser.set_recommendations(dataframe_metadata=df, objective_column='Y2',
-                                                             atype=adviser.FAST)
+                                                             atype=adviser.POC)
 
     analysis_models = H2OHandler()
     analysis_results = analysis_models.order_training(analysis_id=adviser.analysis_id,

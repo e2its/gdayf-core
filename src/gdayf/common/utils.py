@@ -5,6 +5,7 @@
 from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
+from json import dumps
 
 dtypes = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 
@@ -34,3 +35,13 @@ def hash_key(hash_type, filename):
 def decode_json_to_dataframe(json_string, orient='split'):
     return read_json(json_string, orient=orient)
 
+
+## Function oriented compare two dicts based on hash_key(json transformations)
+# @param dict1
+# @param dict2
+# @return True if equals false in other case
+def compare_dict(dict1, dict2):
+    if dict1 is None or dict2 is None:
+        return dict1 is None and dict2 is None
+    else:
+        return md5(dumps(dict1)) == md5(dumps(dict2))
