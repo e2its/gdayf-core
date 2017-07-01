@@ -73,7 +73,7 @@ if __name__ == "__main__":
     analysis_results = analysis_models.order_training(analysis_id=adviser.analysis_id,
                                                       training_frame=concat([pd_train_dataset, pd_valid_dataset],
                                                                             axis=0),
-                                                      analysis_list=analysis_list)
+                                                      model=analysis_list)
 
     sorted_list = adviser.priorize_models(analysis_results[0], analysis_results[1])
 

@@ -39,6 +39,9 @@ from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.dfmetada import DFMetada
+from gdayf.common.utils import get_model_ns
+from gdayf.common.armetadata import ArMetadata
+from gdayf.models.parametersmetadata import ParameterMetadata
 
 __name__ = 'engines.h2o'
 class H2OHandler(object):
@@ -297,21 +300,20 @@ class H2OHandler(object):
     # @param self object pointer
     # @param analysis_id String (Aalysis identificator)
     # @param training_frame pandas.DataFrame
-    # @param analysis_list (ar_template.json, normalization_sets.json) on (ArMetadata type,  NormalizationMetadata)
-    # or compatible tuple (OrderedDict(), OrderedDict())
-    # @return (String, [ArMetadata]) equivalent to (analysis_id, List[analysis_results])
-    def order_training(self, analysis_id, training_frame, analysis_list):
+    # @param base_ar ar_template.json
+    # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
+    def order_training(self, analysis_id, training_frame, base_ar):
         assert isinstance(analysis_id, str)
         assert isinstance(training_frame, DataFrame)
         # Not used now assert isinstance(valid_frame, DataFrame) or valid_frame is None
-        assert isinstance(analysis_list, list)
+        assert isinstance(base_ar, OrderedDict)
         # python train parameters effective
         train_parameters_list = ['max_runtime_secs', 'fold_column',
                                  'weights_column', 'offset_column']
 
         status = -1  # Operation Code
         valid_frame = None
-        model_list = list()
+
         analysis_timestamp = str(time.time())
         # Loading_data structure
         df_metadata = DFMetada()
@@ -337,189 +339,183 @@ class H2OHandler(object):
                                    'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
                                    ')')
 
-        for algorithm_description, normalization in analysis_list:
 
-            # Initializing base structures
-            base_ar = algorithm_description
-            objective_column = base_ar['objective_column']
+        # Initializing base structures
+        normalization = get_model_ns(base_ar)
+        objective_column = base_ar['objective_column']
 
-            tolerance = None
-            tolerance = get_tolerance(df_metadata['columns'], objective_column, self._tolerance)
-            print(tolerance)
+        tolerance = get_tolerance(df_metadata['columns'], objective_column, self._tolerance)
+        print(tolerance)
 
-            base_ar['data_initial'] = df_metadata
+        base_ar['data_initial'] = df_metadata
 
-            # Generating base_path
-            print(base_ar['type'])
-            base_path = self.generate_base_path(base_ar, base_ar['type'])
+        # Generating base_path
+        print(base_ar['type'])
+        base_path = self.generate_base_path(base_ar, base_ar['type'])
 
-            # Applying Normalizations
-            if normalization is not None:
-                base_ns = json.load(normalization, object_pairs_hook=NormalizationSet)
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                      'Executing Normalizations: ' + base_ns)
-                '''Include normalizations a registry activities'''
-                '''Assign data_normalized  base_ar['data_normalized']'''
+        # Applying Normalizations
+        if normalization is not None:
+            base_ns = json.load(normalization, object_pairs_hook=NormalizationSet)
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                  'Executing Normalizations: ' + base_ns)
+            '''Include normalizations a registry activities'''
+            '''Assign data_normalized  base_ar['data_normalized']'''
+        else:
+            base_ns = None
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                  'No Normalizations Required')
+
+        assert isinstance(base_ar, ArMetadata)
+        assert isinstance(base_ns, NormalizationSet) or normalization is None
+
+        final_ar_model = copy.deepcopy(base_ar)
+        model_timestamp = str(time.time())
+
+        model_id = base_ar['model_parameters']['h2o']['model'] + '_' + model_timestamp
+        print(base_ar['model_parameters']['h2o']['types'][0])
+        analysis_type = base_ar['model_parameters']['h2o']['types'][0]['type']
+
+        ''' Generating and executing Models '''
+        # 06/06/2017: Use X less ignored_columns on train
+        x = training_frame.col_names
+        x.remove(objective_column)
+        try:
+            for ignore_col in base_ar['model_parameters']['h2o']['parameters']['ignored_columns']['value']:
+                x.remove(ignore_col)
+        except KeyError:
+            pass
+        except TypeError:
+            pass
+
+        need_factor(atype=base_ar['model_parameters']['h2o']['types'][0]['type'], training_frame=training_frame,
+                    valid_frame=valid_frame, objective_column=objective_column)
+
+        '''Generate commands: model and model.train()'''
+        model_command = list()
+        model_command.append(base_ar['model_parameters']['h2o']['model'])
+        model_command.append("(")
+        model_command.append("training_frame=training_frame")
+        train_command = list()
+        # 06/06/2017: Use ignore_columns instead X on train
+        train_command.append("self._model_base.train(x=%s, y=\'%s\', " % (x, objective_column))
+        '''train_command.append("self._model_base.train(y=\'%s\', " % objective_column)'''
+        train_command.append("training_frame=training_frame")
+        if valid_frame is not None:
+            model_command.append(", validation_frame=valid_frame")
+            train_command.append(", validation_frame=valid_frame")
+        model_command.append(", model_id=\'%s%s\'" % (model_id, self._get_ext()))
+        generate_commands_parameters(base_ar['model_parameters']['h2o'], model_command, train_command,
+                                     train_parameters_list)
+        model_command.append(")")
+        model_command = ''.join(model_command)
+        train_command.append(")")
+        train_command = ''.join(train_command)
+
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               "Generating Model: " + model_command)
+        # Generating model
+        if self._debug:
+            final_ar_model['log_path'] = StorageMetadata()
+            for each_storage_type in base_ar['log_path']:
+                log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
+                final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
+                                                  hash_type=each_storage_type['hash_type'])
+            self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'], grants=0o0777,
+                                    path=dirname(final_ar_model['log_path'][0]['value']))
+            connection().start_logging(final_ar_model['log_path'][0]['value'])
+        self._model_base = eval(model_command)
+        eval(train_command)
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               ("Trained Model: %s :" % model_id) + train_command)
+        if self._debug:
+            connection().stop_logging()
+            self._persistence.store_file(filename=final_ar_model['log_path'][0]['value'],
+                                         storage_json=final_ar_model['log_path'])
+
+        # Generating load_path
+        final_ar_model['load_path'] = StorageMetadata()
+        for each_storage_type in base_ar['load_path']:
+            load_path = base_path + each_storage_type['value'] + '/'
+            self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
+            if self._get_ext() == '.pojo':
+                download_pojo(model=self._model_base, path=load_path, get_jar=True)
+            elif self._get_ext() == '.mojo':
+                '''MOJOs are currently supported for Distributed Random Forest, 
+                Gradient Boosting Machine, 
+                Deep Water, GLM, GLRM and word2vec models only.'''
+                self._model_base.download_mojo(path=load_path, get_genmodel_jar=True)
             else:
-                base_ns = None
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                      'No Normalizations Required')
-            assert isinstance(base_ar, OrderedDict)
-            assert isinstance(base_ns, NormalizationSet) or normalization is None
+                save_model(model=self._model_base, path=load_path, force=True)
 
-            for each_model in base_ar['model_parameters']['h2o']:
+            final_ar_model['load_path'].append(value=load_path + model_id + self._get_ext(),
+                                               fstype=each_storage_type['type'],
+                                               hash_type=each_storage_type['hash_type'])
 
-                final_ar_model = copy.deepcopy(base_ar)
-                final_ar_model['type'] = 'train'
-                final_ar_model['timestamp'] = analysis_timestamp
-                model_timestamp = str(time.time())
-                model_id = each_model['model'] + '_' + model_timestamp
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               model_id + " :Saved Model ")
 
-                #model_path = base_path + base_ar['load_path'][0]['value'] + '/'
-                analysis_type = each_model['types'][0]['type']
+        # Filling whole json ar.json
+        final_ar_model['ignored_parameters'], \
+        final_ar_model['full_parameters_stack'] = self._generate_params()
 
-                ''' Generating and executing Models '''
-                # 06/06/2017: Use X less ignored_columns on train
-                x = training_frame.col_names
-                x.remove(objective_column)
-                try:
-                    for ignore_col in each_model['parameters']['ignored_columns']['value']:
-                        x.remove(ignore_col)
-                except KeyError:
-                    pass
-                except TypeError:
-                    pass
+        # Generating aditional model parameters
+        final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = \
+            OrderedDict(ParameterMetadata(value=model_id, seleccionable=False, type="String"))
 
-                need_factor(atype=each_model['types'][0]['type'], training_frame=training_frame,
-                            valid_frame=valid_frame, objective_column=objective_column)
+        # Generating execution metrics
+        final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
+        print(analysis_type)
 
-                '''Generate commands: model and model.train()'''
-                model_command = list()
-                model_command.append(each_model['model'])
-                model_command.append("(")
-                model_command.append("training_frame=training_frame")
-                train_command = list()
-                # 06/06/2017: Use ignore_columns instead X on train
-                train_command.append("self._model_base.train(x=%s, y=\'%s\', " % (x, objective_column))
-                '''train_command.append("self._model_base.train(y=\'%s\', " % objective_column)'''
-                train_command.append("training_frame=training_frame")
-                if valid_frame is not None:
-                    model_command.append(", validation_frame=valid_frame")
-                    train_command.append(", validation_frame=valid_frame")
-                model_command.append(", model_id=\'%s%s\'" % (model_id, self._get_ext()))
-                generate_commands_parameters(each_model, model_command, train_command, train_parameters_list)
-                model_command.append(")")
-                model_command = ''.join(model_command)
-                train_command.append(")")
-                train_command = ''.join(train_command)
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               "Generating Model %s Execution Metrics" % model_id)
 
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                       "Generating Model: " + model_command)
-                # Generating model
-                if self._debug:
-                    final_ar_model['log_path'] = StorageMetadata()
-                    for each_storage_type in base_ar['log_path']:
-                        log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
-                        final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
-                                                          hash_type=each_storage_type['hash_type'])
-                    self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'], grants=0o0777,
-                                            path=dirname(final_ar_model['log_path'][0]['value']))
-                    connection().start_logging(final_ar_model['log_path'][0]['value'])
-                self._model_base = eval(model_command)
-                eval(train_command)
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                       ("Trained Model: %s :" % model_id) + train_command)
-                if self._debug:
-                    connection().stop_logging()
-                    self._persistence.store_file(filename=final_ar_model['log_path'][0]['value'],
-                                                 storage_json=final_ar_model['log_path'])
+        final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
+                                                                                           source='train',
+                                                                                           antype=analysis_type)
+        final_ar_model['metrics']['execution']['xval'] = \
+            self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
 
-                # Generating load_path
-                final_ar_model['load_path'] = StorageMetadata()
-                for each_storage_type in base_ar['load_path']:
-                    load_path = base_path + each_storage_type['value'] + '/'
-                    self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
-                    if self._get_ext() == '.pojo':
-                        download_pojo(model=self._model_base, path=load_path, get_jar=True)
-                    elif self._get_ext() == '.mojo':
-                        '''MOJOs are currently supported for Distributed Random Forest, 
-                        Gradient Boosting Machine, 
-                        Deep Water, GLM, GLRM and word2vec models only.'''
-                        self._model_base.download_mojo(path=load_path, get_genmodel_jar=True)
-                    else:
-                        save_model(model=self._model_base, path=load_path, force=True)
+        if valid_frame is not None:
+            final_ar_model['metrics']['execution']['valid'] = \
+                self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
+            final_ar_model['metrics']['accuracy'] = \
+                self._accuracy(objective_column, training_frame.rbind(valid_frame),
+                               antype=analysis_type, tolerance=tolerance)
+        else:
+            final_ar_model['metrics']['accuracy'] = \
+                self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance)
 
-                    final_ar_model['load_path'].append(value=load_path + model_id + self._get_ext(),
-                                                       fstype=each_storage_type['type'],
-                                                       hash_type=each_storage_type['hash_type'])
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Accuracy: %s " %
+                               (model_id, final_ar_model['metrics']['accuracy']))
 
+        # Generating model metrics
+        final_ar_model['metrics']['model'] = self._generate_model_metrics()
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Metrics: %s " %
+                               (model_id, final_ar_model['metrics']['model']))
 
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                       model_id + " :Saved Model ")
+        # Generating Variable importance
+        final_ar_model['metrics']['var_importance'] = self._generate_importance_variables()
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               "Model %s Variable Importance: %s " %
+                               (model_id, final_ar_model['metrics']['var_importance']))
 
-                # Filling whole json ar.json
-                final_ar_model['ignored_parameters'], \
-                final_ar_model['full_parameters_stack'] = self._generate_params()
+        # Generating scoring_history
+        final_ar_model['metrics']['scoring'] = self._generate_scoring_history()
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Scoring: %s " %
+                               (model_id, final_ar_model['metrics']['scoring']))
 
-                # Generating model parameters
-                final_ar_model['model_parameters']['h2o'] = list()
-                final_ar_model['model_parameters']['h2o'].append(each_model.copy())
-                final_ar_model['model_parameters']['h2o'][0]['parameters']['model_id'] = model_id + self._get_ext()
+        # writing ar.json file
+        final_ar_model['json_path'] = StorageMetadata()
+        for each_storage_type in base_ar['json_path']:
+            json_path = base_path + each_storage_type['value'] + '/' + model_id + '.json'
+            final_ar_model['json_path'].append(value=json_path, fstype=each_storage_type['type'],
+                                               hash_type=each_storage_type['hash_type'])
+        self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Generated" % model_id)
+        for handler in self._logging.logger.handlers:
+            handler.flush()
 
-                # Generating execution metrics
-                final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
-                print(analysis_type)
-
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                       "Generating Model %s Execution Metrics" % model_id)
-
-                final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
-                                                                                                   source='train',
-                                                                                                   antype=analysis_type)
-                final_ar_model['metrics']['execution']['xval'] = \
-                    self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
-
-                if valid_frame is not None:
-                    final_ar_model['metrics']['execution']['valid'] = \
-                        self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
-                    final_ar_model['metrics']['accuracy'] = \
-                        self._accuracy(objective_column, training_frame.rbind(valid_frame),
-                                       antype=analysis_type, tolerance=tolerance)
-                else:
-                    final_ar_model['metrics']['accuracy'] = \
-                        self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance)
-
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Accuracy: %s " %
-                                       (model_id, final_ar_model['metrics']['accuracy']))
-
-                # Generating model metrics
-                final_ar_model['metrics']['model'] = self._generate_model_metrics()
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Metrics: %s " %
-                                       (model_id, final_ar_model['metrics']['model']))
-
-                # Generating Variable importance
-                final_ar_model['metrics']['var_importance'] = self._generate_importance_variables()
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                       "Model %s Variable Importance: %s " %
-                                       (model_id, final_ar_model['metrics']['var_importance']))
-
-                # Generating scoring_history
-                final_ar_model['metrics']['scoring'] = self._generate_scoring_history()
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Scoring: %s " %
-                                       (model_id, final_ar_model['metrics']['scoring']))
-
-                # writing ar.json file
-                final_ar_model['json_path'] = StorageMetadata()
-                for each_storage_type in base_ar['json_path']:
-                    json_path = base_path + each_storage_type['value'] + '/' + model_id + '.json'
-                    final_ar_model['json_path'].append(value=json_path, fstype=each_storage_type['type'],
-                                                       hash_type=each_storage_type['hash_type'])
-                self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Generated" % model_id)
-                for handler in self._logging.logger.handlers:
-                    handler.flush()
-                model_list.append(final_ar_model)
-            return analysis_id, model_list
+        return analysis_id, final_ar_model
 
     ## Main method to execute predictions over traning models
     # Take the ar.json for and execute predictions including its metrics a storage paths
@@ -532,7 +528,7 @@ class H2OHandler(object):
         model_timestamp = str(time.time())
 
         base_ar = json.load(algorithm_description, object_pairs_hook=OrderedDict)
-        antype = base_ar['model_parameters']['h2o'][0]['types'][0]['type']
+        antype = base_ar['model_parameters']['h2o']['types'][0]['type']
         load_fails = True
         counter_storage = 0
 
@@ -574,32 +570,33 @@ class H2OHandler(object):
 
         df_metadata = DFMetada()
         df_metadata.getDataFrameMetadata(dataframe=predict_frame, typedf='pandas')
-        self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
+        self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id,
                               'Predict dataframe_structure: %s'% df_metadata)
 
         base_ar['data_initial'] = df_metadata
 
         if base_ar['normalizations_set'] is not None:
             base_ns = json.load(base_ar['normalizations_set'], object_pairs_hook=NormalizationSet)
-            self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
+            self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id,
                                    'Executing Normalizations: ' + base_ns)
             '''Include normalizations a registry activities'''
             '''Assign data_normalized  base_ar['data_normalized']'''
         else:
-            self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
+            self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id,
                                    'No Normalizations Required')
 
         #Transforming to H2OFrame
-        predict_frame = H2OFrame(python_obj=predict_frame, destination_frame='predict_frame' + base_ar['model_id'])
+        predict_frame = H2OFrame(python_obj=predict_frame,
+                                 destination_frame='predict_frame' + base_ar['model_id']['value'])
 
-        need_factor(atype=base_ar['model_parameters']['h2o'][0]['types'][0]['type'],
+        need_factor(atype=base_ar['model_parameters']['h2o']['types'][0]['type'],
                     objective_column=objective_column, predict_frame=predict_frame)
 
         base_ar['type'] = 'predict'
         base_ar['timestamp'] = model_timestamp
-        self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
+        self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id,
                                "Generating model performance metrics %s "
-                               % base_ar['model_parameters']['h2o'][0]['parameters']['model_id'])
+                               % base_ar['model_parameters']['h2o']['parameters']['model_id'])
 
         base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=predict_frame,
                                                                                source=None, antype=antype)
@@ -608,7 +605,7 @@ class H2OHandler(object):
 
         base_ar['metrics']['accuracy'] = self._accuracy(objective_column, predict_frame,
                                                         antype=antype, tolerance=tolerance)
-        self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id, "Prediction Accuracy: %s " %
+        self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id, "Prediction Accuracy: %s " %
                                (base_ar['metrics']['accuracy']))
 
         if self._debug:
@@ -619,9 +616,9 @@ class H2OHandler(object):
             self._persistence.mkdir(type=base_ar['log_path'][0]['type'], grants=0o0777,
                                     path=dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
-        self._logging.log_exec(base_ar['model_id'], self._h2o_session.session_id,
+        self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id,
                                "starting Prediction over Model %s "
-                               % (base_ar['model_parameters']['h2o'][0]['parameters']['model_id']))
+                               % (base_ar['model_parameters']['h2o']['parameters']['model_id']))
         prediction_dataframe = self._model_base.predict(predict_frame).as_data_frame(use_pandas=True)
 
         if self._debug:

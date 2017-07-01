@@ -10,10 +10,10 @@ import copy
 # Initialize ['h2o'] to list()
 class H2OFrameworkMetadata (object):
     ## Constructor
-    # @var config
-    # @var default_models
-    # @var models
     def __init__(self, frameworks):
+        # @var config
+        # @var default_models
+        # @var models
         self.default_models = frameworks['h2o']['models']
         self.config = frameworks['h2o']['conf']
         self.models = list()

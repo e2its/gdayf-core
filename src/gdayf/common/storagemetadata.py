@@ -16,6 +16,7 @@ class StorageMetadata (list):
     def __init__(self,):
         list.__init__(self)
 
+
     ## class used to add storage locations to StorageMetadata. use list().append method to include correct media and
     # hash_value for file over OrderedDict() object
     # overriding list().append method
@@ -25,19 +26,22 @@ class StorageMetadata (list):
     # @param hash_type in  ['MD5','SHA256'] default value 'MD5'
     # @return None
     def append(self, value, fstype='localfs', hash_type='MD5'):
-        assert fstype in ['localfs', 'hdfs', 'mongoDB']
-        assert hash_type in ['MD5', 'SHA256']
+        try:
+            assert fstype in ['localfs', 'hdfs', 'mongoDB']
+            assert hash_type in ['MD5', 'SHA256']
 
-        fs = OrderedDict()
-        fs['type'] = fstype
-        fs['value'] = value
-        fs['hash_type'] = hash_type
+            fs = OrderedDict()
+            fs['type'] = fstype
+            fs['value'] = value
+            fs['hash_type'] = hash_type
 
-        if path.exists(value):
-            fs['hash_value'] = hash_key(hash_type=hash_type, filename=fs['value'])
-        else:
-            fs['hash_value'] = None
-        super(StorageMetadata, self).append(fs)
+            if path.exists(value):
+                fs['hash_value'] = hash_key(hash_type=hash_type, filename=fs['value'])
+            else:
+                fs['hash_value'] = None
+            super(StorageMetadata, self).append(fs)
+        except:
+            super(StorageMetadata, self).append(value)
 
     ## method used to get realtive path from config.json
     # @param self object pointer location (optional)

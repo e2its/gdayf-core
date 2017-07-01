@@ -6,6 +6,7 @@ from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
 from json import dumps
+from copy import  deepcopy
 
 dtypes = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 
@@ -45,3 +46,13 @@ def compare_dict(dict1, dict2):
         return dict1 is None and dict2 is None
     else:
         return md5(dumps(dict1)) == md5(dumps(dict2))
+
+
+# Function to get framework from ar.json model description
+def get_model_fw(model):
+    return list(model['model_parameters'].keys())[0]
+
+
+# Function to get normalization_sets structure from ar.json model description
+def get_model_ns(model):
+    return deepcopy(model['normalizations_set'])

@@ -15,7 +15,8 @@ if __name__ == "__main__":
     source_data.append("ENB2012_data.csv")
 
     pd_train_dataset = inputHandlerCSV().inputCSV(filename=''.join(source_data))
-    pd_test_dataset = pd_train_dataset.sample(frac=0.2)
+    pd_train_dataset.drop('Y1', axis=1, inplace=True)
+    pd_train_dataset, pd_test_dataset = pd_train_dataset.sample(frac=0.2)
     print('Training set dimensions:', pd_train_dataset.shape)
 
     #json_file = open(r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\test\json\ar-regression-ENE.json')
@@ -26,11 +27,14 @@ if __name__ == "__main__":
                                                              atype=adviser.POC)
 
     analysis_models = H2OHandler()
-    analysis_results = analysis_models.order_training(analysis_id=adviser.analysis_id,
-                                                      training_frame=pd_train_dataset,
-                                                      analysis_list=analysis_list)
+    analysis_results =list()
+    for model in analysis_list:
+        ana, lista =analysis_models.order_training(analysis_id=adviser.analysis_id,
+                                                          training_frame=pd_train_dataset,
+                                                          base_ar=model)
+        analysis_results.append(lista)
 
-    sorted_list = adviser.priorize_models(analysis_results[0], analysis_results[1])
+    sorted_list = adviser.priorize_models(ana, analysis_results)
 
     for each_model in sorted_list:
         print(dumps(each_model, indent=4))

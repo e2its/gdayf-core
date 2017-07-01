@@ -13,7 +13,7 @@
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
-        "tolerance": 0.005
+        "tolerance": 0.0025
       },
       "models": [
         {
@@ -87,12 +87,12 @@
             },
             "effort":{
               "ntrees": {
-                "value": 100,
+                "value": 75,
                 "seleccionable": true,
                 "type": "int"
               },
               "max_depth": {
-                "value": 20,
+                "value": 15,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -728,8 +728,8 @@
                 "type": "float"
               },
               "mini_batch_size": {
-                "value": 32,
-                "seleccionable": false,
+                "value": 125,
+                "seleccionable": true,
                 "type": "int"
               },
               "hidden": {
@@ -1246,12 +1246,12 @@
             },
             "effort":{
               "ntrees": {
-                "value": 50,
+                "value": 25,
                 "seleccionable": true,
                 "type": "int"
               },
               "max_depth": {
-                "value": 20,
+                "value": 15,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -1559,5 +1559,27 @@
         "hash_value": null, "hash_type":"SHA256"
       }
     ]
+  },
+  "optimizer": {
+    "AdviserStart_rules": {
+      "h2o": {
+        "nfold_limit": 5,
+        "min_rows_limit": 9,
+        "cols_breakdown": 200,
+        "nfold_increment": 2,
+        "min_rows_increment": 2,
+        "max_interactions_rows_breakdown": 1000,
+        "max_interactions_increment": 1000,
+        "max_depth_increment": 2,
+        "ntrees_increment": 2,
+        "dpl_rcount_limit": 10000,
+        "dpl_divisor": 500,
+        "h_dropout_ratio": 0.025,
+        "epochs_increment": 1.5,
+        "dpl_min_batch_size": 10,
+        "dpl_batch_divisor": 2000,
+        "dpl_batch_reduced_divisor": 2
+      }
+    }
   }
 }
