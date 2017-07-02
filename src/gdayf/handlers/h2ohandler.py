@@ -298,21 +298,23 @@ class H2OHandler(object):
 
     ## Main method to execute sets of analysis and normalizations base on params
     # @param self object pointer
-    # @param analysis_id String (Aalysis identificator)
+    # @param analysis_id String (Analysis identificator)
     # @param training_frame pandas.DataFrame
     # @param base_ar ar_template.json
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
-    def order_training(self, analysis_id, training_frame, base_ar):
+    def order_training(self, analysis_id, training_frame, base_ar, **kwargs):
         assert isinstance(analysis_id, str)
         assert isinstance(training_frame, DataFrame)
         # Not used now assert isinstance(valid_frame, DataFrame) or valid_frame is None
         assert isinstance(base_ar, OrderedDict)
         # python train parameters effective
+
         train_parameters_list = ['max_runtime_secs', 'fold_column',
                                  'weights_column', 'offset_column']
 
         status = -1  # Operation Code
         valid_frame = None
+        test_frame = None
 
         analysis_timestamp = str(time.time())
         # Loading_data structure
@@ -339,6 +341,11 @@ class H2OHandler(object):
                                    'Parsing from pandas to H2OFrames: training_frame (' + str(training_frame.nrows) +
                                    ')')
 
+        if "test_frame" in kwargs.keys():
+            test_frame = H2OFrame(python_obj=kwargs['test_frame'], destination_frame='test_frame_' + analysis_id)
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                                   'Parsing from pandas to H2OFrames: test_frame (' + str(test_frame.nrows) +
+                                   ')')
 
         # Initializing base structures
         normalization = get_model_ns(base_ar)
@@ -424,7 +431,16 @@ class H2OHandler(object):
                                     path=dirname(final_ar_model['log_path'][0]['value']))
             connection().start_logging(final_ar_model['log_path'][0]['value'])
         self._model_base = eval(model_command)
-        eval(train_command)
+        try:
+            eval(train_command)
+            final_ar_model['status'] = 'Executed'
+        except OSError as execution_error:
+            self._logging.log_error(analysis_id, self._h2o_session.session_id,
+                                   "Aborting Execution Model: " + repr(execution_error))
+            return analysis_id, None
+
+
+
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                ("Trained Model: %s :" % model_id) + train_command)
         if self._debug:
@@ -472,21 +488,34 @@ class H2OHandler(object):
         final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
                                                                                            source='train',
                                                                                            antype=analysis_type)
+        final_ar_model['metrics']['accuracy'] = OrderedDict()
         final_ar_model['metrics']['execution']['xval'] = \
             self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
 
         if valid_frame is not None:
             final_ar_model['metrics']['execution']['valid'] = \
                 self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
-            final_ar_model['metrics']['accuracy'] = \
+            final_ar_model['metrics']['accuracy']['train'] = \
                 self._accuracy(objective_column, training_frame.rbind(valid_frame),
                                antype=analysis_type, tolerance=tolerance)
         else:
-            final_ar_model['metrics']['accuracy'] = \
+            final_ar_model['metrics']['accuracy']['train'] = \
                 self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance)
-
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Accuracy: %s " %
-                               (model_id, final_ar_model['metrics']['accuracy']))
+                               (model_id, final_ar_model['metrics']['accuracy']['train']))
+
+        if test_frame is not None:
+            final_ar_model['metrics']['accuracy']['test'] = \
+                self._accuracy(objective_column, test_frame, antype=analysis_type, tolerance=tolerance)
+            final_ar_model['metrics']['accuracy']['combined'] = \
+                (final_ar_model['metrics']['accuracy']['train']*0.4 + final_ar_model['metrics']['accuracy']['test']*0.6)
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s Test Accuracy: %s " %
+                                   (model_id, final_ar_model['metrics']['accuracy']['test']))
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, "Model %s CombinedAccuracy: %s " %
+                                   (model_id, final_ar_model['metrics']['accuracy']['combined']))
+
+
+
 
         # Generating model metrics
         final_ar_model['metrics']['model'] = self._generate_model_metrics()
@@ -603,10 +632,10 @@ class H2OHandler(object):
         print(self._generate_execution_metrics(dataframe=predict_frame,
                                                source=None, antype=antype))
 
-        base_ar['metrics']['accuracy'] = self._accuracy(objective_column, predict_frame,
+        base_ar['metrics']['accuracy']['predict'] = self._accuracy(objective_column, predict_frame,
                                                         antype=antype, tolerance=tolerance)
         self._logging.log_exec(base_ar['model_id']['value'], self._h2o_session.session_id, "Prediction Accuracy: %s " %
-                               (base_ar['metrics']['accuracy']))
+                               (base_ar['metrics']['accuracy']['predict']))
 
         if self._debug:
             for each_storage_type in base_ar['log_path']:

@@ -4,6 +4,7 @@
 
 from gdayf.models.modelmetadata import ModelMetadata
 from collections import OrderedDict
+from time import time
 
 
 ## Generate H2O Model base Class and initialize base members
@@ -28,7 +29,7 @@ class H2OModelMetadata(ModelMetadata):
             distribution = 'multinomial'
         else:
             distribution = 'default'
-
+        ts = round(time(), 0)
         for each_model in self._config:
             if each_model['model'] == model_type:
                 for key, value in each_model.items():
@@ -65,6 +66,8 @@ class H2OModelMetadata(ModelMetadata):
                         self.model[key] = atype
                     else:
                         self.model[key] = value
+        # Fijamos semilla
+        self.model['parameters']['seed']['value'] = int(ts)
         return self.model
 
 

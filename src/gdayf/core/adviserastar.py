@@ -37,7 +37,7 @@ class AdviserAStar(object):
     # @param self object pointer
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
-    # @param metric metrict for priorizing models ['accuracy', 'rmse'] on train
+    # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
         self.analysis_id = analysis_id
         self.timestamp = time()
@@ -123,6 +123,20 @@ class AdviserAStar(object):
             self.deepness += 1
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
+        elif self.deepness == 1:
+            # Get all models
+            fw_model_list = list()
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                except TypeError:
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+            self.deepness += 1
         elif self.next_analysis_list is not None:
             # Get two most potential best models
             fw_model_list = list()
@@ -168,7 +182,6 @@ class AdviserAStar(object):
             self.next_analysis_list = None
         elif self.next_analysis_list is not None:
             fw_model_list = list()
-            self.deepness += 1
             aux_loop_controller = len(self.analysis_recommendation_order)
             for indexer in range(0, aux_loop_controller):
                 try:
@@ -225,14 +238,36 @@ class AdviserAStar(object):
                     model_list.append((fw, model, None))
         return model_list
 
-    ##Method get accuracy for generic model
+    ##Method get train accuracy for generic model
     # @param model
     # @return accuracy metric or None if not exists
     @staticmethod
     def get_accuracy(model):
         try:
-            print('Accuracy:' + str(model['metrics']['accuracy']))
-            return float(model['metrics']['accuracy'])
+            print('Train Accuracy:' + str(model['metrics']['accuracy']['train']))
+            return float(model['metrics']['accuracy']['train'])
+        except KeyError:
+            return 0.0
+
+    ##Method get test accuracy for generic model
+    # @param model
+    # @return accuracy metric or None if not exists
+    @staticmethod
+    def get_test_accuracy(model):
+        try:
+            print('Test Accuracy:' + str(model['metrics']['accuracy']['test']))
+            return float(model['metrics']['accuracy']['test'])
+        except KeyError:
+            return 0.0
+
+    ##Method get averaged train and test  accuracy for generic model
+    # @param model
+    # @return accuracy metric or None if not exists
+    @staticmethod
+    def get_combined(model):
+        try:
+            print('Combined Accuracy:' + str(model['metrics']['accuracy']['combined']))
+            return float(model['metrics']['accuracy']['combined'])
         except KeyError:
             return 0.0
 
@@ -250,13 +285,17 @@ class AdviserAStar(object):
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
     # @param analysis_id
-    # @param model_list for models analized
+    # @param model_list for models analyzed
     # @return (fw,model_list) (ArMetadata, normalization_set)
     def priorize_models(self, analysis_id, model_list):
         if self.metric == 'accuracy':
             return sorted(model_list, key=self.get_accuracy, reverse=True)
         elif self.metric == 'rmse':
             return sorted(model_list, key=self.get_rmse)
+        elif self.metric == 'test_accuracy':
+            return sorted(model_list, key=self.get_test_accuracy, reverse=True)
+        elif self.metric == 'combined':
+            return sorted(model_list, key=self.get_combined, reverse=True)
         else:
             return model_list
 
@@ -314,7 +353,7 @@ class AdviserAStar(object):
         model_list = list()
         model = armetadata['model_parameters']['h2o']
 
-        if get_model_fw(armetadata) == 'h2o' and armetadata['metrics']['accuracy'] != 1.0:
+        if get_model_fw(armetadata) == 'h2o' and eval('self.get_' + self.metric + '(armetadata)') != 1.0:
             config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['h2o']
             nfold_limit = config['nfold_limit']
             min_rows_limit = config['min_rows_limit']
@@ -332,6 +371,7 @@ class AdviserAStar(object):
             dpl_min_batch_size = config['dpl_min_batch_size']
             dpl_batch_divisor = config['dpl_batch_divisor']
             dpl_batch_reduced_divisor = config['dpl_batch_reduced_divisor']
+            hidden_increment = config['hidden_increment']
 
             if model['model'] == 'H2OGradientBoostingEstimator':
                 if (self.deepness + 1 == self.deep_impact) and model['types'][0]['type'] == 'regression':
@@ -438,12 +478,9 @@ class AdviserAStar(object):
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['hidden']['value'].insert(0, \
-                        round(armetadata['data_initial']['rowcount']/(dpl_divisor*(self.deep_impact - self.deepness))))
+                                round(model_aux['parameters']['hidden']['value'][0] * hidden_increment))
                     model_aux['parameters']['hidden_dropout_ratios']['value'].insert(0, h_dropout_ratio)
                     self.safe_append(model_list, new_armetadata)
-                #Solve#
-                print(scoring_metric.shape)
-                print(scoring_metric)
                 if scoring_metric.shape[0] == 0 or \
                         (scoring_metric['epochs'].max() >= \
                         model['parameters']['epochs']['value']):
@@ -455,12 +492,13 @@ class AdviserAStar(object):
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['mini_batch_size']['value'] = \
-                        max(round(armetadata['data_initial']['rowcount'], dpl_batch_divisor), dpl_min_batch_size)
+                        max(round(armetadata['data_initial']['rowcount'] / dpl_batch_divisor), dpl_min_batch_size)
                     self.safe_append(model_list, new_armetadata)
                 elif model['parameters']['mini_batch_size']['value'] >= dpl_min_batch_size:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['mini_batch_size']['value'] /= dpl_batch_reduced_divisor
+                    model_aux['parameters']['mini_batch_size']['value'] = \
+                        round(model_aux['parameters']['mini_batch_size']['value'] / dpl_batch_reduced_divisor)
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ORandomForestEstimator':

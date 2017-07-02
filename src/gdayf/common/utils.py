@@ -6,7 +6,8 @@ from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
 from json import dumps
-from copy import  deepcopy
+from copy import deepcopy
+from numpy.random import rand
 
 dtypes = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 
@@ -48,11 +49,24 @@ def compare_dict(dict1, dict2):
         return md5(dumps(dict1)) == md5(dumps(dict2))
 
 
-# Function to get framework from ar.json model description
+## Function to get framework from ar.json model description
 def get_model_fw(model):
     return list(model['model_parameters'].keys())[0]
 
 
-# Function to get normalization_sets structure from ar.json model description
+## Function to get normalization_sets structure from ar.json model description
+# @param model ArMetadata
+# @return ArMetadata deepcopy
 def get_model_ns(model):
     return deepcopy(model['normalizations_set'])
+
+
+## Function to get pandas dataframe split without copy
+# @param df Pandas dataframe
+# @param train_perc % for train_dataframe
+# @return Dict ('trai'n df pointer, 'test' df pointer)
+def pandas_split_data(df, train_perc=0.9):
+    df['train'] = rand(len(df)) < train_perc
+    train = df[df.train == 1]
+    test = df[df.train == 0]
+    return train, test

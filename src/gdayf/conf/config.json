@@ -13,7 +13,7 @@
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
-        "tolerance": 0.0025
+        "tolerance": 0.005
       },
       "models": [
         {
@@ -87,12 +87,12 @@
             },
             "effort":{
               "ntrees": {
-                "value": 75,
+                "value": 50,
                 "seleccionable": true,
                 "type": "int"
               },
               "max_depth": {
-                "value": 15,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -733,7 +733,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [200, 200],
+                "value": [200, 100],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -1251,7 +1251,7 @@
                 "type": "int"
               },
               "max_depth": {
-                "value": 15,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -1576,6 +1576,7 @@
         "dpl_divisor": 500,
         "h_dropout_ratio": 0.025,
         "epochs_increment": 1.5,
+        "hidden_increment": 1.5,
         "dpl_min_batch_size": 10,
         "dpl_batch_divisor": 2000,
         "dpl_batch_reduced_divisor": 2
