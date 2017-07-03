@@ -3,6 +3,7 @@
 #  on an unified way. Base for all Models
 
 from gdayf.models.modelmetadata import ModelMetadata
+from gdayf.common.constants import *
 from collections import OrderedDict
 from time import time
 
@@ -22,7 +23,7 @@ class H2OModelMetadata(ModelMetadata):
     # @param atype AtypeMetadata
     # @param amode Analysis mode FAST=0 NORMAL=1 PARANOIAC= 2. Define early_stopping parameters inclusion
     # @return H2O model json compatible (OrderedDict())
-    def generate_models(self, model_type, atype, amode=1):
+    def generate_models(self, model_type, atype, amode=POC):
         if atype[0]['type'] == 'binomial':
             distribution = 'binomial'
         elif atype[0]['type'] == 'multinomial':
@@ -42,7 +43,7 @@ class H2OModelMetadata(ModelMetadata):
                                         self.model[key][parm] = parm_value
 
                             elif subkey == 'stopping':
-                                if amode in [0, 3]: #[FAST, POC]
+                                if amode in [POC, FAST, FAST_PARANOIAC]:
                                     for parm, parm_value in subvalue.items():
                                         if parm_value['seleccionable']:
                                             self.model[key][parm] = parm_value
@@ -76,7 +77,7 @@ if __name__ == "__main__":
     m = H2OModelMetadata()
     models = ['H2ODeepLearningEstimator', 'H2OGradientBoostingEstimator',
               'H2OGeneralizedLinearEstimator', 'H2ORandomForestEstimator']
-    amodes = [2, 3]
+    amodes = [POC, NORMAL]
     atypes = [
                 [
                     {

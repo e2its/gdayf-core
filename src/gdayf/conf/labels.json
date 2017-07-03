@@ -1,0 +1,63 @@
+{
+  "en": {
+    "messages": {
+      "controller":{
+	    "start":":Starting Analysis:",
+        "ana_param":":Analysis Metrics:",
+        "ana_mode":":Analysis Mode:",
+        "dep_param":":Deepness Limit:",
+		"input_param":":Input Descriptor:",
+        "metric_order":":Analysis's Results:",
+		"round_reach":":Reached on Round:",
+        "ana_models":":Analyzed Models:",
+        "exc_models":":Excluded Models:",
+        "best_model":":Best Model:",
+		"res_model":":Other Model:",
+        "end":":Analysis finished:"
+      },
+      "corehandler":{
+        "start":":Connected to active cluster and ready:",
+        "framework":": Framework:",
+        "sess": ":Session_id:",
+        "stop": ":H20-cluster not working:",
+        "ar_error": ":Structure's Error ARMetadata:",
+        "df_struct": ":Dataframe_structure:",
+        "parsing_to_h2o":":Parsing from pandas to H2OFrames:",
+        "tolerance":":Setting Tolerance's Threshold value to (native units): ",
+        "action_type": ":Analysis Action Objective:",
+        "exec_norm": ":Executing Normalizations:",
+        "model_id":":Assigning Model id:",
+        "objective":":Objective Column:",
+        "amode":":Analysis Selected Type:",
+        "factoring":":Factoring Objective Column:",
+        "gmodel":":Generating Model Parameters :",
+        "abort":":Aborting Execution Model :",
+        "tmodel": ":Model Trained:",
+        "exec_time":":Execution Time in Seconds:",
+        "msaved":":Model Saved:",
+        "gexec_metric":":Generating Execution Metrics:",
+        "gmodel_metric":":Generating Model Metrics:",
+        "gvar_metric":":Generating Variable Importance Metrics:",
+        "gsco_metric":":Generating Scoring Metrics:",
+        "model_tacc":":Model Train Accuracy:",
+        "model_pacc":":Model Predict Accuracy:",
+        "model_cacc":":Model Combined Accuracy:",
+        "model_stored":":Model Fully Generated and Stored:",
+        "end":":Analysis finished:",
+        "st_prediction":":Staring Prediction Execution:",
+        "st_predict_model": ":Staring Prediction Model:",
+        "hk_check":":Checking for Hash_Keys:"
+
+      },
+      "inputhandler" : {},
+      "adviser": {
+        "new_vector": "Generating new Model with Vector Params: ",
+        "exc_vector": "Excluding Executed Model with Vector Params: "
+      },
+      "persistence" : {}
+    },
+    "ui":{
+
+    }
+  }
+}

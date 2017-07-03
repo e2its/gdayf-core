@@ -13,7 +13,7 @@
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
-        "tolerance": 0.005
+        "tolerance": 0.01
       },
       "models": [
         {
@@ -1520,6 +1520,24 @@
         ],
         "propagate": false
       },
+      "gdayf.core.adviserastar": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.core.controller": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.core": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
       "gdayf.handlers.h2ohandler": {
         "handlers": [
           "error"
@@ -1527,6 +1545,12 @@
         "propagate": true
       },
       "gdayf.handlers": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "__main__": {
         "handlers": [
           "info"
         ],

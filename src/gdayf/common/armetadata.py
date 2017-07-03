@@ -57,6 +57,8 @@ class ArMetadata (OrderedDict):
         new_model['objective_column'] = deepcopy(self['objective_column'])
         new_model['timestamp'] = deepcopy(self['timestamp'])
         new_model['round'] = deepness
+        new_model['execution_seconds'] = 0.0
+        new_model['tolerance'] = 0.0
         new_model['load_path'] = StorageMetadata().get_load_path()
         new_model['normalizations_set'] = deepcopy(self['normalizations_set'])
         new_model['data_initial'] = deepcopy(self['data_initial'])

@@ -13,13 +13,17 @@ from gdayf.models.atypesmetadata import ATypesMetadata
 from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
 from gdayf.common.utils import decode_json_to_dataframe
+from gdayf.conf.loadconfig import LoadLabels
+from gdayf.logs.logshandler import LogsHandler
 from gdayf.common.utils import dtypes
 from gdayf.common.utils import compare_dict
 from gdayf.common.utils import get_model_fw
 from gdayf.common.utils import get_model_ns
+from gdayf.common.constants import *
 from collections import OrderedDict
 from time import time
 from json import dumps
+
 import pprint
 
 ## Class focused on execute A* based analysis on three modalities of working
@@ -27,10 +31,6 @@ import pprint
 # Normal: One A* analysis for all models based until max_deep with early_stopping
 # Paranoiac: One A* algorithm per model analysis until max_deep without early stoping
 class AdviserAStar(object):
-    NORMAL = 1
-    FAST = 0
-    PARANOIAC = 2
-    POC = 3
     deepness = 0
 
     ## Constructor
@@ -39,6 +39,8 @@ class AdviserAStar(object):
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
+        self._labels = LoadLabels().get_config()['messages']['adviser']
+        self._logging = LogsHandler()
         self.analysis_id = analysis_id
         self.timestamp = time()
         self.an_objective = None
@@ -52,19 +54,17 @@ class AdviserAStar(object):
     ## Main method oriented to execute smart analysis
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
-    # @param atype [NORMAL, FAST, PARANOIAC]
+    # @param atype [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @param objective_column string indicating objective column
     # @return ArMetadata()'s Prioritized queue
-    def set_recommendations(self, dataframe_metadata, objective_column, atype=NORMAL):
+    def set_recommendations(self, dataframe_metadata, objective_column, atype=POC):
         self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
-        if atype == self.POC:
+        if atype == POC:
             return self.analysispoc(dataframe_metadata, objective_column)
-        if atype == self.FAST:
-            return self.analysisnormal(dataframe_metadata, objective_column)
-        elif atype == self.NORMAL:
-            return self.analysisnormal(dataframe_metadata, objective_column)
-        elif atype == self.PARANOIAC:
-            return self.analysisparanoiac(dataframe_metadata, objective_column)
+        if atype in [FAST, NORMAL]:
+            return self.analysisnormal(dataframe_metadata, objective_column,amode=atype)
+        elif atype in [FAST_PARANOIAC, PARANOIAC]:
+            return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
 
 
     ## Method oriented to execute smart PoC analysis
@@ -75,7 +75,7 @@ class AdviserAStar(object):
     def analysispoc(self, dataframe_metadata, objective_column):
         self.next_analysis_list.clear()
         if self.deepness == 0:
-            fw_model_list = self.get_candidate_models(self.an_objective, self.NORMAL)
+            fw_model_list = self.get_candidate_models(self.an_objective, POC)
             for fw, model_params, norm_sets in fw_model_list:
                 ar_structure = ArMetadata()
                 ar_structure['model_id'] = self.analysis_id
@@ -100,11 +100,12 @@ class AdviserAStar(object):
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
     # @param objective_column string indicating objective column
+    # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
-    def analysisnormal(self, dataframe_metadata, objective_column):
+    def analysisnormal(self, dataframe_metadata, objective_column, amode):
         self.next_analysis_list.clear()
         if self.deepness == 0:
-            fw_model_list = self.get_candidate_models(self.an_objective, self.NORMAL)
+            fw_model_list = self.get_candidate_models(self.an_objective, amode)
             for fw, model_params, norm_sets in fw_model_list:
                 ar_structure = ArMetadata()
                 ar_structure['model_id'] = self.analysis_id
@@ -155,13 +156,14 @@ class AdviserAStar(object):
         ## Method oriented to execute smart normal and fast analysis
         # @param self object pointer
         # @param dataframe_metadata DFMetadata()
+        # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
         # @param objective_column string indicating objective column
         # @return analysis_id,(framework, Ordered[(algorithm_metadata.json, normalizations_sets.json)])
 
-    def analysisparanoiac(self, dataframe_metadata, objective_column):
+    def analysisparanoiac(self, dataframe_metadata, objective_column, amode):
         self.next_analysis_list.clear()
         if self.deepness == 0:
-            fw_model_list = self.get_candidate_models(self.an_objective, self.NORMAL)
+            fw_model_list = self.get_candidate_models(self.an_objective, amode)
             for fw, model_params, norm_sets in fw_model_list:
                 ar_structure = ArMetadata()
                 ar_structure['model_id'] = self.analysis_id
@@ -340,8 +342,10 @@ class AdviserAStar(object):
         if not self.is_executed(vector):
             model_list.append(model)
             self.analyzed_models.append(vector)
+            self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["new_vector"], str(vector))
         else:
             self.excluded_models.append(vector)
+            self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_vector"], str(vector))
 
     ## Method manging generation of possible optimized models
     # params: results for Handlers (gdayf.handlers)
@@ -454,6 +458,11 @@ class AdviserAStar(object):
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['sparse']['value'] = not model_aux['parameters']['sparse']['value']
+                    self.safe_append(model_list, new_armetadata)
+                if self.deepness > 1 and model['parameters']['activation']['value'] == "rectifier_with_dropout":
+                    new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                    model_aux = new_armetadata['model_parameters']['h2o']
+                    model_aux['parameters']['activation']['value'] = 'tanh_with_dropout'
                     self.safe_append(model_list, new_armetadata)
                 if self.deepness == 1 and model['parameters']['initial_weight_distribution']['value'] == "normal":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
