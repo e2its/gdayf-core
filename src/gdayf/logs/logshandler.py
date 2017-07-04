@@ -12,7 +12,6 @@ from gdayf.conf.loadconfig import LoadConfig
 class LogsHandler (object):
     ## Constructor
     def __init__(self, module=__name__):
-        print(__name__)
         # @var _config
         # protected variable for loading and store DayF whole configuration parameters
         self._conf = LoadConfig().get_config()['logging']
@@ -94,8 +93,6 @@ class LogsHandler (object):
         print(self._compose_log_record(trigger, session, message, add_message))
         self.logger.debug(self._compose_log_record(trigger, session, message, add_message))
 
-__name__ == "gdayf.logs.logshandler"
-print (__name__)
 if __name__ == "__main__":
     logging = LogsHandler(__name__)
     logging.log_debug('logging', '234567', 'Prueba')

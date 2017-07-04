@@ -41,8 +41,8 @@ class AdviserAStar(object):
     def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
         self._labels = LoadLabels().get_config()['messages']['adviser']
         self._logging = LogsHandler()
-        self.analysis_id = analysis_id
         self.timestamp = time()
+        self.analysis_id = analysis_id + '_' + str(self.timestamp)
         self.an_objective = None
         self.deep_impact = deep_impact
         self.analysis_recommendation_order = list()
@@ -60,9 +60,10 @@ class AdviserAStar(object):
     def set_recommendations(self, dataframe_metadata, objective_column, atype=POC):
         self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
         if atype == POC:
-            return self.analysispoc(dataframe_metadata, objective_column)
+            self.deep_impact = 0
+            return self.analysisnormal(dataframe_metadata, objective_column, amode=FAST)
         if atype in [FAST, NORMAL]:
-            return self.analysisnormal(dataframe_metadata, objective_column,amode=atype)
+            return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
         elif atype in [FAST_PARANOIAC, PARANOIAC]:
             return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
 

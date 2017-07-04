@@ -178,12 +178,12 @@
               },
               "keep_cross_validation_predictions": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "keep_cross_validation_fold_assignment": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               }
             },
@@ -194,7 +194,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                  "value": 2.0,
+                  "value": 1.5,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -479,12 +479,12 @@
               },
               "keep_cross_validation_predictions": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "keep_cross_validation_fold_assignment": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               }
             },
@@ -874,12 +874,12 @@
               },
               "keep_cross_validation_predictions": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "keep_cross_validation_fold_assignment": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               }
             },
@@ -1337,12 +1337,12 @@
               },
               "keep_cross_validation_predictions": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "keep_cross_validation_fold_assignment": {
                 "value": false,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "boolean"
               }
             },
@@ -1358,7 +1358,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                  "value": 2.0,
+                  "value": 1.5,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -1588,10 +1588,10 @@
     "AdviserStart_rules": {
       "h2o": {
         "nfold_limit": 5,
-        "min_rows_limit": 9,
+        "min_rows_limit": 10,
         "cols_breakdown": 200,
         "nfold_increment": 2,
-        "min_rows_increment": 2,
+        "min_rows_increment": 1.75,
         "max_interactions_rows_breakdown": 1000,
         "max_interactions_increment": 1000,
         "max_depth_increment": 2,

@@ -9,8 +9,12 @@ from gdayf.common.utils import get_model_fw
 from gdayf.common.utils import get_model_ns
 from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data
+from gdayf.common.armetadata import ArMetadata
 from collections import OrderedDict
 from pathlib import Path
+from copy import deepcopy
+from json import load, dumps
+from json.decoder import JSONDecodeError
 
 
 ## Core class oriented to mange the comunication and execution messages pass for all components on system
@@ -23,6 +27,50 @@ class Controller(object):
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
+        self.h2ohandler = None
+
+
+    ## Method leading and controlling prediction's executions on all frameworks
+    # @param self object pointer
+    # @param datapath String Path indicating file to be analyzed
+    # @param armetadata
+    # @param model_file String Path indicating model_file ArMetadata.json structure
+
+    def exec_prediction(self, datapath, armetadata=None, model_file=None):
+        self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], 'prediction')
+        if armetadata is None and model_file is None:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], datapath)
+            return self._labels["failed_model"]
+        elif armetadata is not None:
+            try :
+                assert isinstance(armetadata, ArMetadata)
+                base_ar = deepcopy(armetadata)
+            except AssertionError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], armetadata)
+        elif model_file is not None:
+            try:
+                json_file = open(model_file)
+                base_ar = load(json_file, object_hook=OrderedDict,)
+                json_file.close()
+            except [IOError, OSError]:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+        try:
+            pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+        except [IOError, OSError, JSONDecodeError]:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+            return self._labels['failed_input']
+
+        if get_model_fw(base_ar) == 'h2o':
+            self.h2ohandler = H2OHandler()
+            if not self.h2ohandler.is_alive():
+                self.h2ohandler.connect()
+            self.h2ohandler.predict(predict_frame=pd_dataset, base_ar=base_ar)
+
+            if self.h2ohandler is not None:
+                self.h2ohandler.delete_h2oframes()
+                del self.h2ohandler
+
+        self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
 
 
     ## Method leading and controlling analysis's executions on all frameworks
@@ -33,14 +81,19 @@ class Controller(object):
     # @param amode Analysis mode of execution [0,1,2,3] [FAST, NORMAL, PARANOIAC, POC]
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined']
     # @param deep_impact  deep analysis
-    def exec_analysis(self, datapath, objective_column, amode=0, metric='combined', deep_impact=2, analysis_id='not used'):
+    def exec_analysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='not used'):
         self._logging.log_exec('gDayF', "Controller", self._labels["start"])
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
         self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], amode)
         self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
 
-        pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+        try:
+            pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+        except [IOError, OSError]:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+            return self._labels['failed_input']
+
         pd_test_dataset = None
         if metric == 'combined' or 'test_accuracy':
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
@@ -50,17 +103,20 @@ class Controller(object):
 
         adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
 
-        while adviser.next_analysis_list is not None and amode != POC:
+        while adviser.next_analysis_list is not None:
             for each_model in adviser.next_analysis_list:
                 if get_model_fw(each_model) == 'h2o':
-                    h2ohadler = H2OHandler()
+                    if self.h2ohandler is None:
+                        self.h2ohandler = H2OHandler()
+                    if not self.h2ohandler.is_alive():
+                        self.h2ohandler.connect()
                     if pd_test_dataset is not None:
-                        _, analyzed_model = h2ohadler.order_training(analysis_id=adviser.analysis_id,
-                                                                     training_frame=pd_dataset,
-                                                                     base_ar=each_model,
-                                                                     test_frame=pd_test_dataset)
+                        _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
+                                                                          training_frame=pd_dataset,
+                                                                          base_ar=each_model,
+                                                                          test_frame=pd_test_dataset)
                     else:
-                        _, analyzed_model = h2ohadler.order_training(analysis_id=adviser.analysis_id,
+                        _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
                                                                      training_frame=pd_dataset,
                                                                      base_ar=each_model)
 
@@ -93,13 +149,27 @@ class Controller(object):
                                    model['round'])
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
+        if self.h2ohandler is not None:
+            self.h2ohandler.delete_h2oframes()
+            del self.h2ohandler
+
+        return self._labels['success_op']
+
 if __name__ == '__main__':
     source_data = list()
     source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
     source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
     source_data.append("CODE/h2o-bk/datasets/")
     source_data.append("ENB2012_data-Y1.csv")
-
+    '''#Analysis
     controller = Controller()
     controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='combined', deep_impact=3)
+                             amode=POC, metric='combined', deep_impact=1)'''
+    #Prediction
+
+    model_source = list()
+    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499166245.3180127/train/1499166245.3180127/json/")
+    model_source.append('H2ODeepLearningEstimator_1499166322.015706.json')
+    controller = Controller()
+    controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
+
