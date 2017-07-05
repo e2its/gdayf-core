@@ -194,7 +194,6 @@ class H2OHandler(object):
     def delete_h2oframes (self):
         for frame_id in self._frame_list:
             try:
-                print ('DataFrame: ' + frame_id)
                 H2Oremove(frame_id)
             except H2OError:
                 self._logging.log_exec(self.analysis_id,
@@ -739,11 +738,13 @@ class H2OHandler(object):
         model_timestamp = str(time.time())
         self.analysis_id = base_ar['model_id']
         analysis_id = self.analysis_id
-        model_id = base_ar['model_parameters']['h2o']['parameters']['model_id']['value']
+        base_model_id = base_ar['model_parameters']['h2o']['parameters']['model_id']['value']
+        model_id = base_model_id + '_' + model_timestamp
+
         antype = base_ar['model_parameters']['h2o']['types'][0]['type']
         load_fails = True
         counter_storage = 0
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["st_prediction"])
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["st_prediction"], model_id)
         base_ar['status'] = self._labels['failed_op'] # Default Failed Operation Code
         base_ns = base_ar['data_normalized']
 
@@ -822,7 +823,9 @@ class H2OHandler(object):
                                     path=dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels['st_predict_model'], model_id)
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               self._labels['st_predict_model'],
+                               base_model_id)
         start = time.time()
         accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, antype=antype,
                                                                 tolerance=tolerance)
@@ -841,7 +844,7 @@ class H2OHandler(object):
 
         base_ar['metrics']['accuracy']['predict'] = accuracy
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
-                               model_id + ' - ' + str(base_ar['metrics']['accuracy']['predict']))
+                               base_model_id + ' - ' + str(base_ar['metrics']['accuracy']['predict']))
 
         base_ar['status'] = self._labels['success_op']
 
@@ -868,7 +871,6 @@ class H2OHandler(object):
                                    self._model_base.model_id)
         try:
             if self._model_base is not None:
-                print(self._model_base.model_id)
                 H2Oremove(self._model_base.model_id)
         except H2OError:
             self._logging.log_exec(analysis_id,

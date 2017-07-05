@@ -10,6 +10,7 @@ from gdayf.common.utils import get_model_ns
 from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data
 from gdayf.common.armetadata import ArMetadata
+from gdayf.common.armetadata import deep_ordered_copy
 from collections import OrderedDict
 from pathlib import Path
 from copy import deepcopy
@@ -42,15 +43,15 @@ class Controller(object):
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], datapath)
             return self._labels["failed_model"]
         elif armetadata is not None:
-            try :
+            try:
                 assert isinstance(armetadata, ArMetadata)
-                base_ar = deepcopy(armetadata)
+                base_ar = deep_ordered_copy(armetadata)
             except AssertionError:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], armetadata)
         elif model_file is not None:
             try:
                 json_file = open(model_file)
-                base_ar = load(json_file, object_hook=OrderedDict,)
+                base_ar = deep_ordered_copy(load(json_file))
                 json_file.close()
             except [IOError, OSError]:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
@@ -112,9 +113,9 @@ class Controller(object):
                         self.h2ohandler.connect()
                     if pd_test_dataset is not None:
                         _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
-                                                                          training_frame=pd_dataset,
-                                                                          base_ar=each_model,
-                                                                          test_frame=pd_test_dataset)
+                                                                           training_frame=pd_dataset,
+                                                                           base_ar=each_model,
+                                                                           test_frame=pd_test_dataset)
                     else:
                         _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
                                                                      training_frame=pd_dataset,
@@ -164,12 +165,12 @@ if __name__ == '__main__':
     '''#Analysis
     controller = Controller()
     controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=POC, metric='combined', deep_impact=1)'''
+                             amode=FAST_PARANOIAC, metric='combined', deep_impact=3)'''
     #Prediction
 
     model_source = list()
-    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499166245.3180127/train/1499166245.3180127/json/")
-    model_source.append('H2ODeepLearningEstimator_1499166322.015706.json')
+    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499198181.7721763/train/1499198181.7721763/json/")
+    model_source.append('H2ODeepLearningEstimator_1499198298.2876208.json')
     controller = Controller()
     controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
 

@@ -67,7 +67,7 @@ class ArMetadata (OrderedDict):
         new_model['model_parameters'] = deepcopy(self['model_parameters'])
         new_model['ignored_parameters'] = deepcopy(self['ignored_parameters'])
         return new_model
-        
+
     ## Anulate pop fetures from OrderedDict parent class.
     # Stability  proposals
     def pop(self, key, default=None):
@@ -77,9 +77,32 @@ class ArMetadata (OrderedDict):
     # Stability  proposals
     def popitem(self, last=True):
         return 1
-## Main block only for testing issues
+
+
+## Package Function getting ArMetadata and make a base copy of parameters to get an ArMetadata structure base to predict
+# @param armetadata structure
+# @return ArMetadata() structure OrderedDict and json compatible
+def deep_ordered_copy(armetadata):
+    new_model = ArMetadata()
+    for key, value in armetadata.items():
+        if key not in ['load_path', 'json_path', 'load_path' ]:
+            new_model[key] = deepcopy(value)
+        else:
+            new_model[key] = list()
+            for each_storage in armetadata[key]:
+                new_model[key].append(OrderedDict(
+                    {'value': each_storage['value'],
+                     'type': each_storage['type'],
+                     'hash_value': each_storage['hash_value'],
+                     'hash_type': each_storage['hash_type']
+                     }
+                ))
+    return new_model
+
+
+'''## Main block only for testing issues
 if __name__ == "__main__":
     ## Varible for testinf propouses
     m = ArMetadata()
-    print(m.get_json())
+    print(m.get_json())'''
 

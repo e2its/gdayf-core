@@ -24,8 +24,6 @@ from collections import OrderedDict
 from time import time
 from json import dumps
 
-import pprint
-
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
 # Normal: One A* analysis for all models based until max_deep with early_stopping
@@ -247,7 +245,6 @@ class AdviserAStar(object):
     @staticmethod
     def get_accuracy(model):
         try:
-            print('Train Accuracy:' + str(model['metrics']['accuracy']['train']))
             return float(model['metrics']['accuracy']['train'])
         except KeyError:
             return 0.0
@@ -258,7 +255,6 @@ class AdviserAStar(object):
     @staticmethod
     def get_test_accuracy(model):
         try:
-            print('Test Accuracy:' + str(model['metrics']['accuracy']['test']))
             return float(model['metrics']['accuracy']['test'])
         except KeyError:
             return 0.0
@@ -269,7 +265,6 @@ class AdviserAStar(object):
     @staticmethod
     def get_combined(model):
         try:
-            print('Combined Accuracy:' + str(model['metrics']['accuracy']['combined']))
             return float(model['metrics']['accuracy']['combined'])
         except KeyError:
             return 0.0
@@ -280,7 +275,6 @@ class AdviserAStar(object):
     @staticmethod
     def get_rmse(model):
         try:
-            print('RMSE:' + str(model['metrics']['execution']['train']['RMSE']))
             return float(model['metrics']['execution']['train']['RMSE'])
         except KeyError:
             return 0.0
@@ -449,7 +443,7 @@ class AdviserAStar(object):
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ODeepLearningEstimator':
-                if (self.deepness + 1 == self.deep_impact) and model['types'][0]['type'] == 'regression':
+                if (self.deepness + 2 == self.deep_impact) and model['types'][0]['type'] == 'regression':
                     for distribution in model['parameters']['distribution']['type']:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
