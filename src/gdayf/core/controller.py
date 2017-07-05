@@ -65,13 +65,15 @@ class Controller(object):
             self.h2ohandler = H2OHandler()
             if not self.h2ohandler.is_alive():
                 self.h2ohandler.connect()
-            self.h2ohandler.predict(predict_frame=pd_dataset, base_ar=base_ar)
+            prediction_frame, _ = self.h2ohandler.predict(predict_frame=pd_dataset, base_ar=base_ar)
 
             if self.h2ohandler is not None:
                 self.h2ohandler.delete_h2oframes()
                 del self.h2ohandler
 
         self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
+
+        return prediction_frame
 
 
     ## Method leading and controlling analysis's executions on all frameworks
@@ -162,15 +164,21 @@ if __name__ == '__main__':
     source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
     source_data.append("CODE/h2o-bk/datasets/")
     source_data.append("ENB2012_data-Y1.csv")
-    '''#Analysis
+    #Analysis
     controller = Controller()
     controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST_PARANOIAC, metric='combined', deep_impact=3)'''
-    #Prediction
-
+                             amode=FAST, metric='combined', deep_impact=3)
+    '''#Prediction
+    source_data = list()
+    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
+    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
+    source_data.append("CODE/h2o-bk/datasets/")
+    source_data.append("ENB2012_data-Y1.csv")
     model_source = list()
-    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499198181.7721763/train/1499198181.7721763/json/")
-    model_source.append('H2ODeepLearningEstimator_1499198298.2876208.json')
+    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499242347.766494/train/1499242347.766494/json/")
+    model_source.append('H2OGradientBoostingEstimator_1499242403.5658956.json')
     controller = Controller()
-    controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
+    prediction_frame = controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
+    print(prediction_frame)'''
+
 

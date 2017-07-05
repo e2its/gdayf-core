@@ -443,7 +443,7 @@ class AdviserAStar(object):
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ODeepLearningEstimator':
-                if (self.deepness + 2 == self.deep_impact) and model['types'][0]['type'] == 'regression':
+                if (self.deepness + 1 == self.deep_impact) and model['types'][0]['type'] == 'regression':
                     for distribution in model['parameters']['distribution']['type']:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']

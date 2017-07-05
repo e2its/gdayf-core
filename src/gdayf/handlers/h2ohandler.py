@@ -13,6 +13,7 @@ from collections import OrderedDict as OrderedDict
 from os.path import dirname
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
+from copy import deepcopy
 
 from h2o import H2OFrame as H2OFrame
 from h2o import cluster as cluster
@@ -306,25 +307,27 @@ class H2OHandler(object):
     # @param self object pointer
     # @param dataframe H2OFrame
     # @param  antype Atypemetadata().get_artypes() values allowed
+    # @param  base type BugFix on regression with range mixing int and float
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model
-    def _accuracy(self, objective, dataframe, antype, tolerance=0.0):
+    def _accuracy(self, objective, dataframe, antype, base_type, tolerance=0.0):
+        accuracy = -1.0
         prediccion = self._model_base.predict(dataframe)
-        if antype == 'regression':
+        if antype == 'regression' and prediccion.type('predict') == base_type:
             fmin = eval("lambda x: x - " + str(tolerance/2))
             fmax = eval("lambda x: x + " + str(tolerance/2))
             success = dataframe[objective].apply(fmin) <= \
-                       prediccion[0] <= \
+                       prediccion['predict'] <= \
                        dataframe[objective].apply(fmax)
+            accuracy = "Valid"
+        elif antype == 'regression':
+            accuracy = 0.0
         else:
             success = prediccion[0] == dataframe[objective]
-        accuracy = success.sum() / success.nrows
-        try:
-            H2Oremove(prediccion)
-        except H2OError:
-            self._logging.log_exec(self.analysis_id,
-                                   self._h2o_session.session_id, self._labels["delete_objects"],
-                                   prediccion)
+        if accuracy not in [0.0, -1.0]:
+            accuracy = success.sum() / dataframe.nrows
+
+        self._frame_list.append(prediccion.frame_id)
         return accuracy
 
     ## Generate accuracy metrics for model
@@ -333,20 +336,38 @@ class H2OHandler(object):
     # @param self object pointer
     # @param dataframe H2OFrame
     # @param  antype Atypemetadata().get_artypes() values allowed
+    # @param  base type BugFix on regression with range mixing int and float
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model, prediction_dataframe
-    def _predict_accuracy(self, objective, dataframe, antype, tolerance=0.0):
-        prediccion = self._model_base.predict(dataframe)
-        if antype == 'regression':
-            fmin = eval("lambda x: x - " + str(tolerance/2))
-            fmax = eval("lambda x: x + " + str(tolerance/2))
-            success = dataframe[objective].apply(fmin) <= \
-                       prediccion[0] <= \
-                       dataframe[objective].apply(fmax)
-        else:
-            success = prediccion[0] == dataframe[objective]
-        accuracy = success.sum() / success.nrows
+    def _predict_accuracy(self, objective, dataframe, antype, base_type, tolerance=0.0):
+        accuracy = -1.0
+        dataframe_cols = dataframe.columns
+        prediction_dataframe = self._model_base.predict(dataframe)
+        self._frame_list.append(prediction_dataframe.frame_id)
+        prediccion = dataframe.cbind(prediction_dataframe)
+        prediction_columns = prediccion.columns
+        for element in dataframe_cols:
+            prediction_columns.remove(element)
+        predictor_col = prediction_columns[0]
 
+        if objective in dataframe.columns:
+            if antype == 'regression' and prediccion.type(predictor_col) == base_type:
+                fmin = eval("lambda x: x - " + str(tolerance/2))
+                fmax = eval("lambda x: x + " + str(tolerance/2))
+
+                print(prediccion[objective].apply(fmin))
+                print(prediccion[-1])
+                print(prediccion[objective].apply(fmax))
+                success = prediccion[objective].apply(fmin).asnumeric() <= \
+                          prediccion[predictor_col] <= \
+                          prediccion[objective].apply(fmax).asnumeric()
+                accuracy = "Valid"
+            elif antype == 'regression':
+                accuracy = 0.0
+            else:
+                success = prediccion[predictor_col] == prediccion[objective]
+        if accuracy not in [0.0, -1.0]:
+            accuracy = success.sum() / dataframe.nrows
         return accuracy, prediccion
 
     ## Generate model full values parameters for execution analysis
@@ -668,17 +689,20 @@ class H2OHandler(object):
             final_ar_model['metrics']['execution']['valid'] = \
                 self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
             final_ar_model['metrics']['accuracy']['train'] = \
-                self._accuracy(objective_column, training_frame.rbind(valid_frame),
-                               antype=analysis_type, tolerance=tolerance)
+                self._accuracy(objective_column, valid_frame,
+                               antype=analysis_type, tolerance=tolerance,
+                               base_type=valid_frame.type(objective_column))
         else:
             final_ar_model['metrics']['accuracy']['train'] = \
-                self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance)
+                self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance,
+                               base_type=training_frame.type(objective_column))
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
                                model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
 
         if test_frame is not None:
             final_ar_model['metrics']['accuracy']['test'] = \
-                self._accuracy(objective_column, test_frame, antype=analysis_type, tolerance=tolerance)
+                self._accuracy(objective_column, test_frame, antype=analysis_type, tolerance=tolerance,
+                               base_type=test_frame.type(objective_column))
             final_ar_model['metrics']['accuracy']['combined'] = \
                 (final_ar_model['metrics']['accuracy']['train']*0.4 + final_ar_model['metrics']['accuracy']['test']*0.6)
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
@@ -746,7 +770,7 @@ class H2OHandler(object):
         counter_storage = 0
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["st_prediction"], model_id)
         base_ar['status'] = self._labels['failed_op'] # Default Failed Operation Code
-        base_ns = base_ar['data_normalized']
+        base_ns = get_model_ns(base_ar)
 
 
         #Checking file source versus hash_value
@@ -828,22 +852,23 @@ class H2OHandler(object):
                                base_model_id)
         start = time.time()
         accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, antype=antype,
-                                                                tolerance=tolerance)
+                                                                tolerance=tolerance,
+                                                                base_type=predict_frame.type(objective_column))
         base_ar['execution_seconds'] = time.time() - start
         self._frame_list.append(prediction_dataframe.frame_id)
-        prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
 
         if self._debug:
             connection().stop_logging()
             self._persistence.store_file(filename=base_ar['log_path'][0]['value'],
                                          storage_json=base_ar['log_path'])
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
-        base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=predict_frame,
+        if objective_column in predict_frame.columns:
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=predict_frame,
                                                                                             source=None, antype=antype)
 
-        base_ar['metrics']['accuracy']['predict'] = accuracy
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+            base_ar['metrics']['accuracy']['predict'] = accuracy
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
                                base_model_id + ' - ' + str(base_ar['metrics']['accuracy']['predict']))
 
         base_ar['status'] = self._labels['success_op']
@@ -861,6 +886,8 @@ class H2OHandler(object):
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
         for handler in self._logging.logger.handlers:
             handler.flush()
+
+        prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
 
         # Cleaning H2OCluster
         try:
