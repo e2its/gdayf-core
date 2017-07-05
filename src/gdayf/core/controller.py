@@ -115,7 +115,7 @@ class Controller(object):
                         self.h2ohandler.connect()
                     if pd_test_dataset is not None:
                         _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
-                                                                           training_frame=pd_dataset,
+                                                                           training_pframe=pd_dataset,
                                                                            base_ar=each_model,
                                                                            test_frame=pd_test_dataset)
                     else:
@@ -164,21 +164,21 @@ if __name__ == '__main__':
     source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
     source_data.append("CODE/h2o-bk/datasets/")
     source_data.append("ENB2012_data-Y1.csv")
-    #Analysis
+    '''#Analysis
     controller = Controller()
     controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='combined', deep_impact=3)
-    '''#Prediction
+                             amode=FAST, metric='combined', deep_impact=3)'''
+    #Prediction
     source_data = list()
     source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
     source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
     source_data.append("CODE/h2o-bk/datasets/")
     source_data.append("ENB2012_data-Y1.csv")
     model_source = list()
-    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499242347.766494/train/1499242347.766494/json/")
-    model_source.append('H2OGradientBoostingEstimator_1499242403.5658956.json')
+    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499277062.9702203/train/1499277062.9702203/replica/json/")
+    model_source.append('H2OGradientBoostingEstimator_1499277177.3076756.json')
     controller = Controller()
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
-    print(prediction_frame)'''
+    print(prediction_frame)
 
 

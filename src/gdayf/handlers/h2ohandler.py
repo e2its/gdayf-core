@@ -354,10 +354,6 @@ class H2OHandler(object):
             if antype == 'regression' and prediccion.type(predictor_col) == base_type:
                 fmin = eval("lambda x: x - " + str(tolerance/2))
                 fmax = eval("lambda x: x + " + str(tolerance/2))
-
-                print(prediccion[objective].apply(fmin))
-                print(prediccion[-1])
-                print(prediccion[objective].apply(fmax))
                 success = prediccion[objective].apply(fmin).asnumeric() <= \
                           prediccion[predictor_col] <= \
                           prediccion[objective].apply(fmax).asnumeric()
@@ -430,7 +426,7 @@ class H2OHandler(object):
                     valid_frame[objective_column] = valid_frame[objective_column].ascharacter().asfactor()
                     self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
                                            ' validation : ' + objective_column)
-            if predict_frame is not None:
+            if predict_frame is not None and objective_column in predict_frame.columns:
                 if isinstance(predict_frame[objective_column], (int, float)):
                     predict_frame[objective_column] = predict_frame[objective_column].asfactor()
                     self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
@@ -468,9 +464,9 @@ class H2OHandler(object):
     # @param training_frame pandas.DataFrame
     # @param base_ar ar_template.json
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
-    def order_training(self, analysis_id, training_frame, base_ar, **kwargs):
+    def order_training(self, analysis_id, training_pframe, base_ar, **kwargs):
         assert isinstance(analysis_id, str)
-        assert isinstance(training_frame, DataFrame)
+        assert isinstance(training_pframe, DataFrame)
         assert isinstance(base_ar, ArMetadata)
 
         # python train parameters effective
@@ -491,24 +487,24 @@ class H2OHandler(object):
         assert isinstance(base_ns, NormalizationSet) or base_ns is None
         # Applying Normalizations
         data_initial = DFMetada()
-        data_initial.getDataFrameMetadata(dataframe=training_frame, typedf='pandas')
-        data_normalized, train_hash_value, norm_executed = self.execute_normalization(dataframe=training_frame,
+        data_initial.getDataFrameMetadata(dataframe=training_pframe[0:-1], typedf='pandas')
+        data_normalized, train_hash_value, norm_executed = self.execute_normalization(dataframe=training_pframe,
                                                                                       base_ns=base_ns)
         df_metadata = data_initial
         if not norm_executed:
             data_normalized = None
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["df_struct"],
-                                   str(data_initial))
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                                   str(data_initial['correlation']))
         else:
             df_metadata = data_normalized
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["df_struct"],
-                                   str(data_normalized))
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                                   str(data_normalized['correlation']))
             if test_frame is not None:
                 self.execute_normalization(dataframe=test_frame, base_ns=base_ns)
 
         h2o_elements = H2Olist()
         if len(h2o_elements[h2o_elements['key'] == 'train_' + analysis_id + '_' + str(train_hash_value)]):
-            if training_frame.count(axis=0).all() > 100000:
+            if training_pframe.count(axis=0).all() > 100000:
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
                 valid_frame = get_frame('valid_' + analysis_id + '_' + str(train_hash_value))
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
@@ -523,9 +519,9 @@ class H2OHandler(object):
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'test_frame (' + str(test_frame.nrows) + ')')
         else:
-            if training_frame.count(axis=0).all() > 100000:
+            if training_pframe.count(axis=0).all() > 100000:
                 training_frame, valid_frame = \
-                    H2OFrame(python_obj=training_frame).split_frame(ratios=[.85],
+                    H2OFrame(python_obj=training_pframe).split_frame(ratios=[.85],
                                             destination_frames=['train_' + analysis_id + '_' + str(train_hash_value),
                                                                 'valid_' + analysis_id + '_' + str(train_hash_value)])
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
@@ -535,7 +531,7 @@ class H2OHandler(object):
                 self._frame_list.append(valid_frame.frame_id)
             else:
                 training_frame = \
-                    H2OFrame(python_obj=training_frame,
+                    H2OFrame(python_obj=training_pframe,
                              destination_frame='train_' + analysis_id + '_' + str(train_hash_value))
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                        'training_frame(' + str(training_frame.nrows) + ')')
@@ -812,7 +808,8 @@ class H2OHandler(object):
 
         data_initial = DFMetada()
         data_initial.getDataFrameMetadata(dataframe=predict_frame, typedf='pandas')
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id,  self._labels["df_struct"],  str(data_initial))
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                               self._labels["cor_struct"],  str(data_initial['correlation']))
         base_ar['data_initial'] = data_initial
         data_normalized, _, norm_executed = self.execute_normalization(dataframe=predict_frame, base_ns=base_ns)
         if not norm_executed:
@@ -820,8 +817,8 @@ class H2OHandler(object):
                                    'No Normalizations Required')
         else:
             base_ar['data_normalized'] = data_normalized
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["df_struct"],
-                                   str(data_normalized))
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                                   str(data_normalized['correlation']))
 
         #Transforming to H2OFrame
         predict_frame = H2OFrame(python_obj=predict_frame,
@@ -851,9 +848,12 @@ class H2OHandler(object):
                                self._labels['st_predict_model'],
                                base_model_id)
         start = time.time()
+        if objective_column in predict_frame.columns:
+            objective_type = predict_frame.type(objective_column)
+        else:
+            objective_type = None
         accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, antype=antype,
-                                                                tolerance=tolerance,
-                                                                base_type=predict_frame.type(objective_column))
+                                                                tolerance=tolerance, base_type=objective_type)
         base_ar['execution_seconds'] = time.time() - start
         self._frame_list.append(prediction_dataframe.frame_id)
 
