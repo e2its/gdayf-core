@@ -3,6 +3,8 @@
     "h2o": {
       "conf": {
         "path_localfs": "D:/Data/models",
+        "download_fs_type": "local_fs",
+        "download_fs": "downloads",
         "path_hdfs": null,
         "path_mongoDB": null,
         "primary_path": "path_localfs",
@@ -13,13 +15,16 @@
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
-        "tolerance": 0.1
+        "tolerance": 0.05,
+        "enabled" : true,
+        "min_rows_enabled": true
       },
       "models": [
         {
           "model": "H2OGradientBoostingEstimator",
           "id": null,
           "module": "h2o.estimators.gbm",
+          "min_rows_applicability": 0,
           "types": [
             {
               "type": "binomial",
@@ -353,6 +358,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
+          "min_rows_applicability": 3000,
           "types": [
             {
               "type": "binomial",
@@ -656,6 +662,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
+          "min_rows_applicability": 5000,
           "types": [
             {
               "type": "binomial",
@@ -1179,6 +1186,7 @@
           "model": "H2ORandomForestEstimator",
           "id": null,
           "module": "h2o.estimators.random_forest",
+          "min_rows_applicability": 0,
           "types": [
             {
               "type": "binomial",

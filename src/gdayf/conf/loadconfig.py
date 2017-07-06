@@ -40,6 +40,7 @@ class LoadConfig(object):
         return self._configfile
 
 
+
 ## Class Getting the config file place on default location and load all labels
 # named self._config on OrderedDict() format
 class LoadLabels(object):

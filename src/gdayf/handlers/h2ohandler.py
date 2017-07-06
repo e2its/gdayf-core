@@ -13,6 +13,7 @@ from collections import OrderedDict as OrderedDict
 from os.path import dirname
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
+from pathlib import Path
 from copy import deepcopy
 
 from h2o import H2OFrame as H2OFrame
@@ -29,6 +30,7 @@ from h2o import remove as H2Oremove
 from h2o import api as H2Oapi
 from h2o import get_frame
 from h2o import download_pojo
+
 from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.estimators.glm import H2OGeneralizedLinearEstimator
 from h2o.estimators.deeplearning import H2ODeepLearningEstimator
@@ -51,6 +53,7 @@ from gdayf.common.utils import get_model_ns
 from gdayf.common.armetadata import ArMetadata
 from gdayf.models.parametersmetadata import ParameterMetadata
 from gdayf.normalizer.normalizer import Normalizer
+from gdayf.common.utils import  get_model_fw
 
 
 class H2OHandler(object):
@@ -188,6 +191,75 @@ class H2OHandler(object):
         for iter in range(0, nfolds):
             models_ids.append(model_id + '_cv_' + str(iter+1))
         return models_ids
+
+    ## Generate list of models_id for internal crossvalidation objects_
+    # @param self object pointer
+    # @param ar_metadata ArMetadata stored model
+    # @param type ['pojo', 'mojo']
+    # @return download_path, MD5 hash_key
+    def get_java_model(self, ar_metadata, type):
+        fw = get_model_fw(ar_metadata)
+        model_id = ar_metadata['model_parameters'][fw]['parameters']['model_id']['value']
+        self.analysis_id = analysis_id = ar_metadata['model_id']
+        config = LoadConfig().get_config()['frameworks'][fw]['conf']
+
+        load_fails = self.get_model_from_load_path(ar_metadata)
+        if load_fails:
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                   self._labels["no_models"], ar_metadata)
+            return None
+
+        download_path = Path(config[config['primary_path']])
+        print(download_path)
+        download_path = download_path.joinpath(config['download_fs'])
+
+        download_path = download_path.joinpath(model_id)
+        persistence = PersistenceHandler()
+        persistence.mkdir(type='localfs', path=str(download_path), grants=0o0777)
+
+        if type.upper() == 'MOJO':
+            try:
+                file_path = self._model_base.download_mojo(path=str(download_path), get_genmodel_jar=True)
+            except H2OError:
+                self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                       self._labels["failed_op"], download_path)
+        else:
+            try:
+                file_path = download_pojo(self._model_base, path=str(download_path), get_jar=True)
+            except H2OError:
+                self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                       self._labels["failed_op"], download_path)
+
+        return download_path, hash_key('MD5', filename=file_path)
+
+    ## Generate list of models_id for internal crossvalidation objects_
+    # @param self object pointer
+    # @param ar_metadata ArMetadata stored model
+    # @return implicit self._model_base / None on Error
+    def get_model_from_load_path(self, ar_metadata):
+        load_fails = True
+        counter_storage = 0
+        # Checking file source versus hash_value
+
+        assert isinstance(ar_metadata['load_path'], list)
+        while counter_storage < len(ar_metadata['load_path']) and load_fails:
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
+                                   ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
+                                   hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
+                                            ar_metadata['load_path'][counter_storage]['value'])
+                                   )
+
+            if hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
+                        ar_metadata['load_path'][counter_storage]['value']) == \
+                    ar_metadata['load_path'][counter_storage]['hash_value']:
+                try:
+                    self._model_base = load_model(ar_metadata['load_path'][counter_storage]['value'])
+                    load_fails = False
+                except H2OError:
+                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                           self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
+            counter_storage += 1
+        return load_fails
 
     ## Remove used dataframes during analysis execution_
     # @param self object pointer
@@ -440,28 +512,30 @@ class H2OHandler(object):
     # @param self object pointer
     # @param dataframe  pandas dataframe
     # @param base_ns NormalizationMetadata orderedDict() compatible
-    # @return (DFMetadata, Hash_value)
+    # @return (Dataframe, DFMetadata, Hash_value, True/False)
     def execute_normalization (self, dataframe, base_ns):
+        data_norm = dataframe.copy(deep=True)
         if base_ns is not None:
+            data_norm = dataframe.copy(deep=True)
             self._logging.log_exec(self.analysis_id,
                                    self._h2o_session.session_id, self._labels["exec_norm"], str(base_ns))
             normalizer = Normalizer()
-            normalizer.normalizeDataFrame(dataframe, base_ns)
+            normalizer.normalizeDataFrame(data_norm, base_ns)
             df_metadata = DFMetada()
-            df_metadata.getDataFrameMetadata(dataframe=dataframe, typedf='pandas')
+            df_metadata.getDataFrameMetadata(dataframe=data_norm, typedf='pandas')
             df_metadata_hash_value = md5(json.dumps(df_metadata).encode('utf-8')).hexdigest()
-            return df_metadata, df_metadata_hash_value, True
+            return data_norm, df_metadata, df_metadata_hash_value, True
         else:
             df_metadata = DFMetada()
             df_metadata.getDataFrameMetadata(dataframe=dataframe, typedf='pandas')
             df_metadata_hash_value = md5(json.dumps(df_metadata).encode('utf-8')).hexdigest()
-            return df_metadata, df_metadata_hash_value, False
+            return dataframe, df_metadata, df_metadata_hash_value, False
 
             #base_ns = json.load(normalization, object_pairs_hook=NormalizationSet)
     ## Main method to execute sets of analysis and normalizations base on params
     # @param self object pointer
     # @param analysis_id String (Analysis identificator)
-    # @param training_frame pandas.DataFrame
+    # @param training_pframe pandas.DataFrame
     # @param base_ar ar_template.json
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
     def order_training(self, analysis_id, training_pframe, base_ar, **kwargs):
@@ -487,9 +561,9 @@ class H2OHandler(object):
         assert isinstance(base_ns, NormalizationSet) or base_ns is None
         # Applying Normalizations
         data_initial = DFMetada()
-        data_initial.getDataFrameMetadata(dataframe=training_pframe[0:-1], typedf='pandas')
-        data_normalized, train_hash_value, norm_executed = self.execute_normalization(dataframe=training_pframe,
-                                                                                      base_ns=base_ns)
+        data_initial.getDataFrameMetadata(dataframe=training_pframe, typedf='pandas')
+        training_pframe, data_normalized, train_hash_value, norm_executed = \
+            self.execute_normalization(dataframe=training_pframe, base_ns=base_ns)
         df_metadata = data_initial
         if not norm_executed:
             data_normalized = None
@@ -500,7 +574,7 @@ class H2OHandler(object):
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
                                    str(data_normalized['correlation']))
             if test_frame is not None:
-                self.execute_normalization(dataframe=test_frame, base_ns=base_ns)
+                test_frame, _, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns)
 
         h2o_elements = H2Olist()
         if len(h2o_elements[h2o_elements['key'] == 'train_' + analysis_id + '_' + str(train_hash_value)]):
@@ -762,42 +836,17 @@ class H2OHandler(object):
         model_id = base_model_id + '_' + model_timestamp
 
         antype = base_ar['model_parameters']['h2o']['types'][0]['type']
-        load_fails = True
-        counter_storage = 0
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["st_prediction"], model_id)
-        base_ar['status'] = self._labels['failed_op'] # Default Failed Operation Code
+
         base_ns = get_model_ns(base_ar)
 
-
         #Checking file source versus hash_value
-        assert isinstance(base_ar['load_path'], list)
-        while counter_storage < len(base_ar['load_path']) and load_fails:
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
-                                   base_ar['load_path'][counter_storage]['hash_value'] + ' - ' +
-                                   hash_key(base_ar['load_path'][counter_storage]['hash_type'],
-                                            base_ar['load_path'][counter_storage]['value'])
-                                   )
-
-            if hash_key(base_ar['load_path'][counter_storage]['hash_type'],
-                        base_ar['load_path'][counter_storage]['value']) == \
-                    base_ar['load_path'][counter_storage]['hash_value']:
-                load_fails = False
-                try:
-                    if self._get_ext() == '.pojo':
-                        '''Not implemented yet'''
-                        pass
-                    else:
-                        self._model_base = load_model(base_ar['load_path'][counter_storage]['value'])
-                except H2OError:
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                           self._labels["abort"], base_ar['load_path'][counter_storage]['value'])
-            counter_storage += 1
+        load_fails = self.get_model_from_load_path(base_ar)
 
         if load_fails:
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                   self._labels["abort"], str(base_ar['load_path']))
-
-            return 1
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                   self._labels["no_models"], str(base_ar))
+            base_ar['status'] = self._labels['failed_op']  # Default Failed Operation Code
+            return None
 
         objective_column = base_ar['objective_column']
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["objective"], objective_column)
@@ -811,7 +860,8 @@ class H2OHandler(object):
         self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                self._labels["cor_struct"],  str(data_initial['correlation']))
         base_ar['data_initial'] = data_initial
-        data_normalized, _, norm_executed = self.execute_normalization(dataframe=predict_frame, base_ns=base_ns)
+        predict_frame, data_normalized, _, norm_executed = self.execute_normalization(dataframe=predict_frame,
+                                                                                      base_ns=base_ns)
         if not norm_executed:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["exec_norm"],
                                    'No Normalizations Required')

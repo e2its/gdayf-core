@@ -43,6 +43,7 @@ class LogsHandler (object):
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
     def log_info(self, trigger, session, message, add_message=''):
         print(self._compose_log_record(trigger, session, message, add_message))
@@ -52,6 +53,7 @@ class LogsHandler (object):
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
     def log_critical(self, trigger, session, message, add_message=''):
         print(self._compose_log_record(trigger, session, message, add_message))
@@ -61,6 +63,7 @@ class LogsHandler (object):
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
     def log_exec(self, trigger, session, message, add_message=''):
         print(self._compose_log_record(trigger, session, message, add_message))
@@ -70,6 +73,7 @@ class LogsHandler (object):
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
     def log_warning(self, trigger, session, message, add_message=''):
         print(self._compose_log_record(trigger, session, message, add_message))
@@ -79,6 +83,7 @@ class LogsHandler (object):
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
     def log_error(self, trigger, session, message, add_message=''):
         print(self._compose_log_record(trigger, session, message, add_message))
@@ -88,6 +93,7 @@ class LogsHandler (object):
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
     def log_debug(self, trigger, session, message, add_message=''):
         print(self._compose_log_record(trigger, session, message, add_message))

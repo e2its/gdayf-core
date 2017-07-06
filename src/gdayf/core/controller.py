@@ -28,7 +28,7 @@ class Controller(object):
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
-        self.h2ohandler = None
+        self.model_handler = None
 
 
     ## Method leading and controlling prediction's executions on all frameworks
@@ -62,14 +62,14 @@ class Controller(object):
             return self._labels['failed_input']
 
         if get_model_fw(base_ar) == 'h2o':
-            self.h2ohandler = H2OHandler()
-            if not self.h2ohandler.is_alive():
-                self.h2ohandler.connect()
-            prediction_frame, _ = self.h2ohandler.predict(predict_frame=pd_dataset, base_ar=base_ar)
+            self.model_handler = H2OHandler()
+            if not self.model_handler.is_alive():
+                self.model_handler.connect()
+            prediction_frame, _ = self.model_handler.predict(predict_frame=pd_dataset, base_ar=base_ar)
 
-            if self.h2ohandler is not None:
-                self.h2ohandler.delete_h2oframes()
-                del self.h2ohandler
+            if self.model_handler is not None:
+                self.model_handler.delete_h2oframes()
+                del self.model_handler
 
         self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
 
@@ -84,7 +84,7 @@ class Controller(object):
     # @param amode Analysis mode of execution [0,1,2,3] [FAST, NORMAL, PARANOIAC, POC]
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined']
     # @param deep_impact  deep analysis
-    def exec_analysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='not used'):
+    def exec_analysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='N/A'):
         self._logging.log_exec('gDayF', "Controller", self._labels["start"])
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
         self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
@@ -109,22 +109,22 @@ class Controller(object):
         while adviser.next_analysis_list is not None:
             for each_model in adviser.next_analysis_list:
                 if get_model_fw(each_model) == 'h2o':
-                    if self.h2ohandler is None:
-                        self.h2ohandler = H2OHandler()
-                    if not self.h2ohandler.is_alive():
-                        self.h2ohandler.connect()
-                    if pd_test_dataset is not None:
-                        _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
-                                                                           training_pframe=pd_dataset,
-                                                                           base_ar=each_model,
-                                                                           test_frame=pd_test_dataset)
-                    else:
-                        _, analyzed_model = self.h2ohandler.order_training(analysis_id=adviser.analysis_id,
-                                                                     training_frame=pd_dataset,
-                                                                     base_ar=each_model)
+                    if self.model_handler is None:
+                        self.model_handler = H2OHandler()
+                if not self.model_handler.is_alive():
+                    self.model_handler.connect()
+                if pd_test_dataset is not None:
+                    _, analyzed_model = self.model_handler.order_training(analysis_id=adviser.analysis_id,
+                                                                          training_pframe=pd_dataset,
+                                                                          base_ar=each_model,
+                                                                          test_frame=pd_test_dataset)
+                else:
+                    _, analyzed_model = self.model_handler.order_training(analysis_id=adviser.analysis_id,
+                                                                          training_frame=pd_dataset,
+                                                                          base_ar=each_model)
 
-                    if analyzed_model is not None:
-                        adviser.analysis_recommendation_order.append(analyzed_model)
+                if analyzed_model is not None:
+                    adviser.analysis_recommendation_order.append(analyzed_model)
             adviser.next_analysis_list.clear()
             adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
                                                                             model_list=
@@ -137,7 +137,6 @@ class Controller(object):
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
         best_check = True
         for model in adviser.analysis_recommendation_order:
-
             if best_check:
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["best_model"],
                                     model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
@@ -152,11 +151,24 @@ class Controller(object):
                                    model['round'])
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
-        if self.h2ohandler is not None:
-            self.h2ohandler.delete_h2oframes()
-            del self.h2ohandler
+        if self.model_handler is not None:
+            self.model_handler.delete_h2oframes()
+            del self.model_handler
 
         return self._labels['success_op']
+
+    ## Method leading and controlling coversion to java model
+    # @param self object pointer
+    # @param armetadata Armetada object
+    # @param type base type if is possible
+    # @return download_path, hash MD5 key
+    def get_java_model(self, armetadata, type='pojo'):
+        if get_model_fw(armetadata) == 'h2o':
+            if self.model_handler is None:
+                self.model_handler = H2OHandler()
+            if not self.model_handler.is_alive():
+                self.model_handler.connect()
+            return self.model_handler.get_java_model(armetadata, type)
 
 if __name__ == '__main__':
     source_data = list()
@@ -164,10 +176,10 @@ if __name__ == '__main__':
     source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
     source_data.append("CODE/h2o-bk/datasets/")
     source_data.append("ENB2012_data-Y1.csv")
-    '''#Analysis
+    #Analysis
     controller = Controller()
     controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='combined', deep_impact=3)'''
+                             amode=FAST, metric='combined', deep_impact=3)
     #Prediction
     source_data = list()
     source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
@@ -180,5 +192,27 @@ if __name__ == '__main__':
     controller = Controller()
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
     print(prediction_frame)
+
+    # Save Pojo
+    model_source = list()
+    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499277062.9702203/train/1499277062.9702203/replica/json/")
+    model_source.append('H2OGradientBoostingEstimator_1499277177.3076756.json')
+    controller = Controller()
+    fp = open(''.join(model_source))
+    result = controller.get_java_model(load(fp, object_hook=OrderedDict), 'pojo')
+    fp.close()
+    print(result)
+
+    # Save Mojo
+    model_source = list()
+    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499277062.9702203/train/1499277062.9702203/replica/json/")
+    model_source.append('H2OGradientBoostingEstimator_1499277177.3076756.json')
+    controller = Controller()
+    fp = open(''.join(model_source))
+    result = controller.get_java_model(load(fp, object_hook=OrderedDict), 'mojo')
+    fp.close()
+    print(result)
+
+
 
 

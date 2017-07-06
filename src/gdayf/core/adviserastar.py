@@ -29,7 +29,7 @@ from json import dumps
 # Normal: One A* analysis for all models based until max_deep with early_stopping
 # Paranoiac: One A* algorithm per model analysis until max_deep without early stoping
 class AdviserAStar(object):
-    deepness = 0
+    deepness = 1
 
     ## Constructor
     # @param self object pointer
@@ -56,44 +56,18 @@ class AdviserAStar(object):
     # @param objective_column string indicating objective column
     # @return ArMetadata()'s Prioritized queue
     def set_recommendations(self, dataframe_metadata, objective_column, atype=POC):
+        self._logging.log_exec(self.analysis_id, 'AdviserAStar',
+                               self._labels["ana_type"],
+                               str(atype) + ' (' + str(self.deepness) + ')')
         self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
         if atype == POC:
-            self.deep_impact = 0
+            self.deep_impact = 1
             return self.analysisnormal(dataframe_metadata, objective_column, amode=FAST)
         if atype in [FAST, NORMAL]:
             return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
         elif atype in [FAST_PARANOIAC, PARANOIAC]:
             return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
 
-
-    ## Method oriented to execute smart PoC analysis
-    # @param self object pointer
-    # @param dataframe_metadata DFMetadata()
-    # @param objective_column string indicating objective column
-    # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
-    def analysispoc(self, dataframe_metadata, objective_column):
-        self.next_analysis_list.clear()
-        if self.deepness == 0:
-            fw_model_list = self.get_candidate_models(self.an_objective, POC)
-            for fw, model_params, norm_sets in fw_model_list:
-                ar_structure = ArMetadata()
-                ar_structure['model_id'] = self.analysis_id
-                ar_structure['version'] = '0.0.1'
-                ar_structure['objective_column'] = objective_column
-                ar_structure['timestamp'] = self.timestamp
-                ar_structure['normalizations_set'] = norm_sets
-                ar_structure['data_initial'] = dataframe_metadata
-                ar_structure['data_normalized'] = None
-                ar_structure['model_parameters'] = OrderedDict()
-                ar_structure['model_parameters'][fw] = model_params
-                ar_structure['ignored_parameters'] = None
-                ar_structure['full_parameters_stack'] = None
-                ar_structure['status'] = -1
-                self.next_analysis_list.append(ar_structure)
-            self.deepness += 1
-        else:
-            return self.analysis_id, None
-        return self.analysis_id, self.next_analysis_list
 
     ## Method oriented to execute smart normal and fast analysis
     # @param self object pointer
@@ -103,27 +77,11 @@ class AdviserAStar(object):
     # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
     def analysisnormal(self, dataframe_metadata, objective_column, amode):
         self.next_analysis_list.clear()
-        if self.deepness == 0:
-            fw_model_list = self.get_candidate_models(self.an_objective, amode)
-            for fw, model_params, norm_sets in fw_model_list:
-                ar_structure = ArMetadata()
-                ar_structure['model_id'] = self.analysis_id
-                ar_structure['version'] = '0.0.1'
-                ar_structure['objective_column'] = objective_column
-                ar_structure['timestamp'] = self.timestamp
-                ar_structure['normalizations_set'] = norm_sets
-                ar_structure['data_initial'] = dataframe_metadata
-                ar_structure['data_normalized'] = None
-                ar_structure['model_parameters'] = OrderedDict()
-                ar_structure['model_parameters'][fw] = model_params
-                ar_structure['ignored_parameters'] = None
-                ar_structure['full_parameters_stack'] = None
-                ar_structure['status'] = -1
-                self.next_analysis_list.append(ar_structure)
-            self.deepness += 1
+        if self.deepness == 1:
+            self.base_iteration(amode, dataframe_metadata, objective_column)
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
-        elif self.deepness == 1:
+        elif self.deepness == 2:
             # Get all models
             fw_model_list = list()
             aux_loop_controller = len(self.analysis_recommendation_order)
@@ -136,7 +94,6 @@ class AdviserAStar(object):
             self.next_analysis_list.extend(fw_model_list)
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
-            self.deepness += 1
         elif self.next_analysis_list is not None:
             # Get two most potential best models
             fw_model_list = list()
@@ -149,7 +106,7 @@ class AdviserAStar(object):
             self.next_analysis_list.extend(fw_model_list)
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
-            self.deepness += 1
+        self.deepness += 1
         return self.analysis_id, self.next_analysis_list
 
         ## Method oriented to execute smart normal and fast analysis
@@ -161,24 +118,8 @@ class AdviserAStar(object):
 
     def analysisparanoiac(self, dataframe_metadata, objective_column, amode):
         self.next_analysis_list.clear()
-        if self.deepness == 0:
-            fw_model_list = self.get_candidate_models(self.an_objective, amode)
-            for fw, model_params, norm_sets in fw_model_list:
-                ar_structure = ArMetadata()
-                ar_structure['model_id'] = self.analysis_id
-                ar_structure['version'] = '0.0.1'
-                ar_structure['objective_column'] = objective_column
-                ar_structure['timestamp'] = self.timestamp
-                ar_structure['normalizations_set'] = norm_sets
-                ar_structure['data_initial'] = dataframe_metadata
-                ar_structure['data_normalized'] = None
-                ar_structure['model_parameters'] = OrderedDict()
-                ar_structure['model_parameters'][fw] = model_params
-                ar_structure['ignored_parameters'] = None
-                ar_structure['full_parameters_stack'] = None
-                ar_structure['status'] = -1
-                self.next_analysis_list.append(ar_structure)
-            self.deepness += 1
+        if self.deepness == 1:
+            self.base_iteration(amode, dataframe_metadata, objective_column)
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
         elif self.next_analysis_list is not None:
@@ -193,8 +134,33 @@ class AdviserAStar(object):
             self.next_analysis_list.extend(fw_model_list)
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
-            self.deepness += 1
+        self.deepness += 1
         return self.analysis_id, self.next_analysis_list
+
+    ## Method oriented to select initial candidate models
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
+    # @param objective_column string indicating objective column
+    def base_iteration(self, amode, dataframe_metadata, objective_column):
+        fw_model_list = self.get_candidate_models(self.an_objective, amode)
+        self.applicability(fw_model_list, nrows=dataframe_metadata['rowcount'])
+        for fw, model_params, norm_sets in fw_model_list:
+            ar_structure = ArMetadata()
+            ar_structure['model_id'] = self.analysis_id
+            ar_structure['version'] = '0.0.1'
+            ar_structure['objective_column'] = objective_column
+            ar_structure['timestamp'] = self.timestamp
+            ar_structure['normalizations_set'] = norm_sets
+            ar_structure['data_initial'] = dataframe_metadata
+            ar_structure['data_normalized'] = None
+            ar_structure['model_parameters'] = OrderedDict()
+            ar_structure['model_parameters'][fw] = model_params
+            ar_structure['ignored_parameters'] = None
+            ar_structure['full_parameters_stack'] = None
+            ar_structure['status'] = -1
+            self.next_analysis_list.append(ar_structure)
+            self.analyzed_models.append(self.generate_vectors(ar_structure, norm_sets))
 
     ## Method oriented to get frameworks default values from config
     # @param self object pointer
@@ -229,8 +195,8 @@ class AdviserAStar(object):
     def get_candidate_models(self, atype, amode):
         defaultframeworks = self.load_frameworks()
         model_list = list()
-        for fw in defaultframeworks.keys():
-            if fw == 'h2o':
+        for fw, fw_value in defaultframeworks.items():
+            if fw == 'h2o' and fw_value['conf']['enabled']:
                 wfw = H2OFrameworkMetadata(defaultframeworks)
                 for each_model in wfw.get_default():
                     modelbase = H2OModelMetadata()
@@ -238,6 +204,25 @@ class AdviserAStar(object):
                     wfw.models.append(model)
                     model_list.append((fw, model, None))
         return model_list
+
+    ## Method oriented to select applicability of models over min_rows_limit
+    # @param self object pointer
+    # @param model_list List[ArMetadata]
+    # @param nrows number of rows of dataframe
+    # @return implicit List[ArMetadata]
+    def applicability(self, model_list, nrows):
+        fw_config = LoadConfig().get_config()['frameworks']
+        exclude_model = list()
+        for iterator in range(0, len(model_list)):
+            fw = model_list[iterator][0]
+            model = model_list[iterator][1]
+            if fw_config[fw]['conf']['min_rows_enabled'] and (nrows < model['min_rows_applicability']):
+                self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                                       model['model'] + ' - ' +
+                                       str(model['min_rows_applicability']))
+                exclude_model.append(model_list[iterator])
+        for model in exclude_model:
+           model_list.remove(model)
 
     ##Method get train accuracy for generic model
     # @param model
@@ -299,16 +284,15 @@ class AdviserAStar(object):
     ## Store executed model base parameters to check past executions
     # @param model - ArMetadata to be stored as executed
     # @param normalization_set
-    # @return model_vector (fw, vector, normalizaton_set)
+    # @return model_vector (fw, model_id, vector, normalizaton_set)
     def generate_vectors(self, model, normalization_set):
         vector = list()
-        if 'h2o' in model['model_parameters'].keys():
-            for parm, parm_value in model['model_parameters']['h2o']['parameters'].items():
-                if isinstance(parm_value, OrderedDict) and parm != 'model_id':
-                    vector.append(parm_value['value'])
-            return 'h2o', model['model_parameters']['h2o']['model'], vector, normalization_set
-        else:
-            return None
+        fw = get_model_fw(model)
+        for parm, parm_value in model['model_parameters'][fw]['parameters'].items():
+            if isinstance(parm_value, OrderedDict) and parm != 'model_id':
+                vector.append(parm_value['value'])
+        return fw, model['model_parameters'][fw]['model'], vector, normalization_set
+
 
     ## Check if model has benn executed or is planned to execute
     # @param vector - model vector
@@ -373,7 +357,7 @@ class AdviserAStar(object):
             hidden_increment = config['hidden_increment']
 
             if model['model'] == 'H2OGradientBoostingEstimator':
-                if (self.deepness + 1 == self.deep_impact) and model['types'][0]['type'] == 'regression':
+                if (self.deepness == self.deep_impact) and model['types'][0]['type'] == 'regression':
                     for distribution in model['parameters']['distribution']['type']:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
@@ -401,13 +385,13 @@ class AdviserAStar(object):
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2OGeneralizedLinearEstimator':
-                if (self.deepness + 1 == self.deep_impact) and model['types'][0]['type'] == 'regression':
+                if (self.deepness  == self.deep_impact) and model['types'][0]['type'] == 'regression':
                     for family in model['parameters']['family']['type']:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
                         model_aux['parameters']['family']['value'] = family
                         self.safe_append(model_list, new_armetadata)
-                if self.deepness == 1:
+                if self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['alpha']['value'] = 0.0
@@ -421,7 +405,7 @@ class AdviserAStar(object):
                         model_aux = new_armetadata['model_parameters']['h2o']
                         model_aux['parameters']['solver']['value'] = 'L_BGFS'
                         self.safe_append(model_list, new_armetadata)
-                if self.deepness == 1:
+                if self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['balance_classes']['value'] = \
@@ -435,7 +419,7 @@ class AdviserAStar(object):
                 if model_metric['number_of_iterations'][0] >= model['parameters']['max_iterations']['value']:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    if self.deepness == 1:
+                    if self.deepness == 2:
                         model_aux['parameters']['max_interactions']['value'] = \
                             max(round(armetadata['data_initial']['rowcount']/max_interactions_rows_breakdown), 1)
                     else:
@@ -443,18 +427,18 @@ class AdviserAStar(object):
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ODeepLearningEstimator':
-                if (self.deepness + 1 == self.deep_impact) and model['types'][0]['type'] == 'regression':
+                if (self.deepness  == self.deep_impact) and model['types'][0]['type'] == 'regression':
                     for distribution in model['parameters']['distribution']['type']:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
                         model_aux['parameters']['distribution']['value'] = distribution
                         self.safe_append(model_list, new_armetadata)
-                if self.deepness == 1:
+                if self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['sparse']['value'] = not model_aux['parameters']['sparse']['value']
                     self.safe_append(model_list, new_armetadata)
-                if self.deepness > 1 and model['parameters']['activation']['value'] == "rectifier_with_dropout":
+                if self.deepness > 2 and model['parameters']['activation']['value'] == "rectifier_with_dropout":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['activation']['value'] = 'tanh_with_dropout'
@@ -464,13 +448,13 @@ class AdviserAStar(object):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['initial_weight_distribution']['value'] = "uniform"
                     self.safe_append(model_list, new_armetadata)
-                elif self.deepness == 1:
+                elif self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['initial_weight_distribution']['value'] = "normal"
                     self.safe_append(model_list, new_armetadata)
 
-                if self.deepness == 1 and armetadata['data_initial']['rowcount'] > dpl_rcount_limit:
+                if self.deepness == 2 and armetadata['data_initial']['rowcount'] > dpl_rcount_limit:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['hidden']['value'] = \
@@ -492,7 +476,7 @@ class AdviserAStar(object):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['epochs']['value'] *= epochs_increment
                     self.safe_append(model_list, new_armetadata)
-                if self.deepness == 1 and model['parameters']['mini_batch_size']['value'] >= dpl_min_batch_size:
+                if self.deepness == 2 and model['parameters']['mini_batch_size']['value'] >= dpl_min_batch_size:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['mini_batch_size']['value'] = \

@@ -26,7 +26,7 @@ class ArMetadata (OrderedDict):
         self['type'] = type_
         self['objective_column'] = None
         self['timestamp'] = None
-        self['round'] = 0
+        self['round'] = 1
         self['execution_seconds'] = 0
         self['load_path'] = StorageMetadata().get_load_path()
         self['metrics'] = OrderedDict()

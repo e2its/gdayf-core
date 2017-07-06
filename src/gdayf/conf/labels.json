@@ -56,13 +56,15 @@
         "delete_frame" : ":No H2ODataframe to delete:",
         "failed_op" : ":Execution Failed:",
         "success_op" : ":Executed:",
-        "hk_check":":Checking for Hash_Keys:"
-
+        "hk_check":":Checking for Hash_Keys:",
+        "no_models":": No base model to saved on Storage"
       },
       "inputhandler" : {},
       "adviser": {
+        "ana_type": "Starting Recommendation Analysis Type (round):",
         "new_vector": "Generating new Model with Vector Params: ",
-        "exc_vector": "Excluding Executed Model with Vector Params: "
+        "exc_vector": "Excluding Executed Model with Vector Params: ",
+        "exc_applicability": "Excluding Model based on applicability limits: "
       },
       "persistence" : {}
     },
