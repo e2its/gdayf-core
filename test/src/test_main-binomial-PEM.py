@@ -4,16 +4,16 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/multinomial/PEM/")
-    source_data.append("PE-MULTINOM.csv")
+    source_data.append("D:/Data/datasheets/binary/PEM/")
+    source_data.append("PE-BINARY.csv")
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
                              amode=FAST, metric='combined', deep_impact=3)
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/multinomial/PEM/")
-    source_data.append("PE-MULTINOM.csv")
+    source_data.append("D:/Data/datasheets/binary/PEM/")
+    source_data.append("PE-BINARY.csv")
     model_source = list()
 
     #controller = Controller()
@@ -34,6 +34,4 @@ if __name__ == "__main__":
 
     controller.clean_handlers()
     del controller
-
-
 

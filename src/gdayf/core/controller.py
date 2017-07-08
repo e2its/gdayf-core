@@ -28,7 +28,7 @@ class Controller(object):
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
-        self.model_handler = None
+        self.model_handler = OrderedDict()
 
 
     ## Method leading and controlling prediction's executions on all frameworks
@@ -48,6 +48,7 @@ class Controller(object):
                 base_ar = deep_ordered_copy(armetadata)
             except AssertionError:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], armetadata)
+                return self._labels["failed_model"]
         elif model_file is not None:
             try:
                 json_file = open(model_file)
@@ -55,25 +56,59 @@ class Controller(object):
                 json_file.close()
             except [IOError, OSError]:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                return self._labels["failed_model"]
         try:
             pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
         except [IOError, OSError, JSONDecodeError]:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 
-        if get_model_fw(base_ar) == 'h2o':
-            self.model_handler = H2OHandler()
-            if not self.model_handler.is_alive():
-                self.model_handler.connect()
-            prediction_frame, _ = self.model_handler.predict(predict_frame=pd_dataset, base_ar=base_ar)
-
-            if self.model_handler is not None:
-                self.model_handler.delete_h2oframes()
-                del self.model_handler
-
+        fw = get_model_fw(base_ar)
+        if fw == 'h2o':
+            self.init_handler(fw)
+            prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset, base_ar=base_ar)
+            self.clean_handler(fw)
+                
         self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
 
         return prediction_frame
+
+    ## Method focus on cleaning handler objects
+    # @param fw framework
+    def clean_handler(self, fw):
+        if self.model_handler[fw]['handler'] is not None:
+            self.model_handler[fw]['handler'].delete_h2oframes()
+            self.model_handler[fw]['handler'] = None
+
+    ## Method oriented to init handler objects
+    # @param fw framework
+    def init_handler(self, fw):
+        try:
+            if self.model_handler[fw]['handler'] is None:
+                self.model_handler[fw]['handler'] = H2OHandler()
+        except KeyError:
+            self.model_handler[fw] = OrderedDict()
+            self.model_handler[fw]['handler'] = H2OHandler()
+            self.model_handler[fw]['initiated'] = False
+        if not self.model_handler[fw]['handler'].is_alive():
+            initiated = self.model_handler[fw]['handler'].connect()
+            self.model_handler[fw]['initiated'] = (self.model_handler[fw]['initiated'] or initiated)
+
+    ## Method oriented to shutdown localClusters
+    def clean_handlers(self):
+
+        for fw, each_handlers in self.model_handler.items():
+            print (fw)
+            print (each_handlers)
+            if each_handlers['handler'] is not None:
+                self.model_handler[fw][each_handlers['handler']].clean_handler(fw)
+                self._logging.log_exec('gDayF', "Controller", self._labels["cleaning"], fw)
+                if each_handlers['initiated']:
+                    if fw == 'h2o':
+                        H2OHandler().shutdown_cluster()
+                        self._logging.log_exec('gDayF', "Controller", self._labels["shutingdown"], fw)
+
+
 
 
     ## Method leading and controlling analysis's executions on all frameworks
@@ -84,6 +119,7 @@ class Controller(object):
     # @param amode Analysis mode of execution [0,1,2,3] [FAST, NORMAL, PARANOIAC, POC]
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined']
     # @param deep_impact  deep analysis
+    # @return status, adviser.analysis_recommendation_order
     def exec_analysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='N/A'):
         self._logging.log_exec('gDayF', "Controller", self._labels["start"])
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
@@ -93,7 +129,10 @@ class Controller(object):
 
         try:
             pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
-        except [IOError, OSError]:
+        except IOError:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+            return self._labels['failed_input']
+        except OSError:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 
@@ -108,18 +147,17 @@ class Controller(object):
 
         while adviser.next_analysis_list is not None:
             for each_model in adviser.next_analysis_list:
+                fw = get_model_fw(each_model)
                 if get_model_fw(each_model) == 'h2o':
-                    if self.model_handler is None:
-                        self.model_handler = H2OHandler()
-                if not self.model_handler.is_alive():
-                    self.model_handler.connect()
+                    self.init_handler(fw)
+
                 if pd_test_dataset is not None:
-                    _, analyzed_model = self.model_handler.order_training(analysis_id=adviser.analysis_id,
+                    _, analyzed_model = self.model_handler['h2o']['handler'].order_training(analysis_id=adviser.analysis_id,
                                                                           training_pframe=pd_dataset,
                                                                           base_ar=each_model,
                                                                           test_frame=pd_test_dataset)
                 else:
-                    _, analyzed_model = self.model_handler.order_training(analysis_id=adviser.analysis_id,
+                    _, analyzed_model = self.model_handler['h2o']['handler'].order_training(analysis_id=adviser.analysis_id,
                                                                           training_frame=pd_dataset,
                                                                           base_ar=each_model)
 
@@ -151,11 +189,9 @@ class Controller(object):
                                    model['round'])
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
-        if self.model_handler is not None:
-            self.model_handler.delete_h2oframes()
-            del self.model_handler
+        self.clean_handler(fw)
 
-        return self._labels['success_op']
+        return self._labels['success_op'], adviser.analysis_recommendation_order
 
     ## Method leading and controlling coversion to java model
     # @param self object pointer
@@ -163,12 +199,12 @@ class Controller(object):
     # @param type base type if is possible
     # @return download_path, hash MD5 key
     def get_java_model(self, armetadata, type='pojo'):
+        fw = get_model_fw(armetadata)
         if get_model_fw(armetadata) == 'h2o':
-            if self.model_handler is None:
-                self.model_handler = H2OHandler()
-            if not self.model_handler.is_alive():
-                self.model_handler.connect()
-            return self.model_handler.get_java_model(armetadata, type)
+            self.init_handler(fw)
+            results = self.model_handler['h2o']['handler'].get_java_model(armetadata, type)
+            self.clean_handler(fw)
+        return results
 
 if __name__ == '__main__':
     source_data = list()

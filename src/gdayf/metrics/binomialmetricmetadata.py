@@ -44,7 +44,10 @@ class BinomialMetricMetadata(MetricMetadata):
     def set_h2ometrics(self, perf_metrics):
         for parameter, _ in self.items():
             if parameter in ['gains_lift_table', 'max_criteria_and_metric_scores']:
-                self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                try:
+                    self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                except KeyError:
+                    pass
             elif parameter in ['cm']:
                 for each_parameter, __ in self['cm'].items():
                     self['cm'][each_parameter] = \

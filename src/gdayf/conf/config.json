@@ -17,7 +17,8 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": true
+        "min_rows_enabled": false,
+        "train_balance_metric" : 0.2
       },
       "models": [
         {
@@ -666,7 +667,7 @@
           "types": [
             {
               "type": "binomial",
-              "active": true,
+              "active": false,
               "valued": "enum"
             },
             {
