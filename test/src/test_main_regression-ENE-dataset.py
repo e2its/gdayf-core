@@ -10,6 +10,10 @@ if __name__ == "__main__":
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
                              amode=FAST, metric='combined', deep_impact=3)
+
+    controller.save_models(recomendations)
+    controller.remove_models(recomendations, mode=ALL)
+
     #Prediction
     source_data = list()
     source_data.append("D:/Data/datasheets/regression/ENB2012/")
@@ -17,7 +21,6 @@ if __name__ == "__main__":
     model_source = list()
 
     #controller = Controller()
-    print(recomendations[0]['load_path'][0]['value'])
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                   model_file=recomendations[0]['json_path'][0]['value'])
     print(prediction_frame)
@@ -32,6 +35,7 @@ if __name__ == "__main__":
     result = controller.get_java_model(recomendations[0], 'mojo')
     print(result)
 
+    controller.remove_models(recomendations, mode=ALL)
     controller.clean_handlers()
     del controller
 

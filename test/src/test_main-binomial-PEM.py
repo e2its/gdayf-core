@@ -9,7 +9,11 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                             amode=FAST, metric='combined', deep_impact=3)
+                             amode=FAST_PARANOIAC, metric='combined', deep_impact=3)
+
+    controller.save_models(recomendations, mode=BEST_3)
+    controller.remove_models(recomendations, mode=BEST)
+
     #Prediction
     source_data = list()
     source_data.append("D:/Data/datasheets/binary/PEM/")
@@ -32,6 +36,7 @@ if __name__ == "__main__":
     result = controller.get_java_model(recomendations[0], 'mojo')
     print(result)
 
+    controller.remove_models(recomendations, mode=ALL)
     controller.clean_handlers()
     del controller
 

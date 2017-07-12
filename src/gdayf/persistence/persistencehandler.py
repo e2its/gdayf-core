@@ -1,9 +1,14 @@
-from json import dump
+from json import dump, dumps, load, loads
+from collections import OrderedDict
 import mmap
 from os import path as ospath
 from os.path import dirname
-from gdayf.common.utils import hash_key
 from pathlib import Path
+from gdayf.common.utils import hash_key
+from gdayf.conf.loadconfig import LoadConfig
+import gzip
+import mimetypes
+
 
 
 ## @package gdayf.persistence.persistencehandler
@@ -24,6 +29,7 @@ class PersistenceHandler(object):
     # @return global_op state (0 success) (n number of errors)
     def store_file(self, storage_json, filename):
         global_op = 0
+
         try:
             file = open(filename, 'rb')
             mmap_ = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
@@ -111,15 +117,22 @@ class PersistenceHandler(object):
     # @param ar_json file ArMetadata Class or OrderedDict() compatible object
     # @return global_op status (0 success) (1 error)
     def _store_json_to_localfs(self, storage_json, ar_json):
-        if not ospath.exists(storage_json['value']):
-            try:
-                self._mkdir_localfs(path=dirname(storage_json['value']), grants=0o0777)
+        compress = LoadConfig().get_config()['persistence']['compress_json']
+        #if not ospath.exists(storage_json['value']):
+        try:
+            self._mkdir_localfs(path=dirname(storage_json['value']), grants=0o0777)
+            if compress:
+                file = gzip.GzipFile(storage_json['value'], 'w')
+                json_str = dumps(ar_json, indent=4)
+                json_bytes = json_str.encode('utf-8')
+                file.write(json_bytes)
+            else:
                 file = open(storage_json['value'], 'w')
                 dump(ar_json, file, indent=4)
-                file.close()
-                return 0
-            except IOError:
-                return 1
+            file.close()
+            return 0
+        except IOError:
+            return 1
         return 1
 
     ## Method used to store a json on ['hdfs'] persistence system
@@ -198,3 +211,22 @@ class PersistenceHandler(object):
             return 0
         except IOError:
             return 1
+
+## Function base to get an ArMetadata Structure from file
+# @param path FilePath
+# @return operation status (0 success /1 error, ArMetadata/None)
+def get_ar_from_file(path):
+    if ospath.exists(path):
+        _, type = mimetypes.guess_type(path)
+        if type == 'gzip':
+            file = gzip.GzipFile(path, 'r')
+            json_bytes = file.read()
+            json_str = json_bytes.decode('utf-8')
+            ar_metadata = loads(json_str, object_hook=OrderedDict)
+        else:
+            file = open(path, 'r')
+            ar_metadata = load(file, object_hook=OrderedDict)
+        file.close()
+        return 0, ar_metadata
+    else:
+        return 1, None

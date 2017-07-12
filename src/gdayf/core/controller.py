@@ -11,6 +11,7 @@ from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data
 from gdayf.common.armetadata import ArMetadata
 from gdayf.common.armetadata import deep_ordered_copy
+from gdayf.persistence.persistencehandler import get_ar_from_file
 from collections import OrderedDict
 from pathlib import Path
 from copy import deepcopy
@@ -51,9 +52,11 @@ class Controller(object):
                 return self._labels["failed_model"]
         elif model_file is not None:
             try:
-                json_file = open(model_file)
-                base_ar = deep_ordered_copy(load(json_file))
-                json_file.close()
+                #json_file = open(model_file)
+                _, base_ar = get_ar_from_file(model_file)
+                base_ar = deep_ordered_copy(base_ar)
+                '''base_ar = deep_ordered_copy(load(json_file))
+                json_file.close()'''
             except [IOError, OSError]:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
@@ -96,10 +99,9 @@ class Controller(object):
 
     ## Method oriented to shutdown localClusters
     def clean_handlers(self):
-
         for fw, each_handlers in self.model_handler.items():
-            print (fw)
-            print (each_handlers)
+            print(fw)
+            print(each_handlers)
             if each_handlers['handler'] is not None:
                 self.model_handler[fw][each_handlers['handler']].clean_handler(fw)
                 self._logging.log_exec('gDayF', "Controller", self._labels["cleaning"], fw)
@@ -107,9 +109,6 @@ class Controller(object):
                     if fw == 'h2o':
                         H2OHandler().shutdown_cluster()
                         self._logging.log_exec('gDayF', "Controller", self._labels["shutingdown"], fw)
-
-
-
 
     ## Method leading and controlling analysis's executions on all frameworks
     # @param self object pointer
@@ -200,11 +199,48 @@ class Controller(object):
     # @return download_path, hash MD5 key
     def get_java_model(self, armetadata, type='pojo'):
         fw = get_model_fw(armetadata)
-        if get_model_fw(armetadata) == 'h2o':
+        if fw == 'h2o':
             self.init_handler(fw)
-            results = self.model_handler['h2o']['handler'].get_java_model(armetadata, type)
+            results = self.model_handler[fw]['handler'].get_java_model(armetadata, type)
             self.clean_handler(fw)
         return results
+
+    ## Method leading and controlling model savings
+    # @param self object pointer
+    # @param mode [BEST, BEST_3, EACH_BEST, ALL]
+    # @mode  type base type if is possible
+
+    def save_models(self, arlist, mode=BEST):
+        if mode == BEST:
+            model_list = [arlist[0]]
+        elif mode == BEST_3:
+            model_list = arlist[0:3]
+        elif mode == ALL:
+            model_list = arlist
+        print(model_list[0]['json_path'])
+        for fw in self._config['frameworks'].keys():
+                self.init_handler(fw)
+                for each_model in model_list:
+                    if fw in each_model['model_parameters'].keys():
+                        results = self.model_handler[fw]['handler'].store_model(each_model)
+                self.clean_handler(fw)
+
+    ## Method leading and controlling model removing from server
+    # @param self object pointer
+    # @param mode [BEST, BEST_3, EACH_BEST, ALL]
+    # @mode  type base type if is possible
+
+    def remove_models(self, arlist, mode=ALL):
+        if mode == BEST:
+            model_list = arlist[1:]
+        elif mode == BEST_3:
+            model_list = arlist[3:]
+        elif mode == ALL:
+            model_list = arlist
+        for fw in self._config['frameworks'].keys():
+            self.init_handler(fw)
+            results = self.model_handler[fw]['handler'].remove_models(model_list)
+            self.clean_handler(fw)
 
 if __name__ == '__main__':
     source_data = list()
@@ -216,6 +252,7 @@ if __name__ == '__main__':
     controller = Controller()
     controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
                              amode=FAST, metric='combined', deep_impact=3)
+
     #Prediction
     source_data = list()
     source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")

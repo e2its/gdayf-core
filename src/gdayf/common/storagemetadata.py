@@ -6,6 +6,7 @@ from gdayf.common.utils import hash_key
 from gdayf.conf.loadconfig import LoadConfig
 from collections import OrderedDict
 from os import path
+from gdayf.common.utils import get_model_fw
 
 
 ## Class storage metadata
@@ -62,7 +63,39 @@ class StorageMetadata (list):
         return LoadConfig().get_config()['storage']['json_path']
 
 
-if __name__ == '__main__':
-    print(get_load_path())
-    print(get_log_path())
-    print(get_json_path())
+## Function to Generate json StorageMetadata for Armetadata
+# @param armetadata structure to be stored
+def generate_json_path(armetadata):
+    config = LoadConfig().get_config()
+    fw = get_model_fw(armetadata)
+    model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
+    primary_path = config['frameworks'][fw]['conf'][config['frameworks'][fw]['conf']['primary_path']]
+    source_data = list()
+    source_data.append(primary_path)
+    source_data.append('/')
+    source_data.append(fw)
+    source_data.append('/')
+    source_data.append(armetadata['model_id'])
+    source_data.append('/')
+    source_data.append(armetadata['type'])
+    source_data.append('/')
+    source_data.append(str(armetadata['timestamp']))
+    source_data.append('/')
+
+    compress = config['persistence']['compress_json']
+    json_storage = StorageMetadata()
+    for each_storage_type in json_storage.get_json_path():
+        specific_data = list()
+        specific_data.append(each_storage_type['value'])
+        specific_data.append('/')
+        specific_data.append(model_id)
+        specific_data.append('.json')
+        if compress:
+            specific_data.append('.gz')
+
+        json_path = ''.join(source_data)
+        json_path += ''.join(specific_data)
+        json_storage.append(value=json_path, fstype=each_storage_type['type'],
+                            hash_type=each_storage_type['hash_type'])
+
+    armetadata['json_path'] = json_storage

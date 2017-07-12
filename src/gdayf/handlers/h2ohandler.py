@@ -14,7 +14,6 @@ from os.path import dirname
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
 from pathlib import Path
-from copy import deepcopy
 
 from h2o import H2OFrame as H2OFrame
 from h2o import cluster as cluster
@@ -26,6 +25,7 @@ from h2o import save_model as save_model
 from h2o.exceptions import H2OError
 from h2o.exceptions import H2OConnectionError
 from h2o import ls as H2Olist
+from h2o import get_model
 from h2o import remove as H2Oremove
 from h2o import api as H2Oapi
 from h2o import get_frame
@@ -38,6 +38,7 @@ from h2o.estimators.random_forest import H2ORandomForestEstimator
 
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.storagemetadata import StorageMetadata
+from gdayf.common.storagemetadata import generate_json_path
 from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
@@ -53,7 +54,7 @@ from gdayf.common.utils import get_model_ns
 from gdayf.common.armetadata import ArMetadata
 from gdayf.models.parametersmetadata import ParameterMetadata
 from gdayf.normalizer.normalizer import Normalizer
-from gdayf.common.utils import  get_model_fw
+from gdayf.common.utils import get_model_fw
 
 
 class H2OHandler(object):
@@ -206,12 +207,15 @@ class H2OHandler(object):
     # @param type ['pojo', 'mojo']
     # @return download_path, MD5 hash_key
     def get_java_model(self, ar_metadata, type):
+        remove_model = False
         fw = get_model_fw(ar_metadata)
         model_id = ar_metadata['model_parameters'][fw]['parameters']['model_id']['value']
-        self.analysis_id = analysis_id = ar_metadata['model_id']
+        self.analysis_id = ar_metadata['model_id']
+        analysis_id = self.analysis_id
         config = LoadConfig().get_config()['frameworks'][fw]['conf']
+        base_model_id = model_id + '.model'
+        load_fails, remove_model = self._get_model(ar_metadata, base_model_id, remove_model)
 
-        load_fails = self.get_model_from_load_path(ar_metadata)
         if load_fails:
             self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                    self._labels["no_models"], ar_metadata)
@@ -238,7 +242,7 @@ class H2OHandler(object):
                 self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                        self._labels["failed_op"], download_path)
         try:
-            if self._model_base is not None:
+            if self._model_base is not None and remove_model:
                 H2Oremove(self._model_base.model_id)
         except H2OError:
             self._logging.log_exec(analysis_id,
@@ -255,24 +259,29 @@ class H2OHandler(object):
         counter_storage = 0
         # Checking file source versus hash_value
 
-        assert isinstance(ar_metadata['load_path'], list)
-        while counter_storage < len(ar_metadata['load_path']) and load_fails:
-            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
-                                   ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
-                                   hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
-                                            ar_metadata['load_path'][counter_storage]['value'])
-                                   )
+        try:
+            assert isinstance(ar_metadata['load_path'], list)
+        except AssertionError:
+            return load_fails
+
+        while ar_metadata['load_path'] is not None and counter_storage < len(ar_metadata['load_path']) and load_fails:
 
             if hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
                         ar_metadata['load_path'][counter_storage]['value']) == \
                     ar_metadata['load_path'][counter_storage]['hash_value']:
                 try:
                     self._model_base = load_model(ar_metadata['load_path'][counter_storage]['value'])
-                    load_fails = False
+                    if self._model_base is not None:
+                        load_fails = False
                 except H2OError:
                     self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                            self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
             counter_storage += 1
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
+                                   ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
+                                   hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
+                                            ar_metadata['load_path'][counter_storage]['value'])
+                                   )
         return load_fails
 
     ## Remove used dataframes during analysis execution_
@@ -711,7 +720,7 @@ class H2OHandler(object):
         # Generating model
         if self._debug:
             final_ar_model['log_path'] = StorageMetadata()
-            for each_storage_type in base_ar['log_path']:
+            for each_storage_type in final_ar_model['log_path'].get_log_path():
                 log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
                 final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
                                                   hash_type=each_storage_type['hash_type'])
@@ -721,8 +730,12 @@ class H2OHandler(object):
         self._model_base = eval(model_command)
         start = time.time()
         try:
-            model_trained = eval(train_command)
+            eval(train_command)
             final_ar_model['status'] = 'Executed'
+            # Generating aditional model parameters Model_ID
+            final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = \
+                OrderedDict(ParameterMetadata(value=model_id, seleccionable=False, type="String"))
+
         except OSError as execution_error:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["abort"],
                                    repr(execution_error))
@@ -737,34 +750,10 @@ class H2OHandler(object):
             self._persistence.store_file(filename=final_ar_model['log_path'][0]['value'],
                                          storage_json=final_ar_model['log_path'])
 
-        # Generating load_path
-        final_ar_model['load_path'] = StorageMetadata()
-        for each_storage_type in base_ar['load_path']:
-            load_path = base_path + each_storage_type['value'] + '/'
-            self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
-            if self._get_ext() == '.pojo':
-                download_pojo(model=self._model_base, path=load_path, get_jar=True)
-            elif self._get_ext() == '.mojo':
-                '''MOJOs are currently supported for Distributed Random Forest, 
-                Gradient Boosting Machine, 
-                Deep Water, GLM, GLRM and word2vec models only.'''
-                self._model_base.download_mojo(path=load_path, get_genmodel_jar=True)
-            else:
-                save_model(model=self._model_base, path=load_path, force=True)
-
-            final_ar_model['load_path'].append(value=load_path + model_id + self._get_ext(),
-                                               fstype=each_storage_type['type'],
-                                               hash_type=each_storage_type['hash_type'])
-
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["msaved"], model_id)
-
         # Filling whole json ar.json
         final_ar_model['ignored_parameters'], \
         final_ar_model['full_parameters_stack'] = self._generate_params()
 
-        # Generating aditional model parameters
-        final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = \
-            OrderedDict(ParameterMetadata(value=model_id, seleccionable=False, type="String"))
 
         # Generating execution metrics
         final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
@@ -833,12 +822,7 @@ class H2OHandler(object):
 
         final_ar_model['status'] = self._labels['success_op']
 
-        # writing ar.json file
-        final_ar_model['json_path'] = StorageMetadata()
-        for each_storage_type in base_ar['json_path']:
-            json_path = base_path + each_storage_type['value'] + '/' + model_id + '.json'
-            final_ar_model['json_path'].append(value=json_path, fstype=each_storage_type['type'],
-                                               hash_type=each_storage_type['hash_type'])
+        generate_json_path(final_ar_model)
         self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
@@ -851,13 +835,64 @@ class H2OHandler(object):
             if self._model_base is not None:
                 H2Oremove(self._get_cv_ids(self._model_base.model_id,
                                            final_ar_model['model_parameters']['h2o']['parameters']['nfolds']['value']))
-                H2Oremove(self._model_base.model_id)
+                #H2Oremove(self._model_base.model_id)
         except H2OError:
             self._logging.log_exec(analysis_id,
                                    self._h2o_session.session_id, self._labels["delete_objects"],
                                    self._model_base.model_id)
         H2Oapi("POST /3/GarbageCollect")
         return analysis_id, final_ar_model
+
+    ## Method to save model to persistence layer from armetadata
+    # @param armetadata structure to be stored
+    # return saved_model (True/False)
+    def store_model(self, armetadata):
+        saved_model = False
+
+        fw = get_model_fw(armetadata)
+        model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
+        analysis_id = armetadata['model_id']
+
+        if model_id + self._get_ext() not in H2Olist()['key'].tolist():
+            return saved_model
+        else:
+            model_base = get_model(model_id + self._get_ext())
+
+        source_data = list()
+        source_data.append(self.primary_path)
+        source_data.append('/')
+        source_data.append(fw)
+        source_data.append('/')
+        source_data.append(armetadata['model_id'])
+        source_data.append('/')
+        source_data.append(armetadata['type'])
+        source_data.append('/')
+        source_data.append(str(armetadata['timestamp']))
+        source_data.append('/')
+
+        # Generating load_path
+        load_storage = StorageMetadata()
+        for each_storage_type in load_storage.get_load_path():
+            load_path = ''.join(source_data) + each_storage_type['value']+'/'
+            self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
+            if self._get_ext() == '.pojo':
+                download_pojo(model=model_base, path=load_path, get_jar=True)
+            elif self._get_ext() == '.mojo':
+                self._model_base.download_mojo(path=load_path, get_genmodel_jar=True)
+            else:
+                save_model(model=model_base, path=load_path, force=True)
+            load_storage.append(value=load_path + model_id + self._get_ext(),
+                                fstype=each_storage_type['type'], hash_type=each_storage_type['hash_type'])
+            saved_model = True
+        armetadata['load_path'] = load_storage
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["msaved"], model_id)
+
+        generate_json_path(armetadata)
+        self._persistence.store_json(storage_json=armetadata['json_path'], ar_json=armetadata)
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
+
+
+        return saved_model
 
     ## Main method to execute predictions over traning models
     # Take the ar.json for and execute predictions including its metrics a storage paths
@@ -867,22 +902,22 @@ class H2OHandler(object):
     # or compatible tuple (OrderedDict(), OrderedDict())
     # @return (String, [ArMetadata]) equivalent to (analysis_id, List[analysis_results])
     def predict(self, predict_frame, base_ar):
+        remove_model = False
         model_timestamp = str(time.time())
         self.analysis_id = base_ar['model_id']
         analysis_id = self.analysis_id
-        base_model_id = base_ar['model_parameters']['h2o']['parameters']['model_id']['value']
+        base_model_id = base_ar['model_parameters']['h2o']['parameters']['model_id']['value'] + '.model'
         model_id = base_model_id + '_' + model_timestamp
 
         antype = base_ar['model_parameters']['h2o']['types'][0]['type']
 
         base_ns = get_model_ns(base_ar)
-
         #Checking file source versus hash_value
-        load_fails = self.get_model_from_load_path(base_ar)
+        load_fails, remove_model = self._get_model(base_ar, base_model_id, remove_model)
 
-        if load_fails:
+        if load_fails or self._model_base is None:
             self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
-                                   self._labels["no_models"], str(base_ar))
+                                   self._labels["no_models"], base_model_id)
             base_ar['status'] = self._labels['failed_op']  # Default Failed Operation Code
             return None
 
@@ -969,14 +1004,8 @@ class H2OHandler(object):
         base_ar['status'] = self._labels['success_op']
 
         # writing ar.json file
-        json_files = StorageMetadata()
-        for each_storage_type in base_ar['json_path']:
-            each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
-                .replace('.json', '_' + model_timestamp + '.json')
-            json_files.append(value=each_storage_type['value'], fstype=each_storage_type['type'],
-                              hash_type=each_storage_type['hash_type'])
-
-        self._persistence.store_json(json_files, base_ar)
+        generate_json_path(base_ar)
+        self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
         for handler in self._logging.logger.handlers:
@@ -992,7 +1021,7 @@ class H2OHandler(object):
                                    self._h2o_session.session_id, self._labels["delete_frame"],
                                    self._model_base.model_id)
         try:
-            if self._model_base is not None:
+            if self._model_base is not None and remove_model:
                 H2Oremove(self._model_base.model_id)
         except H2OError:
             self._logging.log_exec(analysis_id,
@@ -1002,6 +1031,39 @@ class H2OHandler(object):
 
         return prediction_dataframe, base_ar
 
+    ## Internal method to get an H2Omodel from server or file trapasparent to user
+    # @param self Object pointer
+    # @param base_ar armetadata to load from fs
+    # @param base_model_id fro searching on server memory objects
+    # @param remove_model to indicate if has been load from memory o need to remove at last
+    # @return load_fails, remove_model operation status True/False, needs to remove True/False
+    def _get_model(self, base_ar, base_model_id, remove_model):
+        if base_model_id in H2Olist()['key'].tolist():
+            self._model_base = get_model(base_model_id)
+            if self._model_base is None:
+                load_fails = True
+            else:
+                load_fails = False
+        else:
+            load_fails = self.get_model_from_load_path(base_ar)
+            remove_model = True
+        return load_fails, remove_model
+
+    ## Method to remove list of model from server
+    # @param arlist List of ArMetadata
+    # @return remove_fails True/False
+    def remove_models(self, arlist):
+        remove_fails = True
+        try:
+            assert isinstance(arlist, list)
+        except AssertionError:
+            return remove_fails
+        for armetadata in arlist:
+            fw = get_model_fw(armetadata)
+            model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']+'.model'
+            if model_id in H2Olist()['key'].tolist():
+                H2Oremove(model_id)
+        return False
 
 ## auxiliary function (procedure) to generate model and train chain paramters to execute models
 # Modify model_command and train_command String to complete for eval()

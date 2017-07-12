@@ -1,4 +1,7 @@
 {
+  "persistence": {
+    "compress_json": true
+},
   "frameworks": {
     "h2o": {
       "conf": {
@@ -17,7 +20,7 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "train_balance_metric" : 0.2
       },
       "models": [
@@ -340,8 +343,8 @@
                 "type": "float"
               },
               "categorical_encoding": {
-                "value": "auto",
-                "seleccionable": false,
+                "value": "binary",
+                "seleccionable": true,
                 "type": [
                   "auto",
                   "enum",
@@ -667,7 +670,7 @@
           "types": [
             {
               "type": "binomial",
-              "active": false,
+              "active": true,
               "valued": "enum"
             },
             {
@@ -1154,8 +1157,8 @@
                 "type": "boolean"
               },
               "categorical_encoding": {
-                "value": "auto",
-                "seleccionable": false,
+                "value": "binary",
+                "seleccionable": true,
                 "type": [
                   "auto",
                   "enum",
@@ -1462,8 +1465,8 @@
                 ]
               },
               "categorical_encoding": {
-                "value": "auto",
-                "seleccionable": false,
+                "value": "binary",
+                "seleccionable": true,
                 "type": [
                   "auto",
                   "enum",
@@ -1595,6 +1598,9 @@
   },
   "optimizer": {
     "AdviserStart_rules": {
+      "common":{
+        "multi_limit" : 0.1
+      },
       "h2o": {
         "nfold_limit": 5,
         "min_rows_limit": 10,

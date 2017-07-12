@@ -174,6 +174,7 @@ class AdviserAStar(object):
     # @param objective_column string indicating objective column
     # @return ArType or None if objective_column not found
     def get_analysis_objective(self, dataframe_metadata, objective_column):
+        config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['common']
         for each_column in dataframe_metadata['columns']:
             if each_column['name'] == objective_column:
                 if int(each_column['cardinality']) == 2:
@@ -181,7 +182,7 @@ class AdviserAStar(object):
                 if each_column['type'] not in dtypes:
                     if int(each_column['cardinality']) > 2:
                         return ATypesMetadata(multinomial=True)
-                elif int(each_column['cardinality']) <= round(dataframe_metadata['rowcount']/5000):
+                elif int(each_column['cardinality']) <= (dataframe_metadata['rowcount']*config['multi_limit']):
                     return ATypesMetadata(multinomial=True)
                 else:
                     return ATypesMetadata(regression=True)

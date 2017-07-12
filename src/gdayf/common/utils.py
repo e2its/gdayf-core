@@ -70,3 +70,4 @@ def pandas_split_data(df, train_perc=0.9):
     train = df[df.train == 1].drop('train', axis=1)
     test = df[df.train == 0].drop('train', axis=1)
     return train, test
+

@@ -28,7 +28,7 @@ class ArMetadata (OrderedDict):
         self['timestamp'] = None
         self['round'] = 1
         self['execution_seconds'] = 0
-        self['load_path'] = StorageMetadata().get_load_path()
+        self['load_path'] = None
         self['metrics'] = OrderedDict()
         self['normalizations_set'] = None
         self['data_initial'] = None
@@ -36,8 +36,8 @@ class ArMetadata (OrderedDict):
         self['model_parameters'] = None
         self['ignored_parameters'] = None
         self['full_parameters_stack'] = None
-        self['log_path'] = StorageMetadata().get_log_path()
-        self['json_path'] = StorageMetadata().get_json_path()
+        self['log_path'] = None
+        self['json_path'] = None
         self['status'] = -1
 
     ## Get json format string associted to class OredredDict parameters with encoding utf-8 and indent = 4
@@ -60,7 +60,6 @@ class ArMetadata (OrderedDict):
         new_model['round'] = deepness
         new_model['execution_seconds'] = 0.0
         new_model['tolerance'] = 0.0
-        new_model['load_path'] = StorageMetadata().get_load_path()
         new_model['normalizations_set'] = deepcopy(self['normalizations_set'])
         new_model['data_initial'] = deepcopy(self['data_initial'])
         new_model['data_normalized'] = deepcopy(self['data_normalized'])
@@ -88,15 +87,20 @@ def deep_ordered_copy(armetadata):
         if key not in ['load_path', 'json_path', 'load_path' ]:
             new_model[key] = deepcopy(value)
         else:
-            new_model[key] = list()
-            for each_storage in armetadata[key]:
-                new_model[key].append(OrderedDict(
-                    {'value': each_storage['value'],
-                     'type': each_storage['type'],
-                     'hash_value': each_storage['hash_value'],
-                     'hash_type': each_storage['hash_type']
-                     }
-                ))
+            if value is not None:
+                new_model[key] = list()
+                for each_storage in armetadata[key]:
+                    new_model[key].append(OrderedDict(
+                        {'value': each_storage['value'],
+                         'type': each_storage['type'],
+                         'hash_value': each_storage['hash_value'],
+                         'hash_type': each_storage['hash_type']
+                         }
+                    ))
+            else:
+                new_model[key] = None
+
+
     return new_model
 
 
