@@ -12,6 +12,7 @@ if __name__ == "__main__":
                              amode=NORMAL, metric='combined', deep_impact=3)
 
     controller.save_models(recomendations)
+    controller.reconstruct_execution_tree(recomendations, metric='combined')
     controller.remove_models(recomendations, mode=BEST_3)
     #Prediction
     source_data = list()

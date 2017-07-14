@@ -671,6 +671,7 @@ class H2OHandler(object):
 
         final_ar_model = copy.deepcopy(base_ar)
         final_ar_model['status'] = self._labels['failed_op']
+        final_ar_model['version'] = cluster().version
         model_timestamp = str(time.time())
         final_ar_model['data_initial'] = data_initial
         final_ar_model['data_normalized'] = data_normalized
@@ -806,6 +807,8 @@ class H2OHandler(object):
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
                                model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
 
+        final_ar_model['metrics']['execution']['train']
+
         final_ar_model['tolerance'] = tolerance
 
         # Generating model metrics
@@ -861,15 +864,17 @@ class H2OHandler(object):
         source_data = list()
         source_data.append(self.primary_path)
         source_data.append('/')
-        source_data.append(fw)
-        source_data.append('/')
         source_data.append(armetadata['model_id'])
+        source_data.append('/')
+        source_data.append(fw)
         source_data.append('/')
         source_data.append(armetadata['type'])
         source_data.append('/')
         source_data.append(str(armetadata['timestamp']))
         source_data.append('/')
 
+        #Updating status
+        armetadata['status'] = self._labels["success_st"]
         # Generating load_path
         load_storage = StorageMetadata()
         for each_storage_type in load_storage.get_load_path():

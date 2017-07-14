@@ -158,6 +158,7 @@ class AdviserAStar(object):
             ar_structure['model_parameters'][fw] = model_params
             ar_structure['ignored_parameters'] = None
             ar_structure['full_parameters_stack'] = None
+            ar_structure['predecessor'] = 'root'
             ar_structure['status'] = -1
             self.next_analysis_list.append(ar_structure)
             self.analyzed_models.append(self.generate_vectors(ar_structure, norm_sets))
@@ -229,43 +230,43 @@ class AdviserAStar(object):
 
     ##Method get train accuracy for generic model
     # @param model
-    # @return accuracy metric or None if not exists
+    # @return accuracy metric, objective or 0.0, objective if not exists
     @staticmethod
     def get_accuracy(model):
         try:
-            return float(model['metrics']['accuracy']['train'])
+            return float(model['metrics']['accuracy']['train']), 1.0
         except KeyError:
-            return 0.0
+            return 0.0, 1.0
 
     ##Method get test accuracy for generic model
     # @param model
-    # @return accuracy metric or None if not exists
+    # @return accuracy metric, objective or 0.0, objective if not exists
     @staticmethod
     def get_test_accuracy(model):
         try:
-            return float(model['metrics']['accuracy']['test'])
+            return float(model['metrics']['accuracy']['test']), 1.0
         except KeyError:
-            return 0.0
+            return 0.0, 1.0
 
     ##Method get averaged train and test  accuracy for generic model
     # @param model
-    # @return accuracy metric or None if not exists
+    # @return accuracy metric, objective or 0.0, objective if not exists
     @staticmethod
     def get_combined(model):
         try:
-            return float(model['metrics']['accuracy']['combined'])
+            return float(model['metrics']['accuracy']['combined']), 1.0
         except KeyError:
-            return 0.0
+            return 0.0, 1.0
 
     ##Method get rmse for generic model
     # @param model
-    # @return rsme metric or None if not exists
+    # @return rsme metric, objective or 10e+8, objective if not exists
     @staticmethod
     def get_rmse(model):
         try:
-            return float(model['metrics']['execution']['train']['RMSE'])
+            return float(model['metrics']['execution']['train']['RMSE']), 0.0
         except KeyError:
-            return 0.0
+            return 10e+8, 0.0
 
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
@@ -338,8 +339,9 @@ class AdviserAStar(object):
         scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
         model_list = list()
         model = armetadata['model_parameters']['h2o']
+        metric_value, objective = eval('self.get_' + self.metric + '(armetadata)')
 
-        if get_model_fw(armetadata) == 'h2o' and eval('self.get_' + self.metric + '(armetadata)') != 1.0:
+        if get_model_fw(armetadata) == 'h2o' and metric_value != objective:
             config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['h2o']
             nfold_limit = config['nfold_limit']
             min_rows_limit = config['min_rows_limit']

@@ -9,9 +9,10 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                             amode=FAST_PARANOIAC, metric='combined', deep_impact=3)
+                             amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=3)
 
     controller.save_models(recomendations, mode=BEST_3)
+    controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
     controller.remove_models(recomendations, mode=BEST)
 
     #Prediction

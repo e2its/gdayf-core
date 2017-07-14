@@ -203,7 +203,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                  "value": 1.5,
+                  "value": 2.0,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -362,7 +362,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 3000,
+          "min_rows_applicability": 1000,
           "types": [
             {
               "type": "binomial",
@@ -784,7 +784,7 @@
               },
               "score_each_iteration": {
                 "value": false,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "score_interval": {
@@ -803,8 +803,8 @@
                 "type": "int"
               },
               "score_duty_cycle": {
-                "value": 0.15,
-                "seleccionable": true,
+                "value": 0.2,
+                "seleccionable": false,
                 "type": "float"
               },
               "score_validation_sampling": {
@@ -913,7 +913,7 @@
                 "type": "float"
               },
               "hidden_dropout_ratios": {
-                "value": [0.05, 0.05],
+                "value": [0.025, 0.025],
                 "seleccionable": true,
                 "type": "List[float]"
               },
@@ -1370,7 +1370,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                  "value": 1.5,
+                  "value":2.0,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -1571,6 +1571,13 @@
     }
   },
   "storage": {
+    "path_localfs":
+      {"value": "D:/Data/models" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+    "path_hdfs": null,
+    "path_mongoDB": null,
+    "primary_path": "path_localfs",
     "load_path": [
       {"value": "models" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"

@@ -9,16 +9,16 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='combined', deep_impact=3)
+                             amode=FAST, metric='rmse', deep_impact=3)
 
     controller.save_models(recomendations)
+    controller.reconstruct_execution_tree(recomendations, metric='rmse')
     controller.remove_models(recomendations, mode=ALL)
 
     #Prediction
     source_data = list()
     source_data.append("D:/Data/datasheets/regression/ENB2012/")
     source_data.append("ENB2012_data-Y1.csv")
-    model_source = list()
 
     #controller = Controller()
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),

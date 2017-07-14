@@ -12,9 +12,11 @@ from gdayf.common.utils import pandas_split_data
 from gdayf.common.armetadata import ArMetadata
 from gdayf.common.armetadata import deep_ordered_copy
 from gdayf.persistence.persistencehandler import get_ar_from_file
+from gdayf.persistence.persistencehandler import PersistenceHandler
+from gdayf.common.storagemetadata import StorageMetadata
 from collections import OrderedDict
 from pathlib import Path
-from copy import deepcopy
+import time
 from json import load, dumps
 from json.decoder import JSONDecodeError
 
@@ -24,12 +26,13 @@ from json.decoder import JSONDecodeError
 class Controller(object):
 
     ## Constructor
-    def __init__(self):
+    def __init__(self, user_id='PoC-gDayF'):
         self._config = LoadConfig().get_config()
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
         self.model_handler = OrderedDict()
+        self.user_id = user_id
 
 
     ## Method leading and controlling prediction's executions on all frameworks
@@ -100,15 +103,14 @@ class Controller(object):
     ## Method oriented to shutdown localClusters
     def clean_handlers(self):
         for fw, each_handlers in self.model_handler.items():
-            print(fw)
-            print(each_handlers)
             if each_handlers['handler'] is not None:
-                self.model_handler[fw][each_handlers['handler']].clean_handler(fw)
+                #self.model_handler[fw][each_handlers['handler']].clean_handler(fw)
+                self.clean_handler(fw)
                 self._logging.log_exec('gDayF', "Controller", self._labels["cleaning"], fw)
                 if each_handlers['initiated']:
                     if fw == 'h2o':
                         H2OHandler().shutdown_cluster()
-                        self._logging.log_exec('gDayF', "Controller", self._labels["shutingdown"], fw)
+                        self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
 
     ## Method leading and controlling analysis's executions on all frameworks
     # @param self object pointer
@@ -139,7 +141,7 @@ class Controller(object):
         if metric == 'combined' or 'test_accuracy':
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
 
-        adviser = AdviserAStar(analysis_id=Path(datapath).name, metric=metric, deep_impact=deep_impact)
+        adviser = AdviserAStar(analysis_id=self.user_id + '_' + Path(datapath).name, metric=metric, deep_impact=deep_impact)
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
 
         adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
@@ -152,13 +154,13 @@ class Controller(object):
 
                 if pd_test_dataset is not None:
                     _, analyzed_model = self.model_handler['h2o']['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                          training_pframe=pd_dataset,
-                                                                          base_ar=each_model,
-                                                                          test_frame=pd_test_dataset)
+                                                                                            training_pframe=pd_dataset,
+                                                                                            base_ar=each_model,
+                                                                                            test_frame=pd_test_dataset)
                 else:
                     _, analyzed_model = self.model_handler['h2o']['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                          training_frame=pd_dataset,
-                                                                          base_ar=each_model)
+                                                                                            training_frame=pd_dataset,
+                                                                                            base_ar=each_model)
 
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
@@ -182,13 +184,15 @@ class Controller(object):
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["res_model"],
                                     model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["metric_order"],
+            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
                                    model['metrics']['accuracy'])
+            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
+                                   model['metrics']['execution']['train']['RMSE'])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"],
                                    model['round'])
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
-        self.clean_handler(fw)
+        self.clean_handlers()
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
 
@@ -217,7 +221,6 @@ class Controller(object):
             model_list = arlist[0:3]
         elif mode == ALL:
             model_list = arlist
-        print(model_list[0]['json_path'])
         for fw in self._config['frameworks'].keys():
                 self.init_handler(fw)
                 for each_model in model_list:
@@ -241,6 +244,73 @@ class Controller(object):
             self.init_handler(fw)
             results = self.model_handler[fw]['handler'].remove_models(model_list)
             self.clean_handler(fw)
+
+    ##Method oriented to generate execution tree for visualizations and analysis issues
+    # @param arlist Priorized ArMetadata list
+    # @return OrderedDict() with execution tree data Analysis
+    def reconstruct_execution_tree(self, arlist=None, metric='combined'):
+        if arlist is None or len(arlist) == 0:
+            self._logging.log_exec('gDayF', 'controller', self._labels["failed_model"])
+            return None
+        else:
+            analysis_id = arlist[0]['model_id']
+
+        adviser = AdviserAStar(analysis_id=analysis_id, metric=metric)
+        ordered_list = adviser.priorize_models(adviser.analysis_id, arlist)
+
+        root = OrderedDict()
+        root['data'] = None
+        root['ranking'] = 0
+        root['successors'] = OrderedDict()
+        variable_dict = OrderedDict()
+        variable_dict[0] = {'root': root}
+
+        ranking = 1
+        for new_tree_structure in ordered_list:
+            new_model = deep_ordered_copy(new_tree_structure)
+            model_id = new_tree_structure['model_parameters'][get_model_fw(new_tree_structure)]\
+                                         ['parameters']['model_id']['value']
+            level = new_tree_structure['round']
+            if level not in variable_dict.keys():
+                variable_dict[level] = OrderedDict()
+
+            new_tree_structure = OrderedDict()
+            new_tree_structure['ranking'] = ranking
+            new_tree_structure['data'] = new_model
+            new_tree_structure['successors'] = OrderedDict()
+            variable_dict[level][model_id] = new_tree_structure
+
+            ranking += 1
+
+        level = 1
+        while level in variable_dict.keys():
+            for model_id, new_tree_structure in variable_dict[level].items():
+                container = eval('variable_dict[level-1][new_tree_structure[\'data\'][\'predecessor\']]')
+                container['successors'][model_id] = new_tree_structure
+            level += 1
+
+        #Store_json o primary path
+        primary_path = self._config['storage']['primary_path']
+        fstype = self._config['storage'][primary_path]['type']
+
+        datafile = list()
+        datafile.append(self._config['storage'][primary_path]['value'])
+        datafile.append('/')
+        datafile.append(analysis_id)
+        datafile.append('/')
+        datafile.append('Execution_tree_')
+        datafile.append(analysis_id)
+        datafile.append('.json')
+
+        if self._config['persistence']['compress_json']:
+            datafile.append('.gz')
+
+        storage = StorageMetadata()
+        storage.append(value=''.join(datafile), fstype=fstype)
+        print(storage)
+        PersistenceHandler().store_json(storage, root)
+        return root
+
 
 if __name__ == '__main__':
     source_data = list()

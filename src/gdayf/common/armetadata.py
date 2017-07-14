@@ -38,6 +38,7 @@ class ArMetadata (OrderedDict):
         self['full_parameters_stack'] = None
         self['log_path'] = None
         self['json_path'] = None
+        self['predecessor'] = None
         self['status'] = -1
 
     ## Get json format string associted to class OredredDict parameters with encoding utf-8 and indent = 4
@@ -60,6 +61,7 @@ class ArMetadata (OrderedDict):
         new_model['round'] = deepness
         new_model['execution_seconds'] = 0.0
         new_model['tolerance'] = 0.0
+        new_model['predecessor'] = self['model_parameters'][get_model_fw(self)]['parameters']['model_id']['value']
         new_model['normalizations_set'] = deepcopy(self['normalizations_set'])
         new_model['data_initial'] = deepcopy(self['data_initial'])
         new_model['data_normalized'] = deepcopy(self['data_normalized'])
