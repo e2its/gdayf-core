@@ -4,23 +4,25 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/ENB2012/")
-    source_data.append("ENB2012_data-Y1.csv")
+    source_data.append("D:/Data/datasheets/binary/PEM/")
+    source_data.append("PE-BINARY.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='rmse', deep_impact=3)
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
+                             amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=3)
 
-    controller.save_models(recomendations)
-    controller.reconstruct_execution_tree(recomendations, metric='rmse')
-    controller.remove_models(recomendations, mode=ALL)
+    controller.save_models(recomendations, mode=BEST_3)
+    controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
+    controller.remove_models(recomendations, mode=BEST)
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/ENB2012/")
-    source_data.append("ENB2012_data-Y1.csv")
+    source_data.append("D:/Data/datasheets/binary/PEM/")
+    source_data.append("PE-BINARY.csv")
+    model_source = list()
 
     #controller = Controller()
+    print(recomendations[0]['load_path'][0]['value'])
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                   model_file=recomendations[0]['json_path'][0]['value'])
     print(prediction_frame)
@@ -38,6 +40,4 @@ if __name__ == "__main__":
     controller.remove_models(recomendations, mode=ALL)
     controller.clean_handlers()
     del controller
-
-
 

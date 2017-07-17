@@ -67,8 +67,8 @@ if __name__ == "__main__":
     print(analysis_list)
 
     analysis_models = H2OHandler()
-    analysis_results = analysis_models.order_training(analysis_id='PoC_multinomial',  training_frame=pd_train_dataset,
-                                                      valid_frame=pd_train_dataset, analysis_list=analysis_list)
+    analysis_results = analysis_models.order_training(analysis_id='PoC_multinomial', training_frame=pd_train_dataset,
+                                                      valid_frame=pd_train_dataset, model=analysis_list)
 
     for file in os.listdir(r'D:\Data\models\h2o\PoC-regression\train\json'):
         analysis_models = H2OHandler()

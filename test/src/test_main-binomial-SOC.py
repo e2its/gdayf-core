@@ -1,39 +1,42 @@
 if __name__ == "__main__":
 
-    from gdayf.handlers.h2ohandler import H2OHandler
-    from gdayf.handlers.inputhandler import inputHandlerCSV
-    from pandas import DataFrame as DataFrame
-    from pandas import concat as concat
-    from time import time
-    import os
+    from gdayf.core.controller import Controller
+    from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
-    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
-    source_data.append("CODE/h2o-bk/datasets/")
+    source_data.append("D:/Data/datasheets/binary/FODSET/")
+    source_data.append("football.train2.csv")
+    #Analysis
+    controller = Controller()
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='HomeWin',
+                             amode=NORMAL, metric='combined', deep_impact=3)
 
-    pd_train_dataset = concat([inputHandlerCSV().inputCSV(''.join(source_data) + "football.train2.csv"),
-                              inputHandlerCSV().inputCSV(''.join(source_data) + "football.valid2.csv")],
-                              axis=0)
-    pd_test_dataset = inputHandlerCSV().inputCSV(''.join(source_data) + "football.test2.csv")
+    controller.save_models(recomendations)
+    controller.reconstruct_execution_tree(recomendations, metric='combined')
+    controller.remove_models(recomendations, mode=BEST_3)
+    #Prediction
+    source_data = list()
+    source_data.append("D:/Data/datasheets/binary/FODSET/")
+    source_data.append("football.test2.csv")
+    model_source = list()
 
-    print('Training set', pd_train_dataset.shape)
-    print('Test set', pd_test_dataset.shape)
+    #controller = Controller()
+    print(recomendations[0]['load_path'][0]['value'])
+    prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
+                                                  model_file=recomendations[0]['json_path'][0]['value'])
+    print(prediction_frame[['HomeWin', 'predict', 'p0', 'p1']])
 
-    # Binomial_test
-    json_file = open(r'D:\e2its-dayf.svn\gdayf\branches\0.0.3-team03\test\json\ar-binomial-SOC.json')
-    analysis_list = [(json_file, None)]
+    # Save Pojo
+    #controller = Controller()
+    result = controller.get_java_model(recomendations[0], 'pojo')
+    print(result)
 
-    analysis_models = H2OHandler()
-    analysis_results = analysis_models.order_training(analysis_id='PoC_binomial-SOC'+str(time()),
-                                                      training_frame=pd_train_dataset,
-                                                      analysis_list=analysis_list)
-    del analysis_models
+    # Save Mojo
+    #controller = Controller()
+    result = controller.get_java_model(recomendations[0], 'mojo')
+    print(result)
 
-    analysis_models = H2OHandler()
-    for file in os.listdir(r'D:\Data\models\h2o\PoC-binomial-SOC\train\json'):
-        json_file = open(r'D:\Data\models\h2o\PoC-binomial-SOC\train\json' + '/' + file)
-        analysis_results = analysis_models.predict(pd_test_dataset, json_file)
-    del analysis_models
-
+    controller.remove_models(recomendations, mode=ALL)
+    controller.clean_handlers()
+    del controller
 

@@ -5,7 +5,11 @@
 from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
+from json import dumps
+from copy import deepcopy
+from numpy.random import rand
 
+dtypes = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 
 ## Function oriented to get the hash_key for a file
 # @param hash_type in ['MD5', 'SHS256']
@@ -34,3 +38,41 @@ def decode_json_to_dataframe(json_string, orient='split'):
     return read_json(json_string, orient=orient)
 
 
+## Function oriented compare two dicts based on hash_key(json transformations)
+# @param dict1
+# @param dict2
+# @return True if equals false in other case
+def compare_dict(dict1, dict2):
+    if dict1 is None or dict2 is None:
+        return dict1 is None and dict2 is None
+    else:
+        return md5(dumps(dict1)) == md5(dumps(dict2))
+
+
+## Function to get framework from ar.json model description
+def get_model_fw(model):
+    return list(model['model_parameters'].keys())[0]
+
+
+## Function to get normalization_sets structure from ar.json model description
+# @param model ArMetadata
+# @return ArMetadata deepcopy
+def get_model_ns(model):
+    return deepcopy(model['normalizations_set'])
+
+
+## Function to get pandas dataframe split without copy
+# @param df Pandas dataframe
+# @param train_perc % for train_dataframe
+# @return Dict ('trai'n df pointer, 'test' df pointer)
+def pandas_split_data(df, train_perc=0.9):
+    df['train'] = rand(len(df)) < train_perc
+    train = df[df.train == 1].drop('train', axis=1)
+    test = df[df.train == 0].drop('train', axis=1)
+    return train, test
+
+## Function oriented to extract ArMetadata from json and generate ArMetadata List with all Analysis Data
+# @param path path pointed to analysis storage fs
+# @return ArMetadata List
+def get_arlist_from_path (path):
+    pass

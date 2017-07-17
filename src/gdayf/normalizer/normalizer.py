@@ -1,7 +1,8 @@
 #!/usr/bin/python3
 import numpy as np
 import pandas as pd
-from sklearn import preprocesing
+from sklearn import preprocessing
+from copy import deepcopy
 
 
 class Normalizer:
@@ -12,7 +13,7 @@ class Normalizer:
         if (normalizemd['type'] == 'pandas'):
             dataframe = df.copy()
             for col in normalizemd['columns']:
-                if (col['class'] == 'mean'):
+                if col['class'] == 'mean':
                     dataframe[col['name']] = self.normalizeMean(dataframe[col['name']],
                                                                 col['objective']['mean'],
                                                                 col['objective']['std'])
@@ -38,8 +39,8 @@ class Normalizer:
                     dataframe[col['name']] = self.normalizeBinaryEncoding(dataframe[col['name']])
                 else:
                     print("Nothing to Normalize")
-
-            return dataframe
+            dataframe
+            return
 
     def normalizeWorkingRange(self, dataframe, minval=0, maxval=1):
         assert(maxval > minval)
@@ -59,7 +60,7 @@ class Normalizer:
         return True
 
     def normalizeMean(self, dataframe, mean=0, std=1):
-        if (dataframe.dtype != numpy.object):
+        if (dataframe.dtype != np.object):
             #dataframe = (dataframe - dataframe.mean()) / ((dataframe.max()) - (dataframe.min()))
             #Aplico fórmula de estandarización:
             #dataframe = (dataframe - mean ) / std

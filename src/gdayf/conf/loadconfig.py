@@ -13,20 +13,19 @@ class LoadConfig(object):
     _configfile = None
 
     ## Constructor
-    def __init__(self, configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.4-mrazul\src\gdayf\conf\config.json'):
+    def __init__(self, configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.5-mrzul\src\gdayf\conf\config.json'):
         # @var _config protected member variable to store config parameters
         self._config = None
         # @var _configfile protected member variable to store configfile path
         self._configfile = configfile
-
         if path.exists(configfile):
             with open(configfile, 'rt') as f:
                 try: 
                     self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')
-                except Exception:
-                    raise Exception
+                except IOError:
+                    raise IOError
         else:
-            raise Exception
+            raise IOError
 
     ## Returns OrderedDict with all system configuration
     # @param self object pointer
@@ -40,6 +39,41 @@ class LoadConfig(object):
     def get_configfile(self):
         return self._configfile
 
+
+
+## Class Getting the config file place on default location and load all labels
+# named self._config on OrderedDict() format
+class LoadLabels(object):
+    _config = None
+    _configfile = None
+
+    ## Constructor
+    def __init__(self, lang='en', configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.5-mrzul\src\gdayf\conf\labels.json'):
+        # @var _config protected member variable to store config parameters
+        self._config = None
+        # @var _configfile protected member variable to store configfile path
+        self._configfile = configfile
+        if path.exists(configfile):
+            with open(configfile, 'rt') as f:
+                try:
+                    self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')[lang]
+                except IOError:
+                    raise IOError
+        else:
+            raise IOError
+
+    ## Returns OrderedDict with all system labels
+    # @param self object pointer
+    # @return OrderedDict() config
+    def get_config(self):
+        return self._config
+
+    ## Returns labelsfile path
+    # @param self object pointer
+    # @return file full string path
+    def get_configfile(self):
+        return self._configfile
+
 if __name__ == "__main__":
-    m = LoadConfig(__name__)
-    print(m.get_config()['logging'])
+    m = LoadConfig()
+    print(m.get_config()['storage'])

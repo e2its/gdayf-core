@@ -25,13 +25,13 @@ class BinomialMetricMetadata(MetricMetadata):
         self['logloss'] = None
         self['max_criteria_and_metric_scores'] = OrderedDict
         self['cm'] = OrderedDict()
-        self['cm']['min_per_class_accuracy'] = OrderedDict()
-        self['cm']['absolute_mcc'] = OrderedDict()
-        self['cm']['precision'] = OrderedDict()
-        self['cm']['accuracy'] = OrderedDict()
-        self['cm']['f0point5'] = OrderedDict()
-        self['cm']['f2'] = OrderedDict()
-        self['cm']['f1'] = OrderedDict()
+        self['cm']['min_per_class_accuracy'] = None
+        self['cm']['absolute_mcc'] = None
+        self['cm']['precision'] = None
+        self['cm']['accuracy'] = None
+        self['cm']['f0point5'] = None
+        self['cm']['f2'] = None
+        self['cm']['f1'] = None
 
     # Me#thod to set precision measure
     # Not implemented yet
@@ -44,18 +44,21 @@ class BinomialMetricMetadata(MetricMetadata):
     def set_h2ometrics(self, perf_metrics):
         for parameter, _ in self.items():
             if parameter in ['gains_lift_table', 'max_criteria_and_metric_scores']:
-                self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                try:
+                    self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                except KeyError:
+                    pass
             elif parameter in ['cm']:
-                pass
-            elif parameter in ['thresholds_and_metric_scores']:
-                self['cm'] = OrderedDict()
-                for each_parameter in ['min_per_class_accuracy', 'absolute_mcc', 'precision', 'accuracy',
-                                       'f0point5', 'f2', 'f1', 'mean_per_class_accuracy']:
+                for each_parameter, __ in self['cm'].items():
                     self['cm'][each_parameter] = \
                         perf_metrics.confusion_matrix(
                             metrics=each_parameter).table.as_data_frame().to_json(orient='split')
+            elif parameter in ['thresholds_and_metric_scores']:
+                pass
             else:
                 try:
                     self[parameter] = perf_metrics._metric_json[parameter]
                 except KeyError:
+                    pass
+                except AttributeError:
                     pass

@@ -15,6 +15,7 @@
         "firstq": 381975,
         "secondq" : 457600,
         "thirdq" : 533325,
+        "cardinality" : 100
       },
       {"name" : "INICIO",
         "type"    : "np.datetime64",

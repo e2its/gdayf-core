@@ -12,11 +12,9 @@ from gdayf.conf.loadconfig import LoadConfig
 class LogsHandler (object):
     ## Constructor
     def __init__(self, module=__name__):
-        print(__name__)
         # @var _config
         # protected variable for loading and store DayF whole configuration parameters
         self._conf = LoadConfig().get_config()['logging']
-        print(self._conf)
         # @var logger
         # variable for setting log global handlers
         self.logger = logging.getLogger(module)
@@ -29,68 +27,79 @@ class LogsHandler (object):
     # @param message Text to log
     # @return String event log formatted message
     @staticmethod
-    def _compose_log_record(trigger, session, message):
+    def _compose_log_record(trigger, session, message, add_message=''):
         record = list()
         record.append('\t')
         record.append(trigger)
         record.append('\t')
         record.append(session)
         record.append('\t')
-        record.append('\"')
         record.append(message)
-        record.append('\"')
+        record.append('\t')
+        record.append(str(add_message))
         return ''.join(record)
 
     ## Method for INFO events
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
-    def log_info(self, trigger, session, message):
-        print(message)
-        self.logger.info(self._compose_log_record(trigger, session, message))
+    def log_info(self, trigger, session, message, add_message=''):
+        print(self._compose_log_record(trigger, session, message, add_message))
+        self.logger.info(self._compose_log_record(trigger, session, message, add_message))
 
     ## Method for CRITICAL events
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
-    def log_critical(self, trigger, session, message):
-        self.logger.critical(self._compose_log_record(trigger, session, message))
+    def log_critical(self, trigger, session, message, add_message=''):
+        print(self._compose_log_record(trigger, session, message, add_message))
+        self.logger.critical(self._compose_log_record(trigger, session, message, add_message))
 
     ## Method for EXECUTION (INFO EQUIVALENT) events
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
-    def log_exec(self, trigger, session, message):
-        self.logger.info(self._compose_log_record(trigger, session, message))
+    def log_exec(self, trigger, session, message, add_message=''):
+        print(self._compose_log_record(trigger, session, message, add_message))
+        self.logger.info(self._compose_log_record(trigger, session, message, add_message))
 
     ## Method for WARNING events
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
-    def log_warning(self, trigger, session, message):
-        self.logger.warning(self._compose_log_record(trigger, session, message))
+    def log_warning(self, trigger, session, message, add_message=''):
+        print(self._compose_log_record(trigger, session, message, add_message))
+        self.logger.warning(self._compose_log_record(trigger, session, message, add_message))
 
     ## Method for ERROR) events
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
-    def log_error(self, trigger, session, message):
+    def log_error(self, trigger, session, message, add_message=''):
+        print(self._compose_log_record(trigger, session, message, add_message))
         self.logger.error(self._compose_log_record(trigger, session, message))
 
     ## Method for DEBUG events
     # @param trigger usually Analysis_id who launch the event log activity
     # @param session system session_id
     # @param message Text to log
+    # @param add_message Text for additional message
     # @return None (event logging)
-    def log_debug(self, trigger, session, message):
-        self.logger.debug(self._compose_log_record(trigger, session, message))
+    def log_debug(self, trigger, session, message, add_message=''):
+        print(self._compose_log_record(trigger, session, message, add_message))
+        self.logger.debug(self._compose_log_record(trigger, session, message, add_message))
 
-if __name__ == "logs.logshandler":
+if __name__ == "__main__":
     logging = LogsHandler(__name__)
     logging.log_debug('logging', '234567', 'Prueba')
     logging.log_info('logging', '234567','Prueba')
