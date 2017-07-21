@@ -229,16 +229,19 @@ class H2OHandler(object):
         persistence = PersistenceHandler()
         persistence.mkdir(type='localfs', path=str(download_path), grants=0o0777)
 
+
         if type.upper() == 'MOJO':
             try:
                 file_path = self._model_base.download_mojo(path=str(download_path), get_genmodel_jar=True)
             except H2OError:
+                load_fails = True
                 self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                        self._labels["failed_op"], download_path)
         else:
             try:
                 file_path = download_pojo(self._model_base, path=str(download_path), get_jar=True)
             except H2OError:
+                load_fails = True
                 self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                        self._labels["failed_op"], download_path)
         try:
@@ -248,7 +251,11 @@ class H2OHandler(object):
             self._logging.log_exec(analysis_id,
                                    self._h2o_session.session_id, self._labels["delete_objects"],
                                    self._model_base.model_id)
-        return download_path, hash_key('MD5', filename=file_path)
+
+        if not load_fails:
+            return download_path, hash_key('MD5', filename=file_path)
+        else:
+            return None
 
     ## Generate list of models_id for internal crossvalidation objects_
     # @param self object pointer
@@ -734,8 +741,10 @@ class H2OHandler(object):
             eval(train_command)
             final_ar_model['status'] = 'Executed'
             # Generating aditional model parameters Model_ID
-            final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = \
-                OrderedDict(ParameterMetadata(value=model_id, seleccionable=False, type="String"))
+            final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = ParameterMetadata()
+            final_ar_model['model_parameters']['h2o']['parameters']['model_id'].set_value(value=model_id,
+                                                                                          seleccionable=False,
+                                                                                          type="String")
 
         except OSError as execution_error:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["abort"],

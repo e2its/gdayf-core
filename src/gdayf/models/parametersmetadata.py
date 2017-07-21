@@ -10,8 +10,14 @@ from collections import OrderedDict
 ##Class Parameter metadata
 class ParameterMetadata(OrderedDict):
     ## Constructor
-    def __init__(self, value, seleccionable=True, type=None):
+    def __init__(self):
         OrderedDict.__init__(self)
+
+    ## Method for setting values on all field
+    # @param value value
+    # @param boolean True/False
+    # @param type value's options
+    def set_value(self, value, seleccionable=True, type=None):
         self['value'] = value
         self['seleccionable'] = bool(seleccionable)
         self['type'] = str(type)
