@@ -1614,7 +1614,7 @@
         "multi_limit" : 0.1
       },
       "h2o": {
-        "nfold_limit": 5,
+        "nfold_limit": 8,
         "min_rows_limit": 10,
         "cols_breakdown": 200,
         "nfold_increment": 2,

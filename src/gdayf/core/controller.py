@@ -293,14 +293,20 @@ class Controller(object):
             ranking += 1
 
         level = 1
-        while level in variable_dict.keys():
+        max_level = max(variable_dict.keys())
+        while level in range(1, max_level+1):
             for model_id, new_tree_structure in variable_dict[level].items():
-                try:
-                    container = eval('variable_dict[level-1][new_tree_structure[\'data\'][\'predecessor\']]')
-                except KeyError:
-                    self._logging.log_debug(adviser.analysis_id, 'controller', self._labels["fail_reconstruct"],
-                                            variable_dict)
-                container['successors'][model_id] = new_tree_structure
+                counter = 1
+                found = False
+                while not found or (level - counter) == 0:
+                    if new_tree_structure['data']['predecessor'] in variable_dict[level-counter].keys():
+                        container = eval('variable_dict[level-counter][new_tree_structure[\'data\'][\'predecessor\']]')
+                        container['successors'][model_id] = new_tree_structure
+                        found = True
+                    counter += 1
+                if not found:
+                    self._logging.log_debug(adviser.analysis_id, 'controller', self._labels['fail_reconstruct'],
+                                            model_id)
             level += 1
 
         #Store_json o primary path

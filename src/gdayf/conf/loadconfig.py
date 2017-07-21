@@ -48,7 +48,7 @@ class LoadLabels(object):
     _configfile = None
 
     ## Constructor
-    def __init__(self, lang='en', configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.0.5-mrzul\src\gdayf\conf\labels.json'):
+    def __init__(self, lang='en', configfile=r'D:\e2its-dayf.svn\gdayf\branches\0.1.1-mrazul\src\gdayf\conf\labels.json'):
         # @var _config protected member variable to store config parameters
         self._config = None
         # @var _configfile protected member variable to store configfile path
