@@ -1609,6 +1609,9 @@
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
+    "normalizations_enabled": true,
+    "string_to_categorical_enabled": true,
+    "reduccion_dimension_enabled": true,
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.1

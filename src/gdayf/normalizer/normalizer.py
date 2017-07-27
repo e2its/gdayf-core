@@ -5,83 +5,193 @@ from sklearn import preprocessing
 from copy import deepcopy
 
 
-class Normalizer:
+## Class oriented to manage normalizations on dataframes for improvemnts on accuracy
+class Normalizer (object):
     def __init__(self):
-        True
-
+        pass
+    ## Main method oriented to define and manage normalizations sets applying normalizations
+    # @param self object pointer
+    # @param df dataframe
+    # @param normalizedmd OrderedDict() compatible structure
+    # @return dataframe
     def normalizeDataFrame(self, df, normalizemd):
-        if (normalizemd['type'] == 'pandas'):
+        if normalizemd['type'] == 'pandas':
             dataframe = df.copy()
-            for col in normalizemd['columns']:
-                if col['class'] == 'mean':
-                    dataframe[col['name']] = self.normalizeMean(dataframe[col['name']],
-                                                                col['objective']['mean'],
-                                                                col['objective']['std'])
-                elif (col['class'] == 'working_range'):
-                    dataframe[col['name']] = self.normalizeWorkingRange(dataframe[col['name']],
-                                               col['objective']['minval'],
-                                               col['objective']['maxval'])
-                elif (col['class'] == 'discretize'):
-                    dataframe[col['name']] = self.normalizeDiscretize(dataframe[col['name']],
-                                                                      col['objective']['buckets_number'],
-                                                                      col['objective']['fixed_size'])
-                elif (col['class'] == 'aggregation'):
-                    dataframe[col['name']] = self.normalizeAgregation(dataframe[col['name']],
-                                                                      col['objective']['bucket_radio'])
-                elif (col['class'] == 'missing_values'):
-                    dataframe[col['name']] = self.normalizeMissingValues(dataframe[col['name']],
-                                                                         col['objective']['mean'],
-                                                                         col['objective']['mode'],
-                                                                         col['objective']['fixed'],
-                                                                         col['objective']['k_nearest'],
-                                                                         col['objective']['value'])
-                elif (col['class'] == 'binary_encoding'):
-                    dataframe[col['name']] = self.normalizeBinaryEncoding(dataframe[col['name']])
+            for col, norms in normalizemd['columns']:
+                if norms['class'] == 'base':
+                    self.normalizeBase(dataframe[col])
+                elif norms['class'] == 'drop_missing':
+                    self.normalizeDropMissing(dataframe, col)
+                elif norms['class'] == 'stdmean':
+                    self.normalizeStdMean(dataframe[col])
+                elif norms['class'] == 'working_range':
+                    self.normalizeWorkingRange(dataframe[col],
+                                               norms['objective']['minval'],
+                                               norms['objective']['maxval'])
+                elif norms['class'] == 'discretize':
+                    self.normalizeDiscretize(dataframe[col],
+                                             norms['objective']['buckets_number'],
+                                             norms['objective']['fixed_size'])
+                elif norms['class'] == 'aggregation':
+                    self.normalizeAgregation(dataframe[col], norms['objective']['bucket_ratio'])
+                elif norms['class'] == 'fixed_missing_values':
+                    self.fixedMissingValues(dataframe[col], norms['objective']['value'])
+                elif norms['class'] == 'mean_missing_values':
+                    self.meanMissingValues(dataframe[col],
+                                           col,
+                                           norms['objective']['objective_column'],
+                                           norms['objective']['value']
+                                           )
+                elif norms['class'] == 'progressive_missing_values':
+                    self.progressiveMissingValues(dataframe[col],
+                                                  col,
+                                                  norms['objective']['objective_column'])
+                elif norms['class'] == 'binary_encoding':
+                    self.normalizeBinaryEncoding(dataframe[col])
                 else:
                     print("Nothing to Normalize")
-            dataframe
-            return
+            return dataframe
+        else:
+            return df
 
+    ## Internal method oriented to manage drop NaN values from dataset
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @return dataframe
+    def normalizeBase(self, dataframe):
+        if dataframe.dtype == np.object:
+            try:
+                return pd.to_numeric(dataframe)
+            except ValueError:
+                try:
+                    return pd.to_datetime(dataframe)
+                except ValueError:
+                    return pd.Categorical(dataframe)
+
+    ## Internal method oriented to manage base normalizations
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @param col column base to reference drop NaN
+    # @return dataframe
+    def normalizeDropMissing(self, dataframe, col):
+        return dataframe.dropna(axis=0, subset=[col])
+
+    ## Internal method oriented to manage Working range normalizations on a [closed, closed] interval
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @param minval
+    # @param maxval
+    # @return dataframe
     def normalizeWorkingRange(self, dataframe, minval=0, maxval=1):
         assert(maxval > minval)
-        if (dataframe[dataframe.columns[0]].dtype != np.object):
-            dataframe = (maxval - minval) * ((dataframe - dataframe.min()) / (dataframe.max() - dataframe.min())) + maxval
+        if dataframe.dtype != np.object:
+            dataframe = (maxval - minval) * ((dataframe - dataframe.min()) /
+                                             (dataframe.max() - dataframe.min())) + minval
+        return dataframe
 
-    def normalizeAggregation(self, dataframe, br=0.25):
-        if (dataframe[dataframe.columns[0]].dtype != np.object):
-            buckets = int(1 / br)
+    ## Internal method oriented to manage bucket ratio normalizations head - tail
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @param br bucket ratio
+    # @return dataframe
+    def normalizeAgregation(self, dataframe, br=0.25):
+        if (dataframe.dtype != np.object):
+            buckets = int(1 / (br/2))
             q, bins = pd.qcut(dataframe.iloc[:], buckets, retbins=True)
-            if (dataframe[dataframe.columns[0]].dtype != np.int):
+            if dataframe.dtype != np.int:
                 dataframe[dataframe <= bins[1]] = np.int(dataframe[dataframe <= bins[1]].mean())
+                dataframe[dataframe >= bins[-2]] = np.int(dataframe[dataframe >= bins[-2]].mean())
             else:
                 dataframe[dataframe <= bins[1]] = dataframe[dataframe <= bins[1]].mean()
+                dataframe[dataframe <= bins[-2]] = dataframe[dataframe <= bins[-2]].mean()
+        return dataframe
 
+    ## Internal method oriented to manage Binary encodings
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @return dataframe
     def normalizeBinaryEncoding(self, dataframe):
-        return True
+        return dataframe
 
-    def normalizeMean(self, dataframe, mean=0, std=1):
+    ## Internal method oriented to manage mean and std normalizations. Default mean=0 std=1
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @return dataframe
+    def normalizeStdMean(self, dataframe):
         if (dataframe.dtype != np.object):
-            #dataframe = (dataframe - dataframe.mean()) / ((dataframe.max()) - (dataframe.min()))
-            #Aplico fórmula de estandarización:
-            #dataframe = (dataframe - mean ) / std
-            dataframe = preprocesing.scale(dataframe)
+            #dataframe = (dataframe - dataframe.mean()) / dataframe.std()
+            dataframe = preprocessing.scale(dataframe)
+        return dataframe
 
+    ## Internal method oriented to manage bucketing for discretize
+    # @param self object pointer
+    # dataframe single column dataframe
+    # @param buckets number Int
+    # @param fixed size Boolean (True=Fixed Size, False Fixed Frecuency
+    # @return dataframe
     def normalizeDiscretize(self, dataframe, buckets_number, fixed_size):
         #Un número de buckets de tamaño fixed_size
-        if (fixed_size == 0):
-            True
+        if fixed_size:
+            return pd.qcut(dataframe, buckets_number)
         else:
-            buckets = np.linspace(0,fixed_size,fixed_size*buckets_number)
-            dataframe = np.digitize(dataframe,buckets)
+            return pd.cut(dataframe, buckets_number)
 
-    def normalizeMissingValues(self, dataframe, mean, mode, fixed, k_nearest, value):
-        #Aplicar media, moda o fijo
-        if (mean == True):
-            #dataframe = pd.DataFrame.fillna()
-            True
-        elif (mode == True):
-            True
-        elif(fixed == True):
-            True
+    ## Internal method oriented to manage imputation for missing values to fixed value
+    # @param self object pointer
+    # dataframe single column dataframe
+    # @param value
+    # @return dataframe
+    def fixedMissingValues(self, dataframe, value=0.0):
+        return dataframe.fillna(value)
+
+    ## Internal method oriented to manage imputation for missing values to mean value
+    # @param self object pointer
+    # @param dataframe full column dataframe
+    # @param col column name for imputation
+    # @param objective_col objective_column
+    # @param full True means fll_dataframe.mean(), False means objective_col.value.mean()
+    # @return dataframe
+    def meanMissingValues(self, dataframe, col, objective_col, full=False):
+        if full:
+            return dataframe.fillna(dataframe.mean())
         else:
-            print("Nothing to Normalize")
+            nullfalse = dataframe[dataframe[:][col].notnull()][[col, objective_col]]
+            nullfalse_gb = nullfalse.groupby(objective_col).mean()
+            for index, row in dataframe[dataframe[:][col].isnull()].iterrows():
+                row = row.copy()
+                if nullfalse_gb.index.isin([row[objective_col]]).any():
+                    dataframe.loc[index, col] = nullfalse_gb.loc[row[objective_col], col]
+            return dataframe
+
+    ## Internal method oriented to manage progressive imputations for missing values.
+    # ([right_not_nan] - [left_not_nan])/Cardinality(is_nan)
+    # @param self object pointer
+    # @param dataframe full column dataframe
+    # @param col column name for imputation
+    # @param objective_col objective_column
+    # @return dataframe
+    def progressiveMissingValues(self, dataframe, col, objective_col):
+        nullfalse = dataframe[dataframe[:][col].notnull()].sort_values(objective_col,
+                                                                       axis=0,
+                                                                       ascending=True)[[col, objective_col]]
+        nullfalse_gb = nullfalse.groupby(objective_col).mean()
+        for index, row in dataframe[dataframe[:][col].isnull()].iterrows():
+            row = row.copy()
+            if nullfalse_gb.index.isin([row[objective_col]]).any():
+                dataframe.loc[index, col] = nullfalse_gb.loc[row[objective_col], col]
+            else:
+                index_max = nullfalse_gb.index.where(nullfalse_gb.index > row[objective_col]).min()
+                index_min = nullfalse_gb.index.where(nullfalse_gb.index < row[objective_col]).max()
+                if index_min is np.nan:
+                    dataframe.loc[index, col] = nullfalse_gb.loc[index_max, col]
+                elif index_max is np.nan:
+                    dataframe.loc[index, col] = nullfalse_gb.loc[index_min, col]
+                else:
+                    minimal = min(nullfalse_gb.loc[index_min, col], nullfalse_gb.loc[index_max, col])
+                    maximal = max(nullfalse_gb.loc[index_min, col], nullfalse_gb.loc[index_max, col])
+                    b = maximal - minimal
+                    a = index_max - index_min
+                    x = (row[objective_col] - index_min) / a
+                    offset = b * x
+                    dataframe.loc[index, col] = minimal + offset
+        return dataframe
