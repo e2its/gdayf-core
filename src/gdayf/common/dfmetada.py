@@ -31,13 +31,16 @@ class DFMetada(OrderedDict):
                     auxdict[comp] = str(summary[comp])
                 except KeyError:
                     auxdict[comp] = 'NaN'
-            auxdict['zeros'] = str(dataframe[col][dataframe[col] == 0].count())
+            if typedf in dtypes:
+                auxdict['zeros'] = str(dataframe[dataframe.loc[:, col] == 0][col].count())
+            else:
+                auxdict['zeros'] = 'NaN'
             auxdict['missed'] = str(
                 dataframe[col].isnull().values.ravel().sum())
-            auxdict['cardinality'] = str(int(dataframe[col].value_counts().describe()['count']))
+            auxdict['cardinality'] = str(int(dataframe.loc[:, col].value_counts().describe()['count']))
             auxdict['histogram'] = OrderedDict()
             if int(auxdict['cardinality']) < 100:
-                hist = dataframe[col].value_counts().to_dict()
+                hist = dataframe.loc[:, col].value_counts().to_dict()
                 for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                     auxdict['histogram'][str(tupla[0])] = str(tupla[1])
             else:

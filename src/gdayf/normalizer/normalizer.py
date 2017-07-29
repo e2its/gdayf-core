@@ -2,57 +2,162 @@
 import numpy as np
 import pandas as pd
 from sklearn import preprocessing
+from gdayf.conf.loadconfig import LoadConfig
+from gdayf.conf.loadconfig import LoadLabels
+from gdayf.logs.logshandler import LogsHandler
+from collections import OrderedDict
+import numpy
+from gdayf.common.normalizationset import NormalizationSet
 from copy import deepcopy
 
 
-## Class oriented to manage normalizations on dataframes for improvemnts on accuracy
+## Class oriented to manage normalizations on dataframes for improvements on accuracy
 class Normalizer (object):
     def __init__(self):
-        pass
+        self._config = LoadConfig().get_config()['normalizer']
+        self._labels = LoadLabels().get_config()['messages']['normalizer']
+        self._logging = LogsHandler(__name__)
+
+    ## Method oriented to specificate data_normalizations
+    # @param dataframe_metadata DFMetadata()
+    # @param an_objective ATypesMetadata
+    # @param objective_column string indicating objective column
+    # @return None if nothing to DO or Normalization_sets orderdict() on other way
+    def define_normalizations(self, dataframe_metadata, an_objective, objective_column):
+        if not self._config['normalizations_enabled']:
+            return None
+        else:
+            type = dataframe_metadata['type']
+            print(dataframe_metadata['type'])
+            rowcount = dataframe_metadata['rowcount']
+            cols = dataframe_metadata['cols']
+            columns = dataframe_metadata['columns']
+            norms = OrderedDict()
+            norms['columns'] = OrderedDict()
+            normoption = NormalizationSet()
+            if type == 'pandas':
+                for description in columns:
+                    col = description['name']
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["col_analysis"],
+                                           description['name'] + ' - ' + description['type'])
+                    if col == objective_column:
+                        if int(description['missed']) != 0:
+                            normoption.set_drop_missing()
+                            norms['columns'][col] = normoption.copy()
+                        if description['type'] == "object" and self._config['base_normalization_enabled']:
+                            normoption.set_base()
+                            norms['columns'][col] = normoption.copy()
+                for description in columns:
+                    col = description['name']
+                    if col != objective_column:
+                        if description['type'] == "object" and self._config['base_normalization_enabled']:
+                            normoption.set_base()
+                            norms['columns'][col] = normoption.copy()
+                        if int(description['missed']) > 0 and \
+                           (int(description['missed'])/rowcount < self._config['exclusion_missing_threshold']):
+                            if an_objective[0]['type'] in ['binomial', 'multinomial']:
+                                normoption.set_mean_missing_values(objective_column, full=False)
+                                norms['columns'][col] = normoption.copy()
+                            elif an_objective[0]['type'] in ['regression']:
+                                normoption.set_progressive_missing_values(objective_column)
+                                norms['columns'][col] = normoption.copy()
+                        elif int(description['missed']) > 0:
+                            normoption.set_ignore_column()
+                            norms['columns'][col] = normoption.copy()
+                self._logging.log_exec('gDayF', "Normalizer", self._labels["norm_set_establish"], norms)
+                return norms.copy()
+            else:
+                return None
+
+
+
     ## Main method oriented to define and manage normalizations sets applying normalizations
     # @param self object pointer
     # @param df dataframe
     # @param normalizedmd OrderedDict() compatible structure
     # @return dataframe
     def normalizeDataFrame(self, df, normalizemd):
-        if normalizemd['type'] == 'pandas':
+        self._logging.log_exec('gDayF', "Normalizer", self._labels["start_data_norm"])
+        if isinstance(df, pd.DataFrame):
             dataframe = df.copy()
-            for col, norms in normalizemd['columns']:
+            for col, norms in normalizemd['columns'].items():
                 if norms['class'] == 'base':
-                    self.normalizeBase(dataframe[col])
+                    dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'])
                 elif norms['class'] == 'drop_missing':
-                    self.normalizeDropMissing(dataframe, col)
+                    dataframe = self.normalizeDropMissing(dataframe, col)
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'])
                 elif norms['class'] == 'stdmean':
                     self.normalizeStdMean(dataframe[col])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'])
                 elif norms['class'] == 'working_range':
-                    self.normalizeWorkingRange(dataframe[col],
-                                               norms['objective']['minval'],
-                                               norms['objective']['maxval'])
+                    dataframe.loc[:, col] = self.normalizeWorkingRange(dataframe.loc[:, col],
+                                                                       norms['objective']['minval'],
+                                                                       norms['objective']['maxval'])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'] + ' ( ' +
+                                           str(norms['objective']['minval']) + ',' +
+                                           str(norms['objective']['maxval']) + ' ) ')
                 elif norms['class'] == 'discretize':
-                    self.normalizeDiscretize(dataframe[col],
-                                             norms['objective']['buckets_number'],
-                                             norms['objective']['fixed_size'])
+                    dataframe.loc[:, col] = self.normalizeDiscretize(dataframe.loc[:, col],
+                                                                     norms['objective']['buckets_number'],
+                                                                     norms['objective']['fixed_size'])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'] + ' ( ' +
+                                           str(norms['objective']['buckets_number']) + ',' +
+                                           str(norms['objective']['fixed_size']) + ' ) ')
                 elif norms['class'] == 'aggregation':
-                    self.normalizeAgregation(dataframe[col], norms['objective']['bucket_ratio'])
+                    dataframe.loc[:, col] = self.normalizeAgregation(dataframe.loc[:, col],
+                                                                     norms['objective']['bucket_ratio'])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'] + ' ( ' +
+                                           str(norms['objective']['bucket_ratio']) + ' ) ')
                 elif norms['class'] == 'fixed_missing_values':
-                    self.fixedMissingValues(dataframe[col], norms['objective']['value'])
+                    dataframe.loc[:, col] = self.fixedMissingValues(dataframe.loc[:, col], norms['objective']['value'])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'] + ' ( ' +
+                                           str(norms['objective']['value']) + ' ) ')
                 elif norms['class'] == 'mean_missing_values':
-                    self.meanMissingValues(dataframe[col],
-                                           col,
-                                           norms['objective']['objective_column'],
-                                           norms['objective']['value']
+                    dataframe = self.meanMissingValues(dataframe,
+                                                       col,
+                                                       norms['objective']['objective_column'],
+                                                       norms['objective']['full']
                                            )
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'] + ' ( ' +
+                                           norms['objective']['objective_column'] + ',' +
+                                           str(norms['objective']['full']) + ' ) ')
                 elif norms['class'] == 'progressive_missing_values':
-                    self.progressiveMissingValues(dataframe[col],
-                                                  col,
-                                                  norms['objective']['objective_column'])
-                elif norms['class'] == 'binary_encoding':
-                    self.normalizeBinaryEncoding(dataframe[col])
+                    dataframe = self.progressiveMissingValues(dataframe,
+                                                              col,
+                                                              norms['objective']['objective_column'])
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                           col + ' - ' + norms['class'] + ' ( ' +
+                                           norms['objective']['objective_column'] + ' ) ')
+                elif norms['class'] == 'ignore_column':
+                    pass
+                #elif norms['class'] == 'binary_encoding':
+                #self.normalizeBinaryEncoding(dataframe[col])
                 else:
-                    print("Nothing to Normalize")
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["nothing_to_do"])
             return dataframe
         else:
             return df
+
+    ##Method oriented to generate ignored_column_list on issues where missed > exclusion_missing_threshold
+    # @param  normalizemd  mormalizations_set_metadata
+    # @return ignored_list updated
+    def ignored_columns(self, normalizemd):
+        ignored_list = list()
+        if normalizemd is not None:
+            for col, norms in normalizemd['columns'].items():
+                if norms['class'] == 'ignore_column':
+                    ignored_list.append(col)
+        self._logging.log_exec('gDayF', "Normalizer", self._labels["ignore_list"], ignored_list)
+        return ignored_list.copy()
 
     ## Internal method oriented to manage drop NaN values from dataset
     # @param self object pointer
@@ -87,7 +192,7 @@ class Normalizer (object):
         if dataframe.dtype != np.object:
             dataframe = (maxval - minval) * ((dataframe - dataframe.min()) /
                                              (dataframe.max() - dataframe.min())) + minval
-        return dataframe
+        return dataframe.copy()
 
     ## Internal method oriented to manage bucket ratio normalizations head - tail
     # @param self object pointer
@@ -99,19 +204,19 @@ class Normalizer (object):
             buckets = int(1 / (br/2))
             q, bins = pd.qcut(dataframe.iloc[:], buckets, retbins=True)
             if dataframe.dtype != np.int:
-                dataframe[dataframe <= bins[1]] = np.int(dataframe[dataframe <= bins[1]].mean())
-                dataframe[dataframe >= bins[-2]] = np.int(dataframe[dataframe >= bins[-2]].mean())
+                dataframe[dataframe <= bins[1]] = np.int(dataframe[dataframe <= bins[1]].mean().copy())
+                dataframe[dataframe >= bins[-2]] = np.int(dataframe[dataframe >= bins[-2]].mean().copy())
             else:
-                dataframe[dataframe <= bins[1]] = dataframe[dataframe <= bins[1]].mean()
-                dataframe[dataframe <= bins[-2]] = dataframe[dataframe <= bins[-2]].mean()
-        return dataframe
+                dataframe[dataframe <= bins[1]] = dataframe[dataframe <= bins[1]].mean().copy()
+                dataframe[dataframe <= bins[-2]] = dataframe[dataframe <= bins[-2]].mean().copy()
+        return dataframe.copy()
 
     ## Internal method oriented to manage Binary encodings
     # @param self object pointer
     # @param dataframe single column dataframe
     # @return dataframe
     def normalizeBinaryEncoding(self, dataframe):
-        return dataframe
+        return dataframe.copy()
 
     ## Internal method oriented to manage mean and std normalizations. Default mean=0 std=1
     # @param self object pointer
@@ -121,7 +226,7 @@ class Normalizer (object):
         if (dataframe.dtype != np.object):
             #dataframe = (dataframe - dataframe.mean()) / dataframe.std()
             dataframe = preprocessing.scale(dataframe)
-        return dataframe
+        return dataframe.copy()
 
     ## Internal method oriented to manage bucketing for discretize
     # @param self object pointer
@@ -161,7 +266,7 @@ class Normalizer (object):
                 row = row.copy()
                 if nullfalse_gb.index.isin([row[objective_col]]).any():
                     dataframe.loc[index, col] = nullfalse_gb.loc[row[objective_col], col]
-            return dataframe
+            return dataframe.copy()
 
     ## Internal method oriented to manage progressive imputations for missing values.
     # ([right_not_nan] - [left_not_nan])/Cardinality(is_nan)
@@ -194,4 +299,7 @@ class Normalizer (object):
                     x = (row[objective_col] - index_min) / a
                     offset = b * x
                     dataframe.loc[index, col] = minimal + offset
-        return dataframe
+        return dataframe.copy()
+
+
+

@@ -184,12 +184,18 @@ class Controller(object):
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["res_model"],
                                     model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
+            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"], model['round'])
+            if model["normalizations_set"] is None:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"], [])
+            else:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
+                                       list(model["normalizations_set"]["columns"].keys()))
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
                                    model['metrics']['accuracy'])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
                                    model['metrics']['execution']['train']['RMSE'])
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"],
-                                   model['round'])
+
+
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
         self.clean_handlers()

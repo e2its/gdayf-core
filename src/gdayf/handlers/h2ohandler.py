@@ -546,14 +546,13 @@ class H2OHandler(object):
     # @param dataframe  pandas dataframe
     # @param base_ns NormalizationMetadata orderedDict() compatible
     # @return (Dataframe, DFMetadata, Hash_value, True/False)
-    def execute_normalization (self, dataframe, base_ns):
-        data_norm = dataframe.copy(deep=True)
+    def execute_normalization(self, dataframe, base_ns):
         if base_ns is not None:
             data_norm = dataframe.copy(deep=True)
             self._logging.log_exec(self.analysis_id,
                                    self._h2o_session.session_id, self._labels["exec_norm"], str(base_ns))
             normalizer = Normalizer()
-            normalizer.normalizeDataFrame(data_norm, base_ns)
+            data_norm = normalizer.normalizeDataFrame(data_norm, base_ns)
             df_metadata = DFMetada()
             df_metadata.getDataFrameMetadata(dataframe=data_norm, typedf='pandas')
             df_metadata_hash_value = md5(json.dumps(df_metadata).encode('utf-8')).hexdigest()
@@ -591,7 +590,7 @@ class H2OHandler(object):
             test_frame = None
 
         base_ns = get_model_ns(base_ar)
-        assert isinstance(base_ns, NormalizationSet) or base_ns is None
+        assert isinstance(base_ns, OrderedDict) or base_ns is None
         # Applying Normalizations
         data_initial = DFMetada()
         data_initial.getDataFrameMetadata(dataframe=training_pframe, typedf='pandas')
@@ -620,7 +619,8 @@ class H2OHandler(object):
 
         h2o_elements = H2Olist()
         if len(h2o_elements[h2o_elements['key'] == 'train_' + analysis_id + '_' + str(train_hash_value)]):
-            if training_pframe.count(axis=0).all() > 100000:
+            if training_pframe.count(axis=0).all() > \
+                    self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
                 valid_frame = get_frame('valid_' + analysis_id + '_' + str(train_hash_value))
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
@@ -695,7 +695,9 @@ class H2OHandler(object):
         x = training_frame.col_names
         x.remove(objective_column)
         try:
-            for ignore_col in base_ar['model_parameters']['h2o']['parameters']['ignored_columns']['value']:
+            #for ignore_col in base_ar['model_parameters']['h2o']['parameters']['ignored_columns']['value']:
+            norm = Normalizer()
+            for ignore_col in norm.ignored_columns(base_ns):
                 x.remove(ignore_col)
         except KeyError:
             pass
@@ -816,7 +818,7 @@ class H2OHandler(object):
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
                                model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
 
-        final_ar_model['metrics']['execution']['train']
+        #final_ar_model['metrics']['execution']['train']
 
         final_ar_model['tolerance'] = tolerance
 

@@ -1,17 +1,27 @@
-{"front" : [
+{"column" : [
   {"type" : "normalization",
    "class" : "base",
    "objective" :{
      "value": {}
    }
   },
+  {"type" : "drop",
+   "class" : "ignore_column",
+   "objective" :{
+     "value": {}
+   }
+  },
   {"type" : "normalization",
-   "class" : "mean",
+   "class" : "stdmean",
    "objective" : {
-    "mean" : 0.0,
-    "std" : 1.0
+     "value": {}
    },
    "description" : "normalization to mean (mean=0 and standard deviation = 1)"
+  {"type" : "drop",
+   "class" : "drop_missing",
+   "objective" : {
+     "value": {}
+   },
   }
   {"type" : "normalization",
    "class" : "working_range",
@@ -24,8 +34,8 @@
   {"type" : "bucketing",
    "class" : "discretize",
    "objective" : {
-    "value" : 25,
-    "fixed_size" : "Y"
+    "value" : 10,
+    "fixed_size" : true
    },
    "description" : "bucketing continuos distribution to fixed sized or fixed frecuency"
   },
@@ -45,7 +55,7 @@
   {"type" : "imputation",
    "class" : "mean_missing_values",
    "objective" : {
-     "value": -1,
+     "full": false,
      "objective_column" : "objective_column"
    }
    },

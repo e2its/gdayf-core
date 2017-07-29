@@ -10,6 +10,8 @@ from copy import deepcopy
 from numpy.random import rand
 
 dtypes = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+ftypes = [ 'float', 'float16', 'float32', 'float64']
+itypes = ['int', 'int16', 'int32', 'int64']
 
 ## Function oriented to get the hash_key for a file
 # @param hash_type in ['MD5', 'SHS256']

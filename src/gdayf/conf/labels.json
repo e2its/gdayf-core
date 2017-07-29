@@ -9,6 +9,7 @@
 		"input_param":":Input Descriptor:",
         "ametric_order":":Analysis's Results Accuracy:",
         "pmetric_order":":Analysis's Results Precision (rmse):",
+        "norm_app": ":Normalizations Applied on Columns:",
 		"round_reach":":Reached on Round:",
         "ana_models":":Analyzed Models:",
         "exc_models":":Excluded Models:",
@@ -73,10 +74,17 @@
         "exc_vector": "Excluding Executed Model with Vector Params: ",
         "exc_applicability": "Excluding Model based on applicability limits: "
       },
-      "persistence" : {}
+      "persistence" : {},
+      "normalizer" : {
+        "norm_set_establish" : ":Establishing dataframe normalization recommendations:",
+        "ignored_list": ":Establishing column's exclusion over missing values threshold:",
+        "start_data_norm": ":Starting Dataframe Normalizations:",
+        "applying": ":Applying Normalization:",
+        "nothing_to_do": ":Nothing to Do:",
+        "col_analysis": ":Column Basic Description:"
+      }
     },
     "ui":{
-
     }
   }
 }

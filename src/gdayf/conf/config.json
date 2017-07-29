@@ -21,7 +21,8 @@
         "tolerance": 0.05,
         "enabled" : true,
         "min_rows_enabled": false,
-        "train_balance_metric" : 0.2
+        "train_balance_metric" : 0.2,
+        "validation_frame_threshold" : 100000
       },
       "models": [
         {
@@ -69,7 +70,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": null,
+                "value": [],
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -404,7 +405,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": null,
+                "value": [],
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -709,7 +710,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": null,
+                "value": [],
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -1234,7 +1235,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": null,
+                "value": [],
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -1606,15 +1607,18 @@
       }
     ]
   },
+  "normalizer": {
+    "normalizations_enabled": true,
+    "base_normalization_enabled": true,
+    "exclusion_missing_threshold": 0.2,
+    "reduccion_dimension_enabled": true
+  },
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
-    "normalizations_enabled": true,
-    "string_to_categorical_enabled": true,
-    "reduccion_dimension_enabled": true,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.1
+        "multi_limit" : 0.005
       },
       "h2o": {
         "nfold_limit": 8,
