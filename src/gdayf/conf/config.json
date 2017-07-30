@@ -20,9 +20,10 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "train_balance_metric" : 0.2,
-        "validation_frame_threshold" : 100000
+        "validation_frame_threshold" : 100000,
+        "training_frame_ratio" : 0.85
       },
       "models": [
         {
@@ -345,7 +346,7 @@
                 "type": "float"
               },
               "categorical_encoding": {
-                "value": "binary",
+                "value": "auto",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -364,7 +365,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 2000,
+          "min_rows_applicability": 5000,
           "types": [
             {
               "type": "binomial",
@@ -669,7 +670,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 10000,
+          "min_rows_applicability": 5000,
           "types": [
             {
               "type": "binomial",
@@ -1161,7 +1162,7 @@
                 "type": "boolean"
               },
               "categorical_encoding": {
-                "value": "binary",
+                "value": "auto",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -1469,7 +1470,7 @@
                 ]
               },
               "categorical_encoding": {
-                "value": "binary",
+                "value": "auto",
                 "seleccionable": true,
                 "type": [
                   "auto",

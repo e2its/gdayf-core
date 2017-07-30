@@ -15,6 +15,7 @@ from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.storagemetadata import StorageMetadata
 from collections import OrderedDict
 from pathlib import Path
+from pandas import DataFrame
 import importlib
 from json import load
 from json.decoder import JSONDecodeError
@@ -37,11 +38,12 @@ class Controller(object):
 
     ## Method leading and controlling prediction's executions on all frameworks
     # @param self object pointer
-    # @param datapath String Path indicating file to be analyzed
+    # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param armetadata
     # @param model_file String Path indicating model_file ArMetadata.json structure
 
     def exec_prediction(self, datapath, armetadata=None, model_file=None):
+
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], 'prediction')
         if armetadata is None and model_file is None:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], datapath)
@@ -63,9 +65,16 @@ class Controller(object):
             except [IOError, OSError]:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
-        try:
-            pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
-        except [IOError, OSError, JSONDecodeError]:
+
+        if isinstance(datapath, str):
+            try:
+                pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+            except [IOError, OSError, JSONDecodeError]:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+        elif isinstance(datapath, DataFrame):
+            pd_dataset = datapath
+        else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 
@@ -74,6 +83,8 @@ class Controller(object):
             self.init_handler(fw)
             prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset, base_ar=base_ar)
             self.clean_handler(fw)
+        else:
+            prediction_frame = None
                 
         self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
 
@@ -128,12 +139,21 @@ class Controller(object):
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], amode)
         self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
 
-        try:
-            pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
-        except IOError:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
-            return self._labels['failed_input']
-        except OSError:
+        if isinstance(datapath, str):
+            try:
+                pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+            except IOError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+            except OSError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+            except JSONDecodeError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+        elif isinstance(datapath, DataFrame):
+            pd_dataset = datapath
+        else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 

@@ -33,6 +33,7 @@
         "stop": ":H20-cluster not working:",
         "ar_error": ":Structure's Error ARMetadata:",
         "cor_struct": ":Objective column correlated data:",
+        "no_cor_struct": ":Objective column no correlated data:",
         "parsing_to_h2o": ":Parse executed from pandas to H2OFrames:",
         "getting_from_h2o" :  ":Reused H2OFrame stored on H2OCluster:",
         "tolerance":":Setting Tolerance's Threshold value to (native units): ",

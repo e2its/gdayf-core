@@ -5,6 +5,7 @@ from sklearn import preprocessing
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
+from gdayf.common.utils import dtypes
 from collections import OrderedDict
 import numpy
 from gdayf.common.normalizationset import NormalizationSet
@@ -261,7 +262,10 @@ class Normalizer (object):
             return dataframe.fillna(dataframe.mean())
         else:
             nullfalse = dataframe[dataframe[:][col].notnull()][[col, objective_col]]
-            nullfalse_gb = nullfalse.groupby(objective_col).mean()
+            if objective_col in dtypes:
+                nullfalse_gb = nullfalse.groupby(objective_col).mean()
+            else:
+                nullfalse_gb = nullfalse.groupby(objective_col).agg(lambda x: x.value_counts().index[0])
             for index, row in dataframe[dataframe[:][col].isnull()].iterrows():
                 row = row.copy()
                 if nullfalse_gb.index.isin([row[objective_col]]).any():

@@ -635,11 +635,13 @@ class H2OHandler(object):
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'test_frame (' + str(test_frame.nrows) + ')')
         else:
-            if training_pframe.count(axis=0).all() > 100000:
+            if training_pframe.count(axis=0).all() >  \
+                    self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
                 training_frame, valid_frame = \
-                    H2OFrame(python_obj=training_pframe).split_frame(ratios=[.85],
-                                            destination_frames=['train_' + analysis_id + '_' + str(train_hash_value),
-                                                                'valid_' + analysis_id + '_' + str(train_hash_value)])
+                    H2OFrame(python_obj=training_pframe).\
+                        split_frame(ratios=[self._config['frameworks']['h2o']['conf']['training_frame_ratio']],
+                                    destination_frames=['train_' + analysis_id + '_' + str(train_hash_value),
+                                                        'valid_' + analysis_id + '_' + str(train_hash_value)])
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                        'training_frame(' + str(training_frame.nrows) +
                                        ') validating_frame(' + str(valid_frame.nrows) + ')')
@@ -962,8 +964,11 @@ class H2OHandler(object):
         else:
             base_ar['data_normalized'] = data_normalized
             if objective_column in list(predict_frame.columns.values):
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                try:
+                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_normalized['correlation'][objective_column]))
+                except KeyError:
+                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["no_cor_struct"])
 
         #Transforming to H2OFrame
         predict_frame = H2OFrame(python_obj=predict_frame,
