@@ -209,7 +209,7 @@ class Controller(object):
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"], [])
             else:
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
-                                       list(model["normalizations_set"]["columns"].keys()))
+                                       model["normalizations_set"])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
                                    model['metrics']['accuracy'])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],

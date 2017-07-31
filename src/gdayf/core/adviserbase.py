@@ -166,7 +166,12 @@ class Adviser(object):
     # @param objective_column string indicating objective column
     def base_iteration(self, amode, dataframe_metadata, objective_column):
         fw_model_list = self.get_candidate_models(self.an_objective, amode)
+        aux_model_list = list()
         norm = Normalizer()
+        minimal_nmd = [norm.define_minimal_norm(objective_column=objective_column)]
+        for fw, model, _ in fw_model_list:
+            aux_model_list.append((fw, model, minimal_nmd))
+        fw_model_list = aux_model_list
         nmd = norm.define_normalizations(dataframe_metadata=dataframe_metadata,
                                                objective_column=objective_column,
                                                an_objective=self.an_objective)

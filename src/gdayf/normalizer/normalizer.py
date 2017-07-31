@@ -33,8 +33,7 @@ class Normalizer (object):
             rowcount = dataframe_metadata['rowcount']
             cols = dataframe_metadata['cols']
             columns = dataframe_metadata['columns']
-            norms = OrderedDict()
-            norms['columns'] = OrderedDict()
+            norms = list()
             normoption = NormalizationSet()
             if type == 'pandas':
                 for description in columns:
@@ -42,35 +41,46 @@ class Normalizer (object):
                     self._logging.log_exec('gDayF', "Normalizer", self._labels["col_analysis"],
                                            description['name'] + ' - ' + description['type'])
                     if col == objective_column:
-                        if int(description['missed']) != 0:
-                            normoption.set_drop_missing()
-                            norms['columns'][col] = normoption.copy()
+                        norm_aux = self.define_minimal_norm(col)
+                        if norm_aux is not None:
+                            norms.append(norm_aux)
                         if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
-                            norms['columns'][col] = normoption.copy()
+                            norms.append({col: normoption.copy()})
                 for description in columns:
                     col = description['name']
                     if col != objective_column:
                         if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
-                            norms['columns'][col] = normoption.copy()
+                            norms.append({col: normoption.copy()})
                         if int(description['missed']) > 0 and \
                            (int(description['missed'])/rowcount < self._config['exclusion_missing_threshold']):
                             if an_objective[0]['type'] in ['binomial', 'multinomial']:
                                 normoption.set_mean_missing_values(objective_column, full=False)
-                                norms['columns'][col] = normoption.copy()
+                                norms.append({col: normoption.copy()})
                             elif an_objective[0]['type'] in ['regression']:
                                 normoption.set_progressive_missing_values(objective_column)
-                                norms['columns'][col] = normoption.copy()
+                                norms.append({col: normoption.copy()})
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
-                            norms['columns'][col] = normoption.copy()
+                            norms.append({col: normoption.copy()})
                 self._logging.log_exec('gDayF', "Normalizer", self._labels["norm_set_establish"], norms)
                 return norms.copy()
             else:
                 return None
 
-
+    ## Method oriented to specificate minimal data_normalizations
+    # @param objective_column string indicating objective column
+    # @return None if nothing to DO or Normalization_sets orderdict() on other way
+    def define_minimal_norm(self, objective_column):
+        if not self._config['minimal_normalizations_enabled']:
+            return None
+        else:
+            norms = OrderedDict()
+            normoption = NormalizationSet()
+            normoption.set_drop_missing()
+            norms[objective_column] = normoption.copy()
+            return norms.copy()
 
     ## Main method oriented to define and manage normalizations sets applying normalizations
     # @param self object pointer
@@ -81,7 +91,10 @@ class Normalizer (object):
         self._logging.log_exec('gDayF', "Normalizer", self._labels["start_data_norm"])
         if isinstance(df, pd.DataFrame):
             dataframe = df.copy()
-            for col, norms in normalizemd['columns'].items():
+            for norm_set in normalizemd:
+                col = list(norm_set.keys())[0]
+                norms = norm_set.get(col)
+            #for col, norms in normalizemd['columns'].items():
                 if norms['class'] == 'base':
                     dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
                     self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
@@ -304,6 +317,5 @@ class Normalizer (object):
                     offset = b * x
                     dataframe.loc[index, col] = minimal + offset
         return dataframe.copy()
-
 
 

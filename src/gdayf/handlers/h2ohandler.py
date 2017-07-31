@@ -590,7 +590,7 @@ class H2OHandler(object):
             test_frame = None
 
         base_ns = get_model_ns(base_ar)
-        assert isinstance(base_ns, OrderedDict) or base_ns is None
+        assert isinstance(base_ns, list) or base_ns is None
         # Applying Normalizations
         data_initial = DFMetada()
         data_initial.getDataFrameMetadata(dataframe=training_pframe, typedf='pandas')
@@ -814,11 +814,11 @@ class H2OHandler(object):
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_cacc"],
                                    model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
 
-        final_ar_model['metrics']['accuracy']['train'] = \
+        '''final_ar_model['metrics']['accuracy']['train'] = \
         self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance,
                            base_type=training_frame.type(objective_column))
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
-                               model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
+                               model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))'''
 
         #final_ar_model['metrics']['execution']['train']
 

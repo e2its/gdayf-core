@@ -20,9 +20,9 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": true,
+        "min_rows_enabled": false,
         "train_balance_metric" : 0.2,
-        "validation_frame_threshold" : 100000,
+        "validation_frame_threshold" : 10000,
         "training_frame_ratio" : 0.85
       },
       "models": [
@@ -30,7 +30,7 @@
           "model": "H2OGradientBoostingEstimator",
           "id": null,
           "module": "h2o.estimators.gbm",
-          "min_rows_applicability": 0,
+          "min_rows_applicability": 100000,
           "types": [
             {
               "type": "binomial",
@@ -365,7 +365,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 5000,
+          "min_rows_applicability": 10000,
           "types": [
             {
               "type": "binomial",
@@ -670,7 +670,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 5000,
+          "min_rows_applicability": 10000,
           "types": [
             {
               "type": "binomial",
@@ -1610,6 +1610,7 @@
   },
   "normalizer": {
     "normalizations_enabled": true,
+    "minimal_normalizations_enabled": true,
     "base_normalization_enabled": true,
     "exclusion_missing_threshold": 0.2,
     "reduccion_dimension_enabled": true
