@@ -68,12 +68,14 @@ class Controller(object):
 
         if isinstance(datapath, str):
             try:
+                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
                 pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
             except [IOError, OSError, JSONDecodeError]:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
             pd_dataset = datapath
+            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
         else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
@@ -137,11 +139,13 @@ class Controller(object):
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
         self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], amode)
-        self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
+
 
         if isinstance(datapath, str):
             try:
+                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
                 pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+                id_datapath = Path(datapath).name
             except IOError:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
@@ -152,7 +156,12 @@ class Controller(object):
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
+            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape) )
             pd_dataset = datapath
+            id_datapath = 'Dataframe' + \
+                          '_' +str(pd_dataset.size) + \
+                          '_' + str(pd_dataset.shape[0]) + \
+                          '_' + str(pd_dataset.shape[1])
         else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
@@ -161,7 +170,7 @@ class Controller(object):
         if metric == 'combined' or 'test_accuracy':
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
 
-        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + Path(datapath).name, metric=metric, deep_impact=deep_impact)
+        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath, metric=metric, deep_impact=deep_impact)
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
 
         adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)

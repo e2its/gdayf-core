@@ -1,21 +1,23 @@
 if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
+    from gdayf.handlers.inputhandler import inputHandlerCSV
     from gdayf.common.constants import *
+    from gdayf.common.utils import pandas_split_data
     from pprint import pprint
 
     source_data = list()
     source_data.append("D:/Data/datasheets/Europe-datasheet/Pollutant/")
     source_data.append("UNFCCC_v8-missing.csv")
 
-    #Generating missing values
+    #Reducing rows
+    _, pd_train = pandas_split_data(inputHandlerCSV().inputCSV(filename=''.join(source_data)))
 
 
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
-                                                      objective_column='Country',
-                             amode=POC, metric='combined', deep_impact=3)
+    status, recomendations = controller.exec_analysis(datapath=pd_train, objective_column='Country',
+                                                      amode=FAST, metric='combined', deep_impact=3)
 
     controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='combined')

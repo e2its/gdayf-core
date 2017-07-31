@@ -20,7 +20,7 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_threshold" : 10000,
         "training_frame_ratio" : 0.85
@@ -30,7 +30,7 @@
           "model": "H2OGradientBoostingEstimator",
           "id": null,
           "module": "h2o.estimators.gbm",
-          "min_rows_applicability": 100000,
+          "min_rows_applicability": 0,
           "types": [
             {
               "type": "binomial",
