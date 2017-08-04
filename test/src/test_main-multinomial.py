@@ -9,7 +9,7 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                             amode=FAST, metric='combined', deep_impact=4)
+                             amode=POC, metric='combined', deep_impact=3)
 
     controller.save_models(recomendations)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
