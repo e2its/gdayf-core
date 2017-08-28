@@ -240,12 +240,13 @@ class Adviser(object):
             if fw == 'h2o' and fw_value['conf']['enabled']:
                 wfw = H2OFrameworkMetadata(defaultframeworks)
                 for each_base_model in wfw.get_default():
-                    for each_type in each_base_model['types']:
-                        if each_type['active'] and each_type['type'] == atype[0]['type']:
-                            modelbase = H2OModelMetadata()
-                            model = modelbase.generate_models(each_base_model['model'], atype, amode)
-                            wfw.models.append(model)
-                            model_list.append((fw, model, None))
+                    if each_base_model['enabled']:
+                        for each_type in each_base_model['types']:
+                            if each_type['active'] and each_type['type'] == atype[0]['type']:
+                                modelbase = H2OModelMetadata()
+                                model = modelbase.generate_models(each_base_model['model'], atype, amode)
+                                wfw.models.append(model)
+                                model_list.append((fw, model, None))
         return model_list
 
     ## Method oriented to select applicability of models over min_rows_limit
