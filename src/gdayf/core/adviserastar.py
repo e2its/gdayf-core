@@ -22,7 +22,6 @@ from json import dumps
 # Normal: One A* analysis for all models based until max_deep with early_stopping
 # Paranoiac: One A* algorithm per model analysis until max_deep without early stoping
 class AdviserAStar(Adviser):
-    deepness = 1
 
     ## Constructor
     # @param self object pointer
@@ -38,13 +37,14 @@ class AdviserAStar(Adviser):
     # @param armetadata ArMetadata Model
     # @return list of possible optimized models to execute return None if nothing to do
     def optimize_models(self, armetadata):
-        model_metric = decode_json_to_dataframe(armetadata['metrics']['model'])
-        scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
         model_list = list()
-        model = armetadata['model_parameters']['h2o']
-        metric_value, objective = eval('self.get_' + self.metric + '(armetadata)')
+        model = armetadata['model_parameters'][get_model_fw(armetadata)]
+        metric_value, _, objective = eval('self.get_' + self.metric + '(armetadata)')
 
         if get_model_fw(armetadata) == 'h2o' and metric_value != objective:
+            model_metric = decode_json_to_dataframe(armetadata['metrics']['model'])
+            if model['model'] not in ['H2ONaiveBayesEstimator']:
+                scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
             config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['h2o']
             nfold_limit = config['nfold_limit']
             min_rows_limit = config['min_rows_limit']
@@ -63,6 +63,11 @@ class AdviserAStar(Adviser):
             dpl_batch_divisor = config['dpl_batch_divisor']
             dpl_batch_reduced_divisor = config['dpl_batch_reduced_divisor']
             hidden_increment = config['hidden_increment']
+            nv_laplace = config['nv_laplace']
+            nv_min_prob = config['nv_min_prob']
+            nv_min_sdev = config['nv_min_sdev']
+            nv_improvement = config['nv_improvement']
+            nv_divisor = config['nv_divisor']
 
             if model['model'] == 'H2OGradientBoostingEstimator':
                 if (self.deepness == self.deep_impact) and model['types'][0]['type'] == 'regression':
@@ -228,6 +233,49 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['min_rows']['value'] += min_rows_increment
                     self.safe_append(model_list, new_armetadata)
+
+            elif model['model'] == 'H2ONaiveBayesEstimator':
+                if self.deepness == 2:
+                    for laplace in nv_laplace:
+                        for min_prob in nv_min_prob:
+                            for min_sdev in nv_min_sdev:
+                                new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                                model_aux = new_armetadata['model_parameters']['h2o']
+                                model_aux['parameters']['laplace']['value'] = laplace
+                                model_aux['parameters']['min_prob']['value'] = min_prob
+                                model_aux['parameters']['min_sdev']['value'] = min_sdev
+                                self.safe_append(model_list, new_armetadata)
+                else:
+                    if model['parameters']['nfolds']['value'] < nfold_limit:
+                        new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                        model_aux = new_armetadata['model_parameters']['h2o']
+                        model_aux['parameters']['nfolds']['value'] += nfold_increment
+                        self.safe_append(model_list, new_armetadata)
+                    for laplace in ['improvement', 'decrement']:
+                        for min_prob in ['improvement', 'decrement']:
+                            for min_sdev in ['improvement', 'decrement']:
+                                new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                                model_aux = new_armetadata['model_parameters']['h2o']
+                                if laplace == 'improvement':
+                                    model_aux['parameters']['laplace']['value'] = model_aux['parameters']['laplace'][
+                                                                                      'value'] * (1 + nv_improvement)
+                                else:
+                                    model_aux['parameters']['laplace']['value'] = model_aux['parameters']['laplace'][
+                                                                                      'value'] * (1 - nv_divisor)
+                                if min_prob == 'improvement':
+                                    model_aux['parameters']['min_prob']['value'] = model_aux['parameters']['min_prob'][
+                                                                                       'value'] * (1 + nv_improvement)
+                                else:
+                                    model_aux['parameters']['min_prob']['value'] = model_aux['parameters']['min_prob'][
+                                                                                       'value'] * (1 - nv_divisor)
+                                if min_sdev == 'improvement':
+                                    model_aux['parameters']['min_sdev']['value'] = model_aux['parameters']['min_sdev'][
+                                                                                       'value'] * (1 + nv_improvement)
+                                else:
+                                    model_aux['parameters']['min_sdev']['value'] = model_aux['parameters']['min_sdev'][
+                                                                                       'value'] * (1 - nv_divisor)
+                                self.safe_append(model_list, new_armetadata)
+
         else:
             return None
         if len(model_list) == 0:

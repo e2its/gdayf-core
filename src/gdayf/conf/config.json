@@ -20,10 +20,10 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "train_balance_metric" : 0.2,
-        "validation_frame_threshold" : 10000,
-        "training_frame_ratio" : 0.85
+        "validation_frame_threshold" : 100000,
+        "training_frame_ratio" : 0.80
       },
       "models": [
         {
@@ -366,7 +366,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 100000,
+          "min_rows_applicability": 10000,
           "enabled": true,
           "types": [
             {
@@ -1493,7 +1493,7 @@
           "id": null,
           "module": "h2o.estimators.naive_bayes",
           "min_rows_applicability": 0,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -1616,7 +1616,7 @@
             },
             "sampling":{
               "balance_classes": {
-                "value": true,
+                "value": false,
                 "seleccionable": true,
                 "type": "boolean"
               }
@@ -1636,20 +1636,30 @@
                 "seleccionable": true,
                 "type": "float"
               },
-              "laplace:": {
-                "value": 0.001,
-                "seleccionable": false,
+              "laplace": {
+                "value": 0.000,
+                "seleccionable": true,
                 "type": "integer(0:]"
               },
-			  "min_sdev:": {
-                "value": 1e-10,
-                "seleccionable": false,
-                "type": "integer(1e-10:]"
+              "min_prob": {
+                "value": 1e-6,
+                "seleccionable": true,
+                "type": "integer(:1e-10)"
               },
-			  "eps_sdev:": {
-                "value": 1e-10,
+			  "eps_prob": {
+                "value": 0.0,
                 "seleccionable": false,
-                "type": "integer(1e-10:]"
+                "type": "integer(:1e-10)"
+              },
+			  "min_sdev": {
+                "value": 1e-6,
+                "seleccionable": true,
+                "type": "integer(:1e-10)"
+              },
+			  "eps_sdev": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "integer(:1e-10)"
               }
             }
           }
@@ -2158,7 +2168,12 @@
           {"learn":0.95,"improvement":1e-8},
           {"learn":0.99,"improvement":1e-10},
           {"learn":0.999,"improvement":1e-10}
-        ]
+        ],
+        "nv_laplace": [0.001, 3, 10],
+        "nv_min_prob": [1e-9],
+        "nv_min_sdev": [1e-3],
+        "nv_improvement" : 0.5,
+        "nv_divisor": 0.5
       }
     }
   }

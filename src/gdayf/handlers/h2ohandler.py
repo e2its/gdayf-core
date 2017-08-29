@@ -35,6 +35,7 @@ from h2o.estimators.gbm import H2OGradientBoostingEstimator
 from h2o.estimators.glm import H2OGeneralizedLinearEstimator
 from h2o.estimators.deeplearning import H2ODeepLearningEstimator
 from h2o.estimators.random_forest import H2ORandomForestEstimator
+from h2o.estimators.naive_bayes import H2ONaiveBayesEstimator
 
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.storagemetadata import StorageMetadata
@@ -392,7 +393,11 @@ class H2OHandler(object):
     # @param self object pointer
     # @return json_pandas_dataframe structure orient=split
     def _generate_scoring_history(self):
-        return self._model_base.scoring_history().drop("", axis=1).to_json(orient='split')
+        model_scoring = self._model_base.scoring_history()
+        if model_scoring is None:
+            return None
+        else:
+            return model_scoring.drop("", axis=1).to_json(orient='split')
 
     ## Generate accuracy metrics for model
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
