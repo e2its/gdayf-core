@@ -24,7 +24,8 @@
         "failed_conn": "Cluster unreached:",
         "cleaning": ":Cleaning Handler Objects:",
         "shuttingdown": ":Shutdown Cluster Framework:",
-        "fail_reconstruct": ":Failed reconstruction tree operation - Variable_dict():"
+        "fail_reconstruct": ":Failed reconstruction tree operation - Variable_dict():",
+        "loading_adviser": ":Loading adviser_class:"
       },
       "corehandler":{
         "start":":Connected to active cluster and ready:",

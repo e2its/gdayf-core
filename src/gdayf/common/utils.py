@@ -51,6 +51,22 @@ def compare_dict(dict1, dict2):
         return md5(dumps(dict1)) == md5(dumps(dict2))
 
 
+## Function oriented compare two normalizations_sets based on hash_key(json transformations)
+# @param List of Dict
+# @param List of Dict
+# @return True if equals false in other case
+def compare_list_ordered_dict(list1, list2):
+    if list1[0] is None or list2[0] is None:
+        return list1[0] is None and list2[0] is None
+    elif len(list1) != len(list2):
+        return False
+    else:
+        for i in range(0, len(list1)):
+            if md5(dumps(list[i])) != md5(dumps(list2[i])):
+                return False
+        return True
+
+
 ## Function to get framework from ar.json model description
 def get_model_fw(model):
     return list(model['model_parameters'].keys())[0]

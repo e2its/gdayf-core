@@ -20,7 +20,7 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": true,
+        "min_rows_enabled": false,
         "train_balance_metric" : 0.2,
         "validation_frame_threshold" : 100000,
         "training_frame_ratio" : 0.80
@@ -157,7 +157,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.0001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -376,12 +376,12 @@
             },
             {
               "type": "multinomial",
-              "active": false,
+              "active": true,
               "valued": "enum"
             },
             {
               "type": "regression",
-              "active": false,
+              "active": true,
               "valued": "float64"
             },
             {
@@ -677,7 +677,7 @@
           "types": [
             {
               "type": "binomial",
-              "active": false,
+              "active": true,
               "valued": "enum"
             },
             {
@@ -844,7 +844,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.0001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1325,7 +1325,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.0001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1795,7 +1795,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.0001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },

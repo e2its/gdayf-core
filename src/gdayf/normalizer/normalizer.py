@@ -92,69 +92,70 @@ class Normalizer (object):
         if isinstance(df, pd.DataFrame):
             dataframe = df.copy()
             for norm_set in normalizemd:
-                col = list(norm_set.keys())[0]
-                norms = norm_set.get(col)
-            #for col, norms in normalizemd['columns'].items():
-                if norms['class'] == 'base':
-                    dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'])
-                elif norms['class'] == 'drop_missing':
-                    dataframe = self.normalizeDropMissing(dataframe, col)
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'])
-                elif norms['class'] == 'stdmean':
-                    self.normalizeStdMean(dataframe[col])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'])
-                elif norms['class'] == 'working_range':
-                    dataframe.loc[:, col] = self.normalizeWorkingRange(dataframe.loc[:, col],
-                                                                       norms['objective']['minval'],
-                                                                       norms['objective']['maxval'])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'] + ' ( ' +
-                                           str(norms['objective']['minval']) + ',' +
-                                           str(norms['objective']['maxval']) + ' ) ')
-                elif norms['class'] == 'discretize':
-                    dataframe.loc[:, col] = self.normalizeDiscretize(dataframe.loc[:, col],
-                                                                     norms['objective']['buckets_number'],
-                                                                     norms['objective']['fixed_size'])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'] + ' ( ' +
-                                           str(norms['objective']['buckets_number']) + ',' +
-                                           str(norms['objective']['fixed_size']) + ' ) ')
-                elif norms['class'] == 'aggregation':
-                    dataframe.loc[:, col] = self.normalizeAgregation(dataframe.loc[:, col],
-                                                                     norms['objective']['bucket_ratio'])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'] + ' ( ' +
-                                           str(norms['objective']['bucket_ratio']) + ' ) ')
-                elif norms['class'] == 'fixed_missing_values':
-                    dataframe.loc[:, col] = self.fixedMissingValues(dataframe.loc[:, col], norms['objective']['value'])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'] + ' ( ' +
-                                           str(norms['objective']['value']) + ' ) ')
-                elif norms['class'] == 'mean_missing_values':
-                    dataframe = self.meanMissingValues(dataframe,
-                                                       col,
-                                                       norms['objective']['objective_column'],
-                                                       norms['objective']['full']
-                                           )
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'] + ' ( ' +
-                                           norms['objective']['objective_column'] + ',' +
-                                           str(norms['objective']['full']) + ' ) ')
-                elif norms['class'] == 'progressive_missing_values':
-                    dataframe = self.progressiveMissingValues(dataframe,
-                                                              col,
-                                                              norms['objective']['objective_column'])
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                           col + ' - ' + norms['class'] + ' ( ' +
-                                           norms['objective']['objective_column'] + ' ) ')
-                elif norms['class'] == 'ignore_column':
-                    pass
-                #elif norms['class'] == 'binary_encoding':
-                #self.normalizeBinaryEncoding(dataframe[col])
+                if norm_set is not None:
+                    col = list(norm_set.keys())[0]
+                    norms = norm_set.get(col)
+                #for col, norms in normalizemd['columns'].items():
+                    if norms['class'] == 'base':
+                        dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'])
+                    elif norms['class'] == 'drop_missing':
+                        dataframe = self.normalizeDropMissing(dataframe, col)
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'])
+                    elif norms['class'] == 'stdmean':
+                        self.normalizeStdMean(dataframe[col])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'])
+                    elif norms['class'] == 'working_range':
+                        dataframe.loc[:, col] = self.normalizeWorkingRange(dataframe.loc[:, col],
+                                                                           norms['objective']['minval'],
+                                                                           norms['objective']['maxval'])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               str(norms['objective']['minval']) + ',' +
+                                               str(norms['objective']['maxval']) + ' ) ')
+                    elif norms['class'] == 'discretize':
+                        dataframe.loc[:, col] = self.normalizeDiscretize(dataframe.loc[:, col],
+                                                                         norms['objective']['buckets_number'],
+                                                                         norms['objective']['fixed_size'])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               str(norms['objective']['buckets_number']) + ',' +
+                                               str(norms['objective']['fixed_size']) + ' ) ')
+                    elif norms['class'] == 'aggregation':
+                        dataframe.loc[:, col] = self.normalizeAgregation(dataframe.loc[:, col],
+                                                                         norms['objective']['bucket_ratio'])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               str(norms['objective']['bucket_ratio']) + ' ) ')
+                    elif norms['class'] == 'fixed_missing_values':
+                        dataframe.loc[:, col] = self.fixedMissingValues(dataframe.loc[:, col], norms['objective']['value'])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               str(norms['objective']['value']) + ' ) ')
+                    elif norms['class'] == 'mean_missing_values':
+                        dataframe = self.meanMissingValues(dataframe,
+                                                           col,
+                                                           norms['objective']['objective_column'],
+                                                           norms['objective']['full']
+                                               )
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               norms['objective']['objective_column'] + ',' +
+                                               str(norms['objective']['full']) + ' ) ')
+                    elif norms['class'] == 'progressive_missing_values':
+                        dataframe = self.progressiveMissingValues(dataframe,
+                                                                  col,
+                                                                  norms['objective']['objective_column'])
+                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               norms['objective']['objective_column'] + ' ) ')
+                    elif norms['class'] == 'ignore_column':
+                        pass
+                    #elif norms['class'] == 'binary_encoding':
+                    #self.normalizeBinaryEncoding(dataframe[col])
                 else:
                     self._logging.log_exec('gDayF', "Normalizer", self._labels["nothing_to_do"])
             return dataframe

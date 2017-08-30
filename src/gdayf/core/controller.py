@@ -34,6 +34,8 @@ class Controller(object):
         self.model_handler = OrderedDict()
         self.user_id = user_id
         self.adviser = importlib.import_module(self._config['optimizer']['adviser_classpath'])
+        self._logging.log_exec('gDayF', "Controller", self._labels["loading_adviser"],
+                               self._config['optimizer']['adviser_classpath'])
 
 
     ## Method leading and controlling prediction's executions on all frameworks

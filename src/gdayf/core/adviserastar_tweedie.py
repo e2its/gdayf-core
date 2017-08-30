@@ -273,7 +273,7 @@ class AdviserAStar(Adviser):
                                 model_aux['parameters']['min_sdev']['value'] = min_sdev
                                 self.safe_append(model_list, new_armetadata)
                 elif self.deepness >= 2:
-                    if self.deepness >= 3:
+                    if self.deepness == self.deep_impact:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
                         model_aux['parameters']['balance_classes']['value'] = \
