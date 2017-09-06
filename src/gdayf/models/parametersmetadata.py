@@ -15,7 +15,7 @@ class ParameterMetadata(OrderedDict):
 
     ## Method for setting values on all field
     # @param value value
-    # @param boolean True/False
+    # @param seleccionable True/False
     # @param type value's options
     def set_value(self, value, seleccionable=True, type=None):
         self['value'] = value

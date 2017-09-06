@@ -2,32 +2,28 @@ if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
     from gdayf.common.constants import *
-    from pprint import pprint
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/Usa-datasheet/Emission/")
-    source_data.append("emissionfactors-missing.csv")
-
-
+    source_data.append("D:/Data/datasheets/Anomalies/CCPP")
+    source_data.append("CPP.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                       objective_column='gridsubregion',
-                                                       amode=POC, metric='combined', deep_impact=3)
+    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='Y2',
+                                                       amode=ANOMALIES, metric='rmse', deep_impact=3)
 
-    controller.save_models(recomendations, mode=EACH_BEST)
-    controller.reconstruct_execution_tree(recomendations, metric='combined')
+    controller.save_models(recomendations)
+    controller.reconstruct_execution_tree(recomendations, metric='rmse')
     controller.remove_models(recomendations, mode=ALL)
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/Usa-datasheet/Emission/")
-    source_data.append("emissionfactors-missing-test.csv")
+    source_data.append("D:/Data/datasheets/regression/ENB2012/")
+    source_data.append("ENB2012_data-Y1.csv")
 
     #controller = Controller()
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                   model_file=recomendations[0]['json_path'][0]['value'])
-    pprint(prediction_frame)
+    print(prediction_frame)
 
     # Save Pojo
     #controller = Controller()
