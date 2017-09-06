@@ -574,6 +574,7 @@ class H2OHandler(object):
     # @param analysis_id String (Analysis identificator)
     # @param training_pframe pandas.DataFrame
     # @param base_ar ar_template.json
+    # @param **kwargs extra arguments for test_frame inclusion
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
     def order_training(self, analysis_id, training_pframe, base_ar, **kwargs):
         assert isinstance(analysis_id, str)

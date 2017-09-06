@@ -25,7 +25,7 @@ class Normalizer (object):
     # @param objective_column string indicating objective column
     # @return None if nothing to DO or Normalization_sets orderdict() on other way
     def define_normalizations(self, dataframe_metadata, an_objective, objective_column):
-        if not self._config['normalizations_enabled']:
+        if not self._config['non_minimal_normalizations_enabled']:
             return None
         else:
             type = dataframe_metadata['type']
@@ -44,6 +44,7 @@ class Normalizer (object):
                         norm_aux = self.define_minimal_norm(col)
                         if norm_aux is not None:
                             norms.append(norm_aux)
+
                         if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
                             norms.append({col: normoption.copy()})
@@ -54,7 +55,7 @@ class Normalizer (object):
                             normoption.set_base()
                             norms.append({col: normoption.copy()})
                         if int(description['missed']) > 0 and \
-                           (int(description['missed'])/rowcount < self._config['exclusion_missing_threshold']):
+                           (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
                             if an_objective[0]['type'] in ['binomial', 'multinomial']:
                                 normoption.set_mean_missing_values(objective_column, full=False)
                                 norms.append({col: normoption.copy()})
@@ -85,7 +86,7 @@ class Normalizer (object):
     ## Main method oriented to define and manage normalizations sets applying normalizations
     # @param self object pointer
     # @param df dataframe
-    # @param normalizedmd OrderedDict() compatible structure
+    # @param normalizemd OrderedDict() compatible structure
     # @return dataframe
     def normalizeDataFrame(self, df, normalizemd):
         self._logging.log_exec('gDayF', "Normalizer", self._labels["start_data_norm"])
@@ -245,9 +246,9 @@ class Normalizer (object):
 
     ## Internal method oriented to manage bucketing for discretize
     # @param self object pointer
-    # dataframe single column dataframe
-    # @param buckets number Int
-    # @param fixed size Boolean (True=Fixed Size, False Fixed Frecuency
+    # @param dataframe single column dataframe
+    # @param buckets_number Int
+    # @param fixed_size Boolean (True=Fixed Size, False Fixed Frecuency
     # @return dataframe
     def normalizeDiscretize(self, dataframe, buckets_number, fixed_size):
         #Un número de buckets de tamaño fixed_size
@@ -258,8 +259,8 @@ class Normalizer (object):
 
     ## Internal method oriented to manage imputation for missing values to fixed value
     # @param self object pointer
-    # dataframe single column dataframe
-    # @param value
+    # @param dataframe single column dataframe
+    # @param value int
     # @return dataframe
     def fixedMissingValues(self, dataframe, value=0.0):
         return dataframe.fillna(value)
