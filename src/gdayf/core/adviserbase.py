@@ -176,6 +176,8 @@ class Adviser(object):
                         best_models.append(model_type)
                         # End - Modified 31/08/2017
                 except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    pass and look for next best model on this type'''
                     pass
             #if fw_model_list is not None:
             self.next_analysis_list.extend(fw_model_list)
@@ -391,7 +393,7 @@ class Adviser(object):
         else:
             for normalization in normalization_set:
                 norm_vector.append(md5(dumps(normalization).encode('utf8')).hexdigest())
-        # print("Trace:%s-%s-%s-%s"%(fw, model['model_parameters'][fw]['model'], vector, norm_vector))
+        #print("Trace:%s-%s-%s-%s"%(fw, model['model_parameters'][fw]['model'], vector, norm_vector))
         return fw, model['model_parameters'][fw]['model'], vector, norm_vector
         ''' Deleted 31/08/2017. Change vector model
         return fw, model['model_parameters'][fw]['model'], vector, normalization_set'''

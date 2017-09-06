@@ -136,7 +136,7 @@ class Controller(object):
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined']
     # @param deep_impact  deep analysis
     # @return status, adviser.analysis_recommendation_order
-    def exec_analysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='N/A'):
+    def exec_sanalysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='N/A'):
         self._logging.log_exec('gDayF', "Controller", self._labels["start"])
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
         self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
@@ -249,7 +249,8 @@ class Controller(object):
     ## Method leading and controlling model savings
     # @param self object pointer
     # @param mode [BEST, BEST_3, EACH_BEST, ALL]
-    # @mode  type base type if is possible
+    # @param  arlist List of armetadata
+    # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
 
     def save_models(self, arlist, mode=BEST, metric='accuracy'):
         if mode == BEST:
@@ -260,7 +261,7 @@ class Controller(object):
             exclusion = list()
             model_list = list()
             for model in arlist:
-                if (get_model_fw(model),model['model_parameters'][get_model_fw(model)]['model'],
+                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
                     model['normalizations_set']) not in exclusion:
                     model_list.append(model)
                     exclusion.append((get_model_fw(model),model['model_parameters'][get_model_fw(model)]['model'],
@@ -278,7 +279,7 @@ class Controller(object):
     ## Method leading and controlling model removing from server
     # @param self object pointer
     # @param mode [BEST, BEST_3, EACH_BEST, ALL]
-    # @mode  type base type if is possible
+    # @param  arlist List of armetadata
 
     def remove_models(self, arlist, mode=ALL):
         if mode == BEST:
@@ -294,6 +295,7 @@ class Controller(object):
 
     ##Method oriented to generate execution tree for visualizations and analysis issues
     # @param arlist Priorized ArMetadata list
+    # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
     # @return OrderedDict() with execution tree data Analysis
     def reconstruct_execution_tree(self, arlist=None, metric='combined'):
         if arlist is None or len(arlist) == 0:
@@ -377,8 +379,8 @@ if __name__ == '__main__':
     source_data.append("ENB2012_data-Y1.csv")
     #Analysis
     controller = Controller()
-    controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='combined', deep_impact=3)
+    controller.exec_sanalysis(datapath=''.join(source_data), objective_column='Y2',
+                              amode=FAST, metric='combined', deep_impact=3)
 
     #Prediction
     source_data = list()

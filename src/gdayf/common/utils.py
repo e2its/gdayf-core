@@ -52,8 +52,8 @@ def compare_dict(dict1, dict2):
 
 
 ## Function oriented compare two normalizations_sets based on hash_key(json transformations)
-# @param List of Dict
-# @param List of Dict
+# @param list1 List of Dict
+# @param list2 List of Dict
 # @return True if equals false in other case
 def compare_list_ordered_dict(list1, list2):
     if list1[0] is None or list2[0] is None:
@@ -62,7 +62,7 @@ def compare_list_ordered_dict(list1, list2):
         return False
     else:
         for i in range(0, len(list1)):
-            if md5(dumps(list[i])) != md5(dumps(list2[i])):
+            if md5(dumps(list[i])) != md5(dumps(list2[i].encode('utf8')).hexdigest()):
                 return False
         return True
 

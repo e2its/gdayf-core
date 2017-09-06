@@ -20,7 +20,7 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_threshold" : 100000,
         "training_frame_ratio" : 0.80
@@ -47,6 +47,16 @@
               "type": "regression",
               "active": true,
               "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
             },
             {
               "type": "topology",
@@ -385,6 +395,16 @@
               "valued": "float64"
             },
             {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
               "type": "topology",
               "active": false,
               "valued": "float64"
@@ -689,6 +709,16 @@
               "type": "regression",
               "active": true,
               "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
             },
             {
               "type": "topology",
@@ -1217,6 +1247,16 @@
               "valued": "float64"
             },
             {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
               "type": "topology",
               "active": false,
               "valued": "float64"
@@ -1511,6 +1551,16 @@
               "valued": "float64"
             },
             {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
               "type": "topology",
               "active": false,
               "valued": "float64"
@@ -1685,6 +1735,16 @@
               "type": "regression",
               "active": true,
               "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
             },
             {
               "type": "topology",
@@ -2000,6 +2060,542 @@
 
             }
           }
+        },
+        {
+          "model": "H2OAutoEncoderEstimator",
+          "id": null,
+          "module": "h2o.estimators.deeplearning",
+          "min_rows_applicability": 100000,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_confusion_matrix_size": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+              "epochs": {
+                "value": 50.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "mini_batch_size": {
+                "value": 125,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "hidden": {
+                "value": [16, 2, 16],
+                "seleccionable": true,
+                "type": "List[int]"
+              },
+              "replicate_training_data": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "single_node_mode": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "shuffle_training_data": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "reproducible": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "scoring":{
+              "train_samples_per_iteration": {
+                "value": -2,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "score_each_iteration": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "score_interval": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "score_training_samples": {
+                "value": 1000,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "score_validation_samples": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "score_duty_cycle": {
+                "value": 0.2,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "score_validation_sampling": {
+                "value": "stratified",
+                "seleccionable": false,
+                "type": ["stratified", "uniform"]
+              }
+            },
+            "stopping":{
+              "stopping_rounds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "stopping_metric": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "deviance",
+                  "logloss",
+                  "mse",
+                  "rmse",
+                  "mae",
+                  "rmsle",
+                  "auc",
+                  "lift_top_group",
+                  "misclassification",
+                  "mean_per_class_error"
+                ]
+              },
+              "stopping_tolerance": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "classification_stop": {
+                "value": 0.0001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "regression_stop": {
+                "value": 0.0001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "overwrite_with_best_model": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "max_runtime_secs": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+              "balance_classes": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "activation": {
+              "value": "tanh_with_dropout",
+                "seleccionable": true,
+                "type": [
+                  "rectifier_with_dropout"
+                ]
+              },
+              "input_dropout_ratio": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "hidden_dropout_ratios": {
+                "value": [0.0, 0.0, 0.0],
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "l1": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "l2": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "standardize": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "distribution":{
+              "distribution": {
+                "value": "gaussian",
+                "seleccionable": true,
+                "type": [
+                  "tweedie",
+                  "poisson",
+                  "laplace"
+                ]
+              },
+              "tweedie_power": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "learn":{
+              "adaptive_rate": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "rho": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "epsilon": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "nesterov_accelerated_gradient": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "rate": {
+                "value": 0.05,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "rate_annealing": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "rate_decay": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "others":{
+              "offset_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "weights_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_w2": {
+                  "value": 3.4028235e+38,
+                  "seleccionable": false,
+                  "type": "float"
+                },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "checkpoint": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "pretrained_autoencoder": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "use_all_factor_levels": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "target_ratio_comm_to_comp": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_start": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_ramp": {
+                "value": 1000000.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_stable": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "initial_weight_distribution": {
+                "value": "normal",
+                "seleccionable": true,
+                "type": [
+                  "uniform",
+                  "normal"
+                ]
+              },
+              "initial_weight_scale": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "initial_weights": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[H2OFrame]"
+              },
+              "initial_biases": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[H2OFrame]"
+              },
+              "loss": {
+                "value": "automatic",
+                "seleccionable": false,
+                "type": [
+                  "automatic",
+                  "cross_entropy",
+                  "quadratic",
+                  "huber",
+                  "absolute",
+                  "quantile"
+                ]
+              },
+              "quantile_alpha": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "huber_alpha": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float(0.0, 1.0)"
+              },
+              "diagnostics": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "fast_mode": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "force_load_balance": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "variable_importances": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "replicate_training_data": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "quiet_mode": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "autoencoder": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "sparse": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "col_major": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "average_activation": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "sparsity_beta": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "max_categorical_features": {
+                "value": 2147483647,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "export_weights_and_biases": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "categorical_encoding": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen"
+                ]
+              },
+              "elastic_averaging": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "elastic_averaging_moving_rate": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "elastic_averaging_regularization": {
+                "value": 0.001,
+                "seleccionable": false,
+                "type": "float"
+              }
+            }
+          }
         }
       ]
     }
@@ -2126,11 +2722,10 @@
     ]
   },
   "normalizer": {
-    "normalizations_enabled": true,
     "minimal_normalizations_enabled": true,
+    "non_minimal_normalizations_enabled": true,
     "base_normalization_enabled": true,
-    "exclusion_missing_threshold": 0.2,
-    "reduccion_dimension_enabled": true
+    "exclusion_missing_threshold": 0.3
   },
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
@@ -2173,7 +2768,8 @@
         "nv_min_prob": [1e-9],
         "nv_min_sdev": [1e-3],
         "nv_improvement" : 0.5,
-        "nv_divisor": 0.5
+        "nv_divisor": 0.5,
+        "a_hidden_increment": 2
       }
     }
   }

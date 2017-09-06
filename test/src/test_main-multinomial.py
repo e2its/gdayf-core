@@ -8,8 +8,8 @@ if __name__ == "__main__":
     source_data.append("PE-MULTINOM.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                             amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=3)
+    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='ACCION',
+                                                       amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=3)
 
     controller.save_models(recomendations)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
