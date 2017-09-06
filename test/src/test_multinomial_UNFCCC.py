@@ -1,30 +1,37 @@
 if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
+    from gdayf.handlers.inputhandler import inputHandlerCSV
     from gdayf.common.constants import *
+    from gdayf.common.utils import pandas_split_data
+    from pprint import pprint
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/multinomial/PEM/")
-    source_data.append("PE-MULTINOM.csv")
+    source_data.append("D:/Data/datasheets/Europe-datasheet/Pollutant/")
+    source_data.append("UNFCCC_v8-missing.csv")
+
+    #Reducing rows
+    _, pd_train = pandas_split_data(inputHandlerCSV().inputCSV(filename=''.join(source_data)))
+
+
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                             amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=3)
+    status, recomendations = controller.exec_analysis(datapath=pd_train, objective_column='Country',
+                                                      amode=FAST, metric='combined', deep_impact=3)
 
-    controller.save_models(recomendations)
+    controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
-    controller.remove_models(recomendations, mode=BEST)
+    controller.remove_models(recomendations, mode=ALL)
+
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/multinomial/PEM/")
-    source_data.append("PE-MULTINOM.csv")
-    model_source = list()
+    source_data.append("D:/Data/datasheets/Europe-datasheet/Pollutant/")
+    source_data.append("UNFCCC_v8-missing-test.csv")
 
     #controller = Controller()
-    print(recomendations[0]['load_path'][0]['value'])
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                   model_file=recomendations[0]['json_path'][0]['value'])
-    print(prediction_frame)
+    pprint(prediction_frame)
 
     # Save Pojo
     #controller = Controller()
@@ -39,6 +46,3 @@ if __name__ == "__main__":
     controller.remove_models(recomendations, mode=ALL)
     controller.clean_handlers()
     del controller
-
-
-

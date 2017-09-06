@@ -9,9 +9,9 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='HomeWin',
-                             amode=NORMAL, metric='combined', deep_impact=3)
+                                                      amode=FAST_PARANOIAC, metric='combined', deep_impact=3)
 
-    controller.save_models(recomendations)
+    controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
     controller.remove_models(recomendations, mode=BEST_3)
     #Prediction

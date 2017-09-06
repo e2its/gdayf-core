@@ -9,6 +9,7 @@
 		"input_param":":Input Descriptor:",
         "ametric_order":":Analysis's Results Accuracy:",
         "pmetric_order":":Analysis's Results Precision (rmse):",
+        "norm_app": ":Normalizations Applied on Columns:",
 		"round_reach":":Reached on Round:",
         "ana_models":":Analyzed Models:",
         "exc_models":":Excluded Models:",
@@ -22,7 +23,9 @@
         "failed_input": "Invalidad DataPath descriptor:",
         "failed_conn": "Cluster unreached:",
         "cleaning": ":Cleaning Handler Objects:",
-        "shuttingdown": ":Shutdown Cluster Framework:"
+        "shuttingdown": ":Shutdown Cluster Framework:",
+        "fail_reconstruct": ":Failed reconstruction tree operation - Variable_dict():",
+        "loading_adviser": ":Loading adviser_class:"
       },
       "corehandler":{
         "start":":Connected to active cluster and ready:",
@@ -31,6 +34,7 @@
         "stop": ":H20-cluster not working:",
         "ar_error": ":Structure's Error ARMetadata:",
         "cor_struct": ":Objective column correlated data:",
+        "no_cor_struct": ":Objective column no correlated data:",
         "parsing_to_h2o": ":Parse executed from pandas to H2OFrames:",
         "getting_from_h2o" :  ":Reused H2OFrame stored on H2OCluster:",
         "tolerance":":Setting Tolerance's Threshold value to (native units): ",
@@ -72,10 +76,17 @@
         "exc_vector": "Excluding Executed Model with Vector Params: ",
         "exc_applicability": "Excluding Model based on applicability limits: "
       },
-      "persistence" : {}
+      "persistence" : {},
+      "normalizer" : {
+        "norm_set_establish" : ":Establishing dataframe normalization recommendations:",
+        "ignored_list": ":Establishing column's exclusion over missing values threshold:",
+        "start_data_norm": ":Starting Dataframe Normalizations:",
+        "applying": ":Applying Normalization:",
+        "nothing_to_do": ":Nothing to Do:",
+        "col_analysis": ":Column Basic Description:"
+      }
     },
     "ui":{
-
     }
   }
 }

@@ -1,12 +1,11 @@
 from gdayf.handlers.h2ohandler import H2OHandler
 from gdayf.handlers.inputhandler import inputHandlerCSV
 from gdayf.common.dfmetada import DFMetada
-from gdayf.core.adviserastar import AdviserAStar
+
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.common.utils import get_model_fw
-from gdayf.common.utils import get_model_ns
 from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data
 from gdayf.common.armetadata import ArMetadata
@@ -16,8 +15,9 @@ from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.storagemetadata import StorageMetadata
 from collections import OrderedDict
 from pathlib import Path
-import time
-from json import load, dumps
+from pandas import DataFrame
+import importlib
+from json import load
 from json.decoder import JSONDecodeError
 
 
@@ -33,15 +33,19 @@ class Controller(object):
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
         self.model_handler = OrderedDict()
         self.user_id = user_id
+        self.adviser = importlib.import_module(self._config['optimizer']['adviser_classpath'])
+        self._logging.log_exec('gDayF', "Controller", self._labels["loading_adviser"],
+                               self._config['optimizer']['adviser_classpath'])
 
 
     ## Method leading and controlling prediction's executions on all frameworks
     # @param self object pointer
-    # @param datapath String Path indicating file to be analyzed
+    # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param armetadata
     # @param model_file String Path indicating model_file ArMetadata.json structure
 
     def exec_prediction(self, datapath, armetadata=None, model_file=None):
+
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], 'prediction')
         if armetadata is None and model_file is None:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], datapath)
@@ -63,9 +67,18 @@ class Controller(object):
             except [IOError, OSError]:
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
-        try:
-            pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
-        except [IOError, OSError, JSONDecodeError]:
+
+        if isinstance(datapath, str):
+            try:
+                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
+                pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+            except [IOError, OSError, JSONDecodeError]:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+        elif isinstance(datapath, DataFrame):
+            pd_dataset = datapath
+            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
+        else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 
@@ -74,6 +87,8 @@ class Controller(object):
             self.init_handler(fw)
             prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset, base_ar=base_ar)
             self.clean_handler(fw)
+        else:
+            prediction_frame = None
                 
         self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
 
@@ -126,14 +141,30 @@ class Controller(object):
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
         self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], amode)
-        self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
 
-        try:
-            pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
-        except IOError:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
-            return self._labels['failed_input']
-        except OSError:
+
+        if isinstance(datapath, str):
+            try:
+                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
+                pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
+                id_datapath = Path(datapath).name
+            except IOError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+            except OSError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+            except JSONDecodeError:
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                return self._labels['failed_input']
+        elif isinstance(datapath, DataFrame):
+            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape) )
+            pd_dataset = datapath
+            id_datapath = 'Dataframe' + \
+                          '_' +str(pd_dataset.size) + \
+                          '_' + str(pd_dataset.shape[0]) + \
+                          '_' + str(pd_dataset.shape[1])
+        else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 
@@ -141,7 +172,7 @@ class Controller(object):
         if metric == 'combined' or 'test_accuracy':
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
 
-        adviser = AdviserAStar(analysis_id=self.user_id + '_' + Path(datapath).name, metric=metric, deep_impact=deep_impact)
+        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath, metric=metric, deep_impact=deep_impact)
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
 
         adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
@@ -184,12 +215,18 @@ class Controller(object):
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["res_model"],
                                     model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
+            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"], model['round'])
+            if model["normalizations_set"] is None:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"], [])
+            else:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
+                                       model["normalizations_set"])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
                                    model['metrics']['accuracy'])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
                                    model['metrics']['execution']['train']['RMSE'])
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"],
-                                   model['round'])
+
+
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
         self.clean_handlers()
@@ -214,11 +251,21 @@ class Controller(object):
     # @param mode [BEST, BEST_3, EACH_BEST, ALL]
     # @mode  type base type if is possible
 
-    def save_models(self, arlist, mode=BEST):
+    def save_models(self, arlist, mode=BEST, metric='accuracy'):
         if mode == BEST:
             model_list = [arlist[0]]
         elif mode == BEST_3:
             model_list = arlist[0:3]
+        elif mode == EACH_BEST:
+            exclusion = list()
+            model_list = list()
+            for model in arlist:
+                if (get_model_fw(model),model['model_parameters'][get_model_fw(model)]['model'],
+                    model['normalizations_set']) not in exclusion:
+                    model_list.append(model)
+                    exclusion.append((get_model_fw(model),model['model_parameters'][get_model_fw(model)]['model'],
+                                      model['normalizations_set'])
+                                     )
         elif mode == ALL:
             model_list = arlist
         for fw in self._config['frameworks'].keys():
@@ -255,7 +302,7 @@ class Controller(object):
         else:
             analysis_id = arlist[0]['model_id']
 
-        adviser = AdviserAStar(analysis_id=analysis_id, metric=metric)
+        adviser = self.adviser.AdviserAStar(analysis_id=analysis_id, metric=metric)
         ordered_list = adviser.priorize_models(adviser.analysis_id, arlist)
 
         root = OrderedDict()
@@ -283,10 +330,20 @@ class Controller(object):
             ranking += 1
 
         level = 1
-        while level in variable_dict.keys():
+        max_level = max(variable_dict.keys())
+        while level in range(1, max_level+1):
             for model_id, new_tree_structure in variable_dict[level].items():
-                container = eval('variable_dict[level-1][new_tree_structure[\'data\'][\'predecessor\']]')
-                container['successors'][model_id] = new_tree_structure
+                counter = 1
+                found = False
+                while not found or (level - counter) == 0:
+                    if new_tree_structure['data']['predecessor'] in variable_dict[level-counter].keys():
+                        container = eval('variable_dict[level-counter][new_tree_structure[\'data\'][\'predecessor\']]')
+                        container['successors'][model_id] = new_tree_structure
+                        found = True
+                    counter += 1
+                if not found:
+                    self._logging.log_debug(adviser.analysis_id, 'controller', self._labels['fail_reconstruct'],
+                                            model_id)
             level += 1
 
         #Store_json o primary path

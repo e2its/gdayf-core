@@ -11,7 +11,7 @@ if __name__ == "__main__":
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
                              amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=3)
 
-    controller.save_models(recomendations, mode=BEST_3)
+    controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
     controller.remove_models(recomendations, mode=BEST)
 

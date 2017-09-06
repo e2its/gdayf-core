@@ -1,11 +1,27 @@
-{"front" : [
+{"column" : [
   {"type" : "normalization",
-   "class" : "mean",
+   "class" : "base",
+   "objective" :{
+     "value": {}
+   }
+  },
+  {"type" : "drop",
+   "class" : "ignore_column",
+   "objective" :{
+     "value": {}
+   }
+  },
+  {"type" : "normalization",
+   "class" : "stdmean",
    "objective" : {
-    "mean" : 0.0,
-    "std" : 1.0
+     "value": {}
    },
    "description" : "normalization to mean (mean=0 and standard deviation = 1)"
+  {"type" : "drop",
+   "class" : "drop_missing",
+   "objective" : {
+     "value": {}
+   },
   }
   {"type" : "normalization",
    "class" : "working_range",
@@ -18,40 +34,54 @@
   {"type" : "bucketing",
    "class" : "discretize",
    "objective" : {
-    "buckets_number" : 25,
-    "fixed_size" : "Y"
+    "value" : 10,
+    "fixed_size" : true
    },
-   "description" : "bucketing continuos distribution to fixed sized
-   or fixed frecuency"
-  }
+   "description" : "bucketing continuos distribution to fixed sized or fixed frecuency"
+  },
   {"type" : "bucketing",
    "class" : "aggregation",
    "objective" : {
-      "bucket_ratio" : 0.25,
+      "bucket_ratio" : 0.25
     },
-    "description" : "bucketing less frcuent values on a single bucket.
-    bucket_ratio means the quantity of non-frecuent values to bucket
-    "
-  }
+    "description" : "bucketing less frequent values on a single bucket_ratio means the quantity of non-frequent values to bucket"
+  },
   {"type" : "imputation",
-   "class" : "missing_values",
+   "class" : "fixed_missing_values",
    "objective" : {
-     "mean" : "T",
-     "mode" : "F",
-     "fixed" : "F",
-     "k_nearest" : -1,
      "value": 0
+   }
+   },
+  {"type" : "imputation",
+   "class" : "mean_missing_values",
+   "objective" : {
+     "full": false,
+     "objective_column" : "objective_column"
+   }
+   },
+    {"type" : "imputation",
+   "class" : "progressive_missing_values",
+   "objective" : {
+     "objective_column" : "objective_column"
+   }
+   },
+      {"type" : "imputation",
+   "class" : "reduction_missing_values",
+   "objective" : {
+     "value": 2,
+     "column_list" : [],
+     "objective_column" : "objective_column"
+   }
    },
    "description" : "fill missing values with choosen option: mean: for continuous values or long cardinality
    discrete values mode: for short cardinal discrete values fixed: means by value k_nearest: supporting mean and mode.
    number of values to take in accounton selection (k_nearest upper and k-nearest lower)value: suppoting fixed "
-  }
+  },
   {"type" : "encoding",
    "class" : "binary_encoding",
    "objective" : {
     },
-    "description" : "for multinomial algorithms
-    "
+    "description" : "for multinomial algorithms"
   }
   ]
 }

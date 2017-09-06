@@ -1,20 +1,15 @@
-## @package gdayf.core.adviserastar
+## @package gdayf.core.adviserastar_tweedie
 # Define all objects, functions and structured related to manage and execute Smart analysis based on A* Algorithm
 # and defined heuristic
 # Main class AdviserAStarAvg. Lets us execute analysis, make recommendations over optimizing on selected algoritms
 
-
 from gdayf.common.dfmetada import DFMetada
 from gdayf.conf.loadconfig import LoadConfig
-
 from gdayf.common.utils import decode_json_to_dataframe
-from gdayf.conf.loadconfig import LoadLabels
-from gdayf.logs.logshandler import LogsHandler
-
-from gdayf.common.utils import get_model_fw
 from gdayf.core.adviserbase import Adviser
+from gdayf.common.utils import get_model_fw
+from gdayf.models.parametersmetadata import ParameterMetadata
 
-from time import time
 from json import dumps
 
 ## Class focused on execute A* based analysis on three modalities of working
@@ -30,7 +25,6 @@ class AdviserAStar(Adviser):
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
         super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric)
-
 
     ## Method manging generation of possible optimized models
     # params: results for Handlers (gdayf.handlers)
@@ -63,18 +57,30 @@ class AdviserAStar(Adviser):
             dpl_batch_divisor = config['dpl_batch_divisor']
             dpl_batch_reduced_divisor = config['dpl_batch_reduced_divisor']
             hidden_increment = config['hidden_increment']
+            learning_conf = config['learning_conf']
+            rho_conf = config['rho_conf']
             nv_laplace = config['nv_laplace']
             nv_min_prob = config['nv_min_prob']
             nv_min_sdev = config['nv_min_sdev']
             nv_improvement = config['nv_improvement']
             nv_divisor = config['nv_divisor']
 
+
             if model['model'] == 'H2OGradientBoostingEstimator':
-                if (self.deepness == self.deep_impact) and model['types'][0]['type'] == 'regression':
-                    for distribution in model['parameters']['distribution']['type']:
+                if (self.deepness == 2) and model['types'][0]['type'] == 'regression':
+                    for tweedie_power in [1.1, 1.5, 1.9]:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        model_aux['parameters']['distribution']['value'] = distribution
+                        model_aux['parameters']['distribution']['value'] = 'tweedie'
+                        model_aux['parameters']['tweedie_power'] = ParameterMetadata()
+                        model_aux['parameters']['tweedie_power'].set_value(tweedie_power)
+                        self.safe_append(model_list, new_armetadata)
+                if self.deepness == 2:
+                    for learning in learning_conf:
+                        new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                        model_aux = new_armetadata['model_parameters']['h2o']
+                        model_aux['parameters']['learn_rate']['value'] = learning['learn']
+                        model_aux['parameters']['learn_rate_annealing']['value'] = learning['improvement']
                         self.safe_append(model_list, new_armetadata)
                 if model_metric['number_of_trees'][0] >= model['parameters']['ntrees']['value']:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
@@ -98,11 +104,11 @@ class AdviserAStar(Adviser):
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2OGeneralizedLinearEstimator':
-                if (self.deepness  == self.deep_impact) and model['types'][0]['type'] == 'regression':
-                    for family in model['parameters']['family']['type']:
+                if (self.deepness == 2) and model['types'][0]['type'] == 'regression':
+                    for tweedie_power in [1.0, 1.5, 2.0, 2.5, 3.0]:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        model_aux['parameters']['family']['value'] = family
+                        model_aux['parameters']['tweedie_variance_power']['value'] = tweedie_power
                         self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
@@ -140,11 +146,20 @@ class AdviserAStar(Adviser):
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ODeepLearningEstimator':
-                if (self.deepness  == self.deep_impact) and model['types'][0]['type'] == 'regression':
-                    for distribution in model['parameters']['distribution']['type']:
+                if (self.deepness == 2) and model['types'][0]['type'] == 'regression':
+                    for tweedie_power in [1.1, 1.5, 1.9]:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        model_aux['parameters']['distribution']['value'] = distribution
+                        model_aux['parameters']['distribution']['value'] = 'tweedie'
+                        model_aux['parameters']['tweedie_power'] = ParameterMetadata()
+                        model_aux['parameters']['tweedie_power'].set_value(tweedie_power)
+                        self.safe_append(model_list, new_armetadata)
+                if self.deepness == 2:
+                    for learning in rho_conf:
+                        new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                        model_aux = new_armetadata['model_parameters']['h2o']
+                        model_aux['parameters']['rho']['value'] = learning['learn']
+                        model_aux['parameters']['epsilon']['value'] = learning['improvement']
                         self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
@@ -156,7 +171,7 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['activation']['value'] = 'tanh_with_dropout'
                     self.safe_append(model_list, new_armetadata)
-                if self.deepness == 1 and model['parameters']['initial_weight_distribution']['value'] == "normal":
+                if self.deepness == 2 and model['parameters']['initial_weight_distribution']['value'] == "normal":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['initial_weight_distribution']['value'] = "uniform"
@@ -166,22 +181,34 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['initial_weight_distribution']['value'] = "normal"
                     self.safe_append(model_list, new_armetadata)
-
                 if self.deepness == 2 and armetadata['data_initial']['rowcount'] > dpl_rcount_limit:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['hidden']['value'] = \
-                        [round(armetadata['data_initial']['rowcount']/(dpl_divisor*(self.deep_impact - self.deepness))),
+                        [round(armetadata['data_initial']['rowcount']/(dpl_divisor*0.5)),
                         round(armetadata['data_initial']['rowcount']/(dpl_divisor*self.deep_impact))]
                     model_aux['parameters']['hidden_dropout_ratios']['value'] = [h_dropout_ratio, h_dropout_ratio]
                     self.safe_append(model_list, new_armetadata)
-                elif self.deepness <= self.deep_impact:
+                if self.deepness == 2:
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['hidden']['value'].insert(0, \
-                                round(model_aux['parameters']['hidden']['value'][0] * hidden_increment))
-                    model_aux['parameters']['hidden_dropout_ratios']['value'].insert(0, h_dropout_ratio)
+                    model_aux['parameters']['hidden']['value'] = \
+                        [model_aux['parameters']['hidden']['value'][1], model_aux['parameters']['hidden']['value'][0]]
+                    model_aux['parameters']['hidden_dropout_ratios']['value'] = [h_dropout_ratio, h_dropout_ratio]
                     self.safe_append(model_list, new_armetadata)
+                elif self.deepness <= self.deep_impact and \
+                     len(armetadata['model_parameters']['h2o']['parameters']['hidden']['value']) < 4:
+                        new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                        model_aux = new_armetadata['model_parameters']['h2o']
+                        if model_aux['parameters']['hidden']['value'][0] > model_aux['parameters']['hidden']['value'][1]:
+                            model_aux['parameters']['hidden']['value'].insert(0, \
+                                        round(model_aux['parameters']['hidden']['value'][0] * hidden_increment))
+                            model_aux['parameters']['hidden_dropout_ratios']['value'].insert(0, h_dropout_ratio)
+                        else:
+                            model_aux['parameters']['hidden']['value'].append( \
+                                        round(model_aux['parameters']['hidden']['value'][-1] * hidden_increment))
+                            model_aux['parameters']['hidden_dropout_ratios']['value'].append( h_dropout_ratio)
+                        self.safe_append(model_list, new_armetadata)
                 if scoring_metric.shape[0] == 0 or \
                         (scoring_metric['epochs'].max() >= \
                         model['parameters']['epochs']['value']):
@@ -245,36 +272,29 @@ class AdviserAStar(Adviser):
                                 model_aux['parameters']['min_prob']['value'] = min_prob
                                 model_aux['parameters']['min_sdev']['value'] = min_sdev
                                 self.safe_append(model_list, new_armetadata)
-                else:
+                elif self.deepness >= 2:
+                    if self.deepness == self.deep_impact:
+                        new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                        model_aux = new_armetadata['model_parameters']['h2o']
+                        model_aux['parameters']['balance_classes']['value'] = \
+                            not model_aux['parameters']['balance_classes']['value']
+                        self.safe_append(model_list, new_armetadata)
                     if model['parameters']['nfolds']['value'] < nfold_limit:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
                         model_aux['parameters']['nfolds']['value'] += nfold_increment
                         self.safe_append(model_list, new_armetadata)
+
                     for laplace in ['improvement', 'decrement']:
-                        for min_prob in ['improvement', 'decrement']:
-                            for min_sdev in ['improvement', 'decrement']:
-                                new_armetadata = armetadata.copy_template(deepness=self.deepness)
-                                model_aux = new_armetadata['model_parameters']['h2o']
-                                if laplace == 'improvement':
-                                    model_aux['parameters']['laplace']['value'] = model_aux['parameters']['laplace'][
-                                                                                      'value'] * (1 + nv_improvement)
-                                else:
-                                    model_aux['parameters']['laplace']['value'] = model_aux['parameters']['laplace'][
-                                                                                      'value'] * (1 - nv_divisor)
-                                if min_prob == 'improvement':
-                                    model_aux['parameters']['min_prob']['value'] = model_aux['parameters']['min_prob'][
-                                                                                       'value'] * (1 + nv_improvement)
-                                else:
-                                    model_aux['parameters']['min_prob']['value'] = model_aux['parameters']['min_prob'][
-                                                                                       'value'] * (1 - nv_divisor)
-                                if min_sdev == 'improvement':
-                                    model_aux['parameters']['min_sdev']['value'] = model_aux['parameters']['min_sdev'][
-                                                                                       'value'] * (1 + nv_improvement)
-                                else:
-                                    model_aux['parameters']['min_sdev']['value'] = model_aux['parameters']['min_sdev'][
-                                                                                       'value'] * (1 - nv_divisor)
-                                self.safe_append(model_list, new_armetadata)
+                        new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                        model_aux = new_armetadata['model_parameters']['h2o']
+                        if laplace == 'improvement':
+                            model_aux['parameters']['laplace']['value'] = model_aux['parameters']['laplace'][
+                                                                              'value'] * (1 + nv_improvement)
+                        else:
+                            model_aux['parameters']['laplace']['value'] = model_aux['parameters']['laplace'][
+                                                                              'value'] * (1 - nv_divisor)
+                        self.safe_append(model_list, new_armetadata)
 
         else:
             return None

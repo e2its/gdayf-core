@@ -20,10 +20,8 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": false,
-        "train_balance_metric" : 0.2,
-        "validation_frame_threshold" : 100000,
-        "training_frame_ratio" : 0.80
+        "min_rows_enabled": true,
+        "train_balance_metric" : 0.2
       },
       "models": [
         {
@@ -31,7 +29,6 @@
           "id": null,
           "module": "h2o.estimators.gbm",
           "min_rows_applicability": 0,
-          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -72,7 +69,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": [],
+                "value": null,
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -157,7 +154,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.0001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -211,12 +208,12 @@
                   "type": "float"
               },
               "col_sample_rate": {
-                "value": 0.9,
-                "seleccionable": true,
+                "value": 1.0,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "col_sample_rate_change_per_level": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": false,
                 "type": "float(0.0, 2.0)"
               },
@@ -226,8 +223,8 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
-                "seleccionable": true,
+                "value": 1.0,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate_per_class": {
@@ -236,8 +233,8 @@
                 "type": "List[float(0.0, 1.0)]"
               },
               "max_abs_leafnode_pred": {
-                "value": 50,
-                "seleccionable": true,
+                "value": 1.797693135e+308,
+                "seleccionable": false,
                 "type": "float"
               }
             },
@@ -246,14 +243,13 @@
                 "value": "gaussian",
                 "seleccionable": true,
                 "type": [
-                  "tweedie",
                   "laplace",
                   "poisson",
                   "gamma"
                 ]
               },
               "tweedie_power": {
-                "value": 1.0,
+                "value": 2.0,
                 "seleccionable": false,
                 "type": "float"
               }
@@ -347,7 +343,7 @@
                 "type": "float"
               },
               "categorical_encoding": {
-                "value": "auto",
+                "value": "binary",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -366,8 +362,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 10000,
-          "enabled": true,
+          "min_rows_applicability": 1000,
           "types": [
             {
               "type": "binomial",
@@ -408,7 +403,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": [],
+                "value": null,
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -542,17 +537,16 @@
             },
             "distribution":{
               "family": {
-                "value": "tweedie",
+                "value": "gaussian",
                 "seleccionable": true,
                 "type": [
                   "poisson",
-                  "gamma",
-                  "gaussian"
+                  "gamma"
                 ]
               },
               "tweedie_variance_power": {
-                "value": 0.0,
-                "seleccionable": true,
+                "value": 0,
+                "seleccionable": false,
                 "type": "float"
               },
               "tweedie_link_power": {
@@ -672,8 +666,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 100000,
-          "enabled": true,
+          "min_rows_applicability": 5000,
           "types": [
             {
               "type": "binomial",
@@ -714,7 +707,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": [],
+                "value": null,
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -741,7 +734,7 @@
             },
             "effort":{
               "epochs": {
-                "value": 20.0,
+                "value": 10.0,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -751,7 +744,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [150, 75],
+                "value": [200, 100],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -811,7 +804,7 @@
               },
               "score_duty_cycle": {
                 "value": 0.2,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "score_validation_sampling": {
@@ -844,7 +837,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.0001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -925,13 +918,13 @@
                 "type": "List[float]"
               },
               "l1": {
-                "value": 0.0001,
+                "value": 0.005,
                 "seleccionable": false,
                 "type": "float"
               },
               "l2": {
-                "value": 0.0001,
-                "seleccionable": true,
+                "value": 0.005,
+                "seleccionable": false,
                 "type": "float"
               },
               "standardize": {
@@ -945,13 +938,12 @@
                 "value": "gaussian",
                 "seleccionable": true,
                 "type": [
-                  "tweedie",
                   "poisson",
                   "laplace"
                 ]
               },
               "tweedie_power": {
-                "value": 1.0,
+                "value": 1.5,
                 "seleccionable": false,
                 "type": "float"
               }
@@ -963,13 +955,13 @@
                 "type": "boolean"
               },
               "rho": {
-                "value": 0.9,
+                "value": 0.85,
                 "seleccionable": true,
                 "type": "float"
               },
               "epsilon": {
-                "value": 1e-06,
-                "seleccionable": true,
+                "value": 1e-08,
+                "seleccionable": false,
                 "type": "float"
               },
               "nesterov_accelerated_gradient": {
@@ -978,13 +970,13 @@
                 "type": "boolean"
               },
               "rate": {
-                "value": 0.05,
+                "value": 0.005,
                 "seleccionable": false,
                 "type": "float"
               },
               "rate_annealing": {
-                "value": 0.9,
-                "seleccionable": false,
+                "value": 0.0005,
+                "seleccionable": true,
                 "type": "float"
               },
               "rate_decay": {
@@ -1165,7 +1157,7 @@
                 "type": "boolean"
               },
               "categorical_encoding": {
-                "value": "auto",
+                "value": "binary",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -1199,7 +1191,6 @@
           "id": null,
           "module": "h2o.estimators.random_forest",
           "min_rows_applicability": 0,
-          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -1240,7 +1231,7 @@
                 "type": "H2OFrame"
               },
               "ignored_columns": {
-                "value": [],
+                "value": null,
                 "seleccionable": false,
                 "type": "List[str]"
               },
@@ -1325,7 +1316,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.0001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1389,12 +1380,12 @@
                 "type": "float(0.0, 2.0)"
               },
               "col_sample_rate_per_tree": {
-                "value": 0.9,
-                "seleccionable": true,
+                "value": 1.0,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
+                "value": 0.8,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -1474,7 +1465,7 @@
                 ]
               },
               "categorical_encoding": {
-                "value": "auto",
+                "value": "binary",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -1485,519 +1476,6 @@
                   "eigen"
                 ]
               }
-            }
-          }
-        },
-        {
-          "model": "H2ONaiveBayesEstimator",
-          "id": null,
-          "module": "h2o.estimators.naive_bayes",
-          "min_rows_applicability": 0,
-          "enabled": true,
-          "types": [
-            {
-              "type": "binomial",
-              "active": true,
-              "valued": "enum"
-            },
-            {
-              "type": "multinomial",
-              "active": true,
-              "valued": "enum"
-            },
-            {
-              "type": "regression",
-              "active": false,
-              "valued": "float64"
-            },
-            {
-              "type": "topology",
-              "active": false,
-              "valued": "float64"
-            }
-          ],
-          "parameters": {
-            "base":{
-              "model_id": {
-              "value": 0,
-              "seleccionable": false,
-              "type": "str"
-              },
-              "training_frame": {
-                "value": null,
-                "seleccionable": false,
-                "type": "H2OFrame"
-              },
-              "validation_frame": {
-                "value": null,
-                "seleccionable": false,
-                "type": "H2OFrame"
-              },
-              "ignored_columns": {
-                "value": [],
-                "seleccionable": false,
-                "type": "List[str]"
-              },
-              "ignore_const_cols": {
-                "value": true,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "response_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "max_hit_ratio_k": {
-                "value": 0,
-                "seleccionable": true,
-                "type": "int"
-              }
-            },
-            "effort":{
-            },
-            "repetible":{
-              "seed": {
-                "value": -1,
-                "seleccionable": true,
-                "type": "int"
-              }
-            },
-            "scoring":{
-              "score_each_iteration": {
-                "value": true,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "compute_metrics": {
-                "value": true,
-                "seleccionable": true,
-                "type": "boolean"
-              }
-            },
-            "stopping":{
-              "max_runtime_secs": {
-                "value": 0,
-                "seleccionable": true,
-                "type": "float"
-              }
-            },
-            "xval":{
-              "nfolds": {
-                "value": 3,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "fold_assignment": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": [
-                  "auto",
-                  "random",
-                  "modulo",
-                  "stratified"
-                ]
-              },
-              "fold_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "keep_cross_validation_predictions": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "keep_cross_validation_fold_assignment": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              }
-            },
-            "sampling":{
-              "balance_classes": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              }
-            },
-            "distribution":{
-            },
-            "learn":{
-            },
-            "others":{
-              "class_sampling_factors": {
-                "value": null,
-                "seleccionable": false,
-                "type": "List[float]"
-              },
-              "max_after_balance_size": {
-                "value": 5.0,
-                "seleccionable": true,
-                "type": "float"
-              },
-              "laplace": {
-                "value": 0.000,
-                "seleccionable": true,
-                "type": "integer(0:]"
-              },
-              "min_prob": {
-                "value": 1e-6,
-                "seleccionable": true,
-                "type": "integer(:1e-10)"
-              },
-			  "eps_prob": {
-                "value": 0.0,
-                "seleccionable": false,
-                "type": "integer(:1e-10)"
-              },
-			  "min_sdev": {
-                "value": 1e-6,
-                "seleccionable": true,
-                "type": "integer(:1e-10)"
-              },
-			  "eps_sdev": {
-                "value": 0.0,
-                "seleccionable": false,
-                "type": "integer(:1e-10)"
-              }
-            }
-          }
-        },
-        {
-          "model": "H2OXGBoostEstimator",
-          "id": null,
-          "module": "h2o.estimators.xgboost",
-          "min_rows_applicability": 0,
-          "enabled": false,
-          "types": [
-            {
-              "type": "binomial",
-              "active": true,
-              "valued": "enum"
-            },
-            {
-              "type": "multinomial",
-              "active": true,
-              "valued": "enum"
-            },
-            {
-              "type": "regression",
-              "active": true,
-              "valued": "float64"
-            },
-            {
-              "type": "topology",
-              "active": false,
-              "valued": "float64"
-            }
-          ],
-          "parameters": {
-            "base":{
-              "model_id": {
-              "value": 0,
-              "seleccionable": false,
-              "type": "str"
-              },
-              "training_frame": {
-                "value": null,
-                "seleccionable": false,
-                "type": "H2OFrame"
-              },
-              "validation_frame": {
-                "value": null,
-                "seleccionable": false,
-                "type": "H2OFrame"
-              },
-              "ignored_columns": {
-                "value": [],
-                "seleccionable": false,
-                "type": "List[str]"
-              },
-              "ignore_const_cols": {
-                "value": true,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "y": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str(response_column)"
-              }
-            },
-            "effort":{
-              "ntrees": {
-                "value": 50,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "max_depth": {
-                "value": 6,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "tree_method": {
-                "value": "auto",
-                "seleccionable": false,
-                "type": ["auto","exact","aprox","hist"]
-              },
-              "grow_policy": {
-                "value": "depthwise",
-                "seleccionable": true,
-                "type": ["depthwise","lossguide"]
-              },
-              "booster": {
-                "value": "dart",
-                "seleccionable": true,
-                "type": [ "gbtree", "gblinear","dart"]
-              }
-            },
-            "repetible":{
-              "seed": {
-                "value": -1,
-                "seleccionable": true,
-                "type": "int"
-              }
-            },
-            "scoring":{
-              "score_each_iteration": {
-                "value": true,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "score_tree_interval": {
-                "value": 0,
-                "seleccionable": false,
-                "type": "int"
-              }
-            },
-            "stopping":{
-              "stopping_rounds": {
-                "value": 3,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "stopping_metric": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": [
-                  "auto",
-                  "deviance",
-                  "logloss",
-                  "mse",
-                  "rmse",
-                  "mae",
-                  "rmsle",
-                  "auc",
-                  "lift_top_group",
-                  "misclassification",
-                  "mean_per_class_error"
-                ]
-              },
-              "stopping_tolerance": {
-                "value": 0.00005,
-                "seleccionable": true,
-                "type": "float"
-              },
-              "max_runtime_secs": {
-                "value": 0,
-                "seleccionable": true,
-                "type": "float"
-              }
-            },
-            "xval":{
-              "nfolds": {
-                "value": 3,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "fold_assignment": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": [
-                  "auto",
-                  "random",
-                  "modulo",
-                  "stratified"
-                ]
-              },
-              "fold_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "keep_cross_validation_predictions": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "keep_cross_validation_fold_assignment": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              }
-            },
-            "sampling":{
-              "min_rows": {
-                  "value": 2.0,
-                  "seleccionable": true,
-                  "type": "float"
-              },
-              "col_sample_rate": {
-                "value": 0.9,
-                "seleccionable": true,
-                "type": "float[0.0, 1.0]"
-              },
-              "col_sample_rate_per_tree": {
-                "value": 1.0,
-                "seleccionable": false,
-                "type": "float[0.0, 1.0]"
-              },
-              "sample_rate": {
-                "value": 0.9,
-                "seleccionable": true,
-                "type": "float[0.0, 1.0]"
-              },
-              "max_abs_leafnode_pred": {
-                "value": 50,
-                "seleccionable": true,
-                "type": "float"
-              },
-              "max_bins": {
-                "value": 256,
-                "seleccionable": false,
-                "type": "integer(0:]"
-              },
-              "max_leaves": {
-                "value": 0,
-                "seleccionable": false,
-                "type": "integer(0:]"
-              },
-              "min_sum_hessian_in_leaf": {
-                "value": 100,
-                "seleccionable": false,
-                "type": "integer(0:]"
-              },
-              "min_data_in_leaf": {
-                "value": 0,
-                "seleccionable": false,
-                "type": "integer(0:]"
-              },
-              "sample_type": {
-                "value": "uniform",
-                "seleccionable": false,
-                "type": ["weighted"]
-              }
-            },
-            "distribution":{
-              "distribution": {
-                "value": "gaussian",
-                "seleccionable": true,
-                "type": [
-                  "tweedie",
-                  "poisson",
-                  "gamma"
-                ]
-              },
-              "tweedie_power": {
-                "value": 1.0,
-                "seleccionable": false,
-                "type": "float"
-              }
-            },
-            "learn":{
-              "learn_rate": {
-                "value": 0.3,
-                "seleccionable": true,
-                "type": "float[0.0, 1.0]"
-              },
-              "normalize_type": {
-                "value": "forest",
-                "seleccionable": false,
-                "type": ["tree"]
-              },
-              "one_drop": {
-                "value": false,
-                "seleccionable": false,
-                "type": "boolean"
-              },
-              "rate_drop": {
-                "value": 0.025,
-                "seleccionable": true,
-                "type": "float[0.0, 1.0]"
-              },
-              "skip_drop": {
-                "value": 0.5,
-                "seleccionable": true,
-                "type": "float[0.0, 1.0]"
-              }
-            },
-            "others":{
-              "offset_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "quiet_mode": {
-                "value": true,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "weights_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "min_split_improvement": {
-                "value": 1e-05,
-                "seleccionable": false,
-                "type": "float"
-              },
-              "categorical_encoding": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": [
-                  "label_encoder",
-                  "enum",
-                  "one_hot_internal",
-                  "one_hot_explicit",
-                  "binary",
-                  "eigen",
-				  "sort_by_response",
-				  "enum_limited"
-                ]
-              },
-              "reg_lambda": {
-                "value": 0.0,
-                "seleccionable": false,
-                "type": "float"
-              },
-              "reg_alpha": {
-                "value": 0.0,
-                "seleccionable": false,
-                "type": "float"
-              },
-              "dmatrix_type": {
-                "value": "auto",
-                "seleccionable": false,
-                "type": ["auto","dense","sparse"]
-              },
-              "backend": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": ["auto","gpu","cpu"]
-              },
-              "gpu_id": {
-                "value": 0,
-                "seleccionable": false,
-                "type": "integer"
-              },
-			  "verbose": {
-                "value": false,
-                "seleccionable": false,
-                "type": "boolean"
-              }
-
             }
           }
         }
@@ -2125,55 +1603,31 @@
       }
     ]
   },
-  "normalizer": {
-    "normalizations_enabled": true,
-    "minimal_normalizations_enabled": true,
-    "base_normalization_enabled": true,
-    "exclusion_missing_threshold": 0.2,
-    "reduccion_dimension_enabled": true
-  },
   "optimizer": {
-    "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
+    "adviser_classpath" : "gdayf.core.adviserastar",
     "adviser_class": "AdviserStart",
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.005
+        "multi_limit" : 0.1
       },
       "h2o": {
-        "nfold_limit": 8,
+        "nfold_limit": 5,
         "min_rows_limit": 10,
         "cols_breakdown": 200,
         "nfold_increment": 2,
-        "min_rows_increment": 2,
+        "min_rows_increment": 1.75,
         "max_interactions_rows_breakdown": 1000,
         "max_interactions_increment": 1000,
         "max_depth_increment": 2,
         "ntrees_increment": 2,
-        "dpl_rcount_limit": 100000,
+        "dpl_rcount_limit": 10000,
         "dpl_divisor": 500,
         "h_dropout_ratio": 0.025,
-        "epochs_increment": 2.0,
-        "hidden_increment": 2.0,
+        "epochs_increment": 1.5,
+        "hidden_increment": 1.5,
         "dpl_min_batch_size": 10,
-        "dpl_batch_divisor": 1000,
-        "dpl_batch_reduced_divisor": 2,
-        "learning_conf" : [
-          {"learn":0.5,"improvement":0.85},
-          {"learn":0.01,"improvement":0.1},
-          {"learn":0.005,"improvement":0.05},
-          {"learn":0.05,"improvement":0.99},
-          {"learn":1.0,"improvement":0.75}
-        ],
-        "rho_conf" : [
-          {"learn":0.95,"improvement":1e-8},
-          {"learn":0.99,"improvement":1e-10},
-          {"learn":0.999,"improvement":1e-10}
-        ],
-        "nv_laplace": [0.001, 3, 10],
-        "nv_min_prob": [1e-9],
-        "nv_min_sdev": [1e-3],
-        "nv_improvement" : 0.5,
-        "nv_divisor": 0.5
+        "dpl_batch_divisor": 2000,
+        "dpl_batch_reduced_divisor": 2
       }
     }
   }

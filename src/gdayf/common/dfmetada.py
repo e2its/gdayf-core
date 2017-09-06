@@ -4,6 +4,7 @@ from json import dumps, loads
 from collections import OrderedDict
 from gdayf.common.utils import dtypes
 from copy import deepcopy
+from pandas import cut, value_counts, qcut
 import operator
 
 
@@ -31,21 +32,32 @@ class DFMetada(OrderedDict):
                     auxdict[comp] = str(summary[comp])
                 except KeyError:
                     auxdict[comp] = 'NaN'
-            auxdict['zeros'] = str(dataframe[col][dataframe[col] == 0].count())
+            if typedf in dtypes:
+                auxdict['zeros'] = str(dataframe[dataframe.loc[:, col] == 0][col].count())
+            else:
+                auxdict['zeros'] = 'NaN'
             auxdict['missed'] = str(
                 dataframe[col].isnull().values.ravel().sum())
-            auxdict['cardinality'] = str(int(dataframe[col].value_counts().describe()['count']))
+            auxdict['cardinality'] = str(int(dataframe.loc[:, col].value_counts().describe()['count']))
             auxdict['histogram'] = OrderedDict()
-            if int(auxdict['cardinality']) < 100:
-                hist = dataframe[col].value_counts().to_dict()
+            if int(auxdict['cardinality']) < 41:
+                hist = dataframe.loc[:, col].value_counts().to_dict()
                 for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                     auxdict['histogram'][str(tupla[0])] = str(tupla[1])
+                del hist
             else:
+                try:
+                    hist = cut(dataframe.loc[:, col], 40).value_counts().to_dict()
+                    for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
+                        auxdict['histogram'][str(tupla[0])] = str(tupla[1])
+                    del hist
+                except TypeError: #Bug? TypeError: Can't convert 'float' object to str implicitly
                     auxHist = dataframe[col].value_counts()
                     auxdict['histogram']['max'] = str(auxHist.max())
                     auxdict['histogram']['min'] = str(auxHist.min())
                     auxdict['histogram']['mean'] = str(auxHist.mean())
                     auxdict['histogram']['std'] = str(auxHist.std())
+                    del auxHist
             auxdict['distribution'] = 'Not implemented yet'
             self['columns'].append(auxdict)
         self['correlation'] = dataframe.corr().to_dict()

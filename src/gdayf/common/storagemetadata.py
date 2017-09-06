@@ -68,6 +68,7 @@ class StorageMetadata (list):
 def generate_json_path(armetadata):
     config = LoadConfig().get_config()
     fw = get_model_fw(armetadata)
+
     model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
     primary_path = config['frameworks'][fw]['conf'][config['frameworks'][fw]['conf']['primary_path']]
     source_data = list()
