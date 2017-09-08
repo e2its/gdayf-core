@@ -2065,7 +2065,7 @@
           "model": "H2OAutoEncoderEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 100000,
+          "min_rows_applicability": 0,
           "enabled": true,
           "types": [
             {
@@ -2273,36 +2273,6 @@
               }
             },
             "xval":{
-              "nfolds": {
-                "value": 3,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "fold_assignment": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": [
-                  "auto",
-                  "random",
-                  "modulo",
-                  "stratified"
-                ]
-              },
-              "fold_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "keep_cross_validation_predictions": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "keep_cross_validation_fold_assignment": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              }
             },
             "sampling":{
               "balance_classes": {
@@ -2319,7 +2289,7 @@
               },
               "input_dropout_ratio": {
                 "value": 0.0,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "hidden_dropout_ratios": {
