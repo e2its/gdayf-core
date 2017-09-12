@@ -4,11 +4,11 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/Anomalies/CCPP")
-    source_data.append("CPP.csv")
+    source_data.append("/Data/Data/datasheets/Anomalies/UCI CBM Dataset/")
+    source_data.append("UCI-CBM.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='Y2',
+    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column=None,
                                                        amode=ANOMALIES, metric='rmse', deep_impact=3)
 
     controller.save_models(recomendations)
@@ -17,8 +17,8 @@ if __name__ == "__main__":
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/ENB2012/")
-    source_data.append("ENB2012_data-Y1.csv")
+    source_data.append("/Data/Data/datasheets/Anomalies/UCI CBM Dataset/")
+    source_data.append("UCI-CBM.csv")
 
     #controller = Controller()
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),

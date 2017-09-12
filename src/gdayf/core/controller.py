@@ -132,11 +132,16 @@ class Controller(object):
     # @param datapath String Path indicating file to be analyzed
     # @param objective_column string indicating objective column
     # @param analysis_id main id code to be referenced on future predictions
-    # @param amode Analysis mode of execution [0,1,2,3] [FAST, NORMAL, PARANOIAC, POC]
+    # @param amode Analysis mode of execution [0,1,2,3,4,5,6]
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined']
     # @param deep_impact  deep analysis
     # @return status, adviser.analysis_recommendation_order
     def exec_sanalysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='N/A'):
+
+        supervised = True
+        if objective_column is None:
+            supervised = False
+
         self._logging.log_exec('gDayF', "Controller", self._labels["start"])
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
         self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
@@ -166,7 +171,7 @@ class Controller(object):
                           '_' + str(pd_dataset.shape[1])
         else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
-            return self._labels['failed_input']
+            return self._labels['failed_input'], None
 
         pd_test_dataset = None
         if metric == 'combined' or 'test_accuracy':
@@ -221,8 +226,9 @@ class Controller(object):
             else:
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
                                        model["normalizations_set"])
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
-                                   model['metrics']['accuracy'])
+            if supervised:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
+                                       model['metrics']['accuracy'])
             self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
                                    model['metrics']['execution']['train']['RMSE'])
 
@@ -232,6 +238,8 @@ class Controller(object):
         self.clean_handlers()
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
+
+
 
     ## Method leading and controlling coversion to java model
     # @param self object pointer

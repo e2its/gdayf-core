@@ -21,7 +21,19 @@ class RegressionMetricMetadata(MetricMetadata):
     def set_precision(self, threshold):
         pass
 
-    ## Method to load Binomial metrics from H2ORegressionModelMetrics class
+    ## Method to load Regression metrics from H2ORegressionModelMetrics class
+    # @param self objetct pointer
+    # @param perf_metrics H2ORegressionModelMetrics
+    def set_h2ometrics(self, perf_metrics):
+        for parameter, _ in self.items():
+            try:
+                self[parameter] = perf_metrics._metric_json[parameter]
+            except KeyError:
+                pass
+            except AttributeError:
+                pass
+
+    ## Method to load Regression metrics from H2ORegressionModelMetrics class
     # @param self objetct pointer
     # @param perf_metrics H2ORegressionModelMetrics
     def set_h2ometrics(self, perf_metrics):

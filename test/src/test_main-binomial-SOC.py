@@ -4,7 +4,7 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/binary/FODSET/")
+    source_data.append("/Data/Data/datasheets/binary/FODSET/")
     source_data.append("football.train2.csv")
     #Analysis
     controller = Controller()
@@ -14,9 +14,10 @@ if __name__ == "__main__":
     controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
     controller.remove_models(recomendations, mode=BEST_3)
+
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/binary/FODSET/")
+    source_data.append("/Data/Data/datasheets/binary/FODSET/")
     source_data.append("football.test2.csv")
     model_source = list()
 

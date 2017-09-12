@@ -313,15 +313,15 @@ class AdviserAStar(Adviser):
                         model_aux['parameters']['rho']['value'] = learning['learn']
                         model_aux['parameters']['epsilon']['value'] = learning['improvement']
                         self.safe_append(model_list, new_armetadata)
-                if self.deepness == 2:
+
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['sparse']['value'] = not model_aux['parameters']['sparse']['value']
                     self.safe_append(model_list, new_armetadata)
-                if self.deepness > 2 and model['parameters']['activation']['value'] == "tanh_with_dropout":
+                if self.deepness > 1 and model['parameters']['activation']['value'] == "rectifier":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['activation']['value'] = 'rectifier_with_dropout'
+                    model_aux['parameters']['activation']['value'] = 'tanh'
                     self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2 and model['parameters']['initial_weight_distribution']['value'] == "normal":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
@@ -333,15 +333,16 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['initial_weight_distribution']['value'] = "normal"
                     self.safe_append(model_list, new_armetadata)
-                elif self.deepness <= self.deep_impact and \
-                     len(armetadata['model_parameters']['h2o']['parameters']['hidden']['value']) < 7:
+
+                if self.deepness <= self.deep_impact:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        next_hidden = [model_aux['parameters']['hidden']['value'] * a_hidden_increment]
-                        model_aux['parameters']['hidden']['value'] = next_hidden\
-                            .extend(model_aux['parameters']['hidden']['value'])\
-                            .append(next_hidden)
+                        next_hidden = int(round(model_aux['parameters']['hidden']['value'][0] * a_hidden_increment, 0))
+                        model_aux['parameters']['hidden']['value'] = [next_hidden,
+                                                                      model_aux['parameters']['hidden']['value'][1],
+                                                                      next_hidden]
                         self.safe_append(model_list, new_armetadata)
+
                 if scoring_metric.shape[0] == 0 or \
                         (scoring_metric['epochs'].max() >= \
                         model['parameters']['epochs']['value']):

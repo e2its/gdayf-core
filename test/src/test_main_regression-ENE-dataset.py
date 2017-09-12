@@ -4,7 +4,7 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/ENB2012/")
+    source_data.append("/Data/Data/datasheets/regression/ENB2012/")
     source_data.append("ENB2012_data-Y1.csv")
     #Analysis
     controller = Controller()
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/ENB2012/")
+    source_data.append("/Data/Data/datasheets/regression/ENB2012/")
     source_data.append("ENB2012_data-Y1.csv")
 
     #controller = Controller()

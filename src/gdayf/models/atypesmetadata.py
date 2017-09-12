@@ -13,7 +13,7 @@ class ATypesMetadata (list):
     # @param cls class pointer
     # @return analysis types allowed
     def get_artypes(cls):
-        return ['binomial', 'multinomial', 'regression', 'topology']
+        return ['binomial', 'multinomial', 'regression', 'topology', 'anomalies', 'clustering']
 
     ## Constructor
     #

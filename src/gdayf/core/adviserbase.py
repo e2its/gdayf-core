@@ -21,6 +21,7 @@ from collections import OrderedDict
 from time import time
 from hashlib import md5 as md5
 from json import dumps
+from copy import deepcopy
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
@@ -54,16 +55,28 @@ class Adviser(object):
     # @param objective_column string indicating objective column
     # @return ArMetadata()'s Prioritized queue
     def set_recommendations(self, dataframe_metadata, objective_column, atype=POC):
+        supervised = True
+        if objective_column is None:
+            supervised = False
         self._logging.log_exec(self.analysis_id, 'AdviserAStar',
                                self._labels["ana_type"],
                                str(atype) + ' (' + str(self.deepness) + ')')
-        self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
-        if atype == POC:
-            return self.analysispoc(dataframe_metadata, objective_column, amode=FAST)
-        if atype in [FAST, NORMAL]:
-            return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
-        elif atype in [FAST_PARANOIAC, PARANOIAC]:
-            return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
+        if supervised:
+            self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
+            if atype == POC:
+                return self.analysispoc(dataframe_metadata, objective_column, amode=FAST)
+            if atype in [FAST, NORMAL]:
+                return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
+            elif atype in [FAST_PARANOIAC, PARANOIAC]:
+                return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
+        else:
+            if atype in [ANOMALIES]:
+                self.an_objective = ATypesMetadata(anomalies=True)
+                return self.analysisanomalies(dataframe_metadata, objective_column, amode=atype)
+            elif atype in [CLUSTERING]:
+                self.an_objective = ATypesMetadata(clustering=True)
+                return self.analysisclustering(dataframe_metadata, objective_column, amode=atype)
+
 
 
     ## Method oriented to execute smart normal and fast analysis
@@ -186,28 +199,151 @@ class Adviser(object):
         self.deepness += 1
         return self.analysis_id, self.next_analysis_list
 
+    ## Method oriented to execute unsupervised anomalies models
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param amode [ANOMALIES]
+    # @param objective_column string indicating objective column
+    # @return analysis_id,(framework, Ordered[(algorithm_metadata.json, normalizations_sets.json)])
+
+    def analysisanomalies(self, dataframe_metadata, objective_column, amode):
+        self.next_analysis_list.clear()
+        if self.deepness == 1:
+            self.base_iteration(amode, dataframe_metadata, objective_column)
+        elif self.deepness > self.deep_impact:
+            self.next_analysis_list = None
+        elif self.deepness == 2:
+            # Get all models
+            fw_model_list = list()
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                except TypeError:
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        elif self.next_analysis_list is not None:
+            fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    # Modified 31/08/2017
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models:
+                        print("Trace:%s-%s"%(model_type, best_models))
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        best_models.append(model_type)
+                        # End - Modified 31/08/2017
+                except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    pass and look for next best model on this type'''
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        self.deepness += 1
+        return self.analysis_id, self.next_analysis_list
+
+    ## Method oriented to execute unsupervised clustering models
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param amode [CLUSTERING]
+    # @param objective_column string indicating objective column
+    # @return analysis_id,(framework, Ordered[(algorithm_metadata.json, normalizations_sets.json)])
+
+    def analysisclustering(self, dataframe_metadata, objective_column, amode):
+        self.next_analysis_list.clear()
+        if self.deepness == 1:
+            self.base_iteration(amode, dataframe_metadata, objective_column)
+        elif self.deepness > self.deep_impact:
+            self.next_analysis_list = None
+        elif self.deepness == 2:
+            # Get all models
+            fw_model_list = list()
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                except TypeError:
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        elif self.next_analysis_list is not None:
+            fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    # Modified 31/08/2017
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models:
+                        print("Trace:%s-%s"%(model_type, best_models))
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        best_models.append(model_type)
+                        # End - Modified 31/08/2017
+                except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    pass and look for next best model on this type'''
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        self.deepness += 1
+        return self.analysis_id, self.next_analysis_list
+
     ## Method oriented to select initial candidate models
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
     # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @param objective_column string indicating objective column
     def base_iteration(self, amode, dataframe_metadata, objective_column):
+        supervised = True
+        if objective_column is None:
+            supervised = False
+
         fw_model_list = self.get_candidate_models(self.an_objective, amode)
+
         aux_model_list = list()
         norm = Normalizer()
-        minimal_nmd = [norm.define_minimal_norm(objective_column=objective_column)]
-        for fw, model, _ in fw_model_list:
-            aux_model_list.append((fw, model, minimal_nmd))
-        fw_model_list = aux_model_list
-        nmd = norm.define_normalizations(dataframe_metadata=dataframe_metadata,
+        #modified 11/09/2017
+        #minimal_nmd = [norm.define_minimal_norm(objective_column=objective_column)]
+        minimal_nmd = norm.define_minimal_norm(dataframe_metadata=dataframe_metadata,
                                                objective_column=objective_column,
                                                an_objective=self.an_objective)
+        for fw, model, _ in fw_model_list:
+            aux_model_list.append((fw, model, deepcopy(minimal_nmd)))
+        fw_model_list = aux_model_list
 
         self.applicability(fw_model_list, nrows=dataframe_metadata['rowcount'])
+
+        nmd = norm.define_normalizations(dataframe_metadata=dataframe_metadata,
+                                         objective_column=objective_column,
+                                         an_objective=self.an_objective)
+
         if nmd is not None:
             nmdlist = list()
             for fw, model, _ in fw_model_list:
-                nmdlist.append((fw, model, nmd))
+                if minimal_nmd[0] is not None:
+                    whole_nmd = deepcopy(minimal_nmd)
+                    whole_nmd.extend(deepcopy(nmd))
+                    nmdlist.append((fw, model, whole_nmd))
+                else:
+                    nmdlist.append((fw, model, deepcopy(nmd)))
+
             fw_model_list.extend(nmdlist)
 
         for fw, model_params, norm_sets in fw_model_list:
