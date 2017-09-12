@@ -27,7 +27,7 @@
         "anomaly_threshold":
         {
           "columns" :0.15,
-          "global_mse":0.15
+          "global_mse":0.05
         }
       },
       "models": [

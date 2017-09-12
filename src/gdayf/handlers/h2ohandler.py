@@ -416,7 +416,7 @@ class H2OHandler(object):
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
     # on dataframe objective's column
     # @param self object pointer
-    # @param dataframe H2OFrame
+    # @param dataframe normalized H2OFrame
     # @param  antype Atypemetadata().get_artypes() values allowed
     # @param  base type BugFix on regression with range mixing int and float
     # @param tolerance (optional) default value 0.0. Only for regression
@@ -427,6 +427,7 @@ class H2OHandler(object):
         prediction_dataframe = self._model_base.predict(dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = dataframe.cbind(prediction_dataframe)
+        self._frame_list.append(prediction_dataframe.frame_id)
         prediction_columns = prediccion.columns
         for element in dataframe_cols:
             prediction_columns.remove(element)
@@ -456,10 +457,11 @@ class H2OHandler(object):
 
     ## Generate detected anomalies on dataframe
     # @param self object pointer
-    # @param dataframe H2OFrame
+    # @param odataframe original H2OFrame
+    # @param dataframe normalized H2OFrame
     # @param anomalies_thresholds OrderedDict
     # @return OrderedDict with anomalies
-    def _predict_anomalies(self, dataframe, anomalies_thresholds):
+    def _predict_anomalies(self, odataframe, dataframe, anomalies_thresholds):
 
         result1 = self._model_base.predict(dataframe)
         self._frame_list.append(result1.frame_id)
@@ -487,11 +489,12 @@ class H2OHandler(object):
             else:
                 min = (1 - self._anomaly_threshold['columns'])
 
-            temp_anomalies = dataframe[difference[col] > (anomalies_thresholds['columns'][col]['max'] * max)
+            temp_anomalies = odataframe[difference[col] > (anomalies_thresholds['columns'][col]['max'] * max)
                                        or
                                        difference[col] < (anomalies_thresholds['columns'][col]['min'] * min)]
+            self._frame_list.append(temp_anomalies.frame_id)
             if temp_anomalies.nrows > 0:
-                anomalies['columns'] = temp_anomalies.as_data_frame(use_pandas=True)
+                anomalies['columns'][col] = temp_anomalies.as_data_frame(use_pandas=True)
 
         anomalies['global_mse'] = OrderedDict()
         if anomalies_thresholds['global_mse']['max'] < 0:
@@ -510,9 +513,10 @@ class H2OHandler(object):
         self._frame_list.append(anomalyframe.frame_id)
 
 
-        temp_anomalies = anomalyframe[anomalyframe['Reconstruction.MSE'] > (anomalies_thresholds['global_mse']['max'] * max)
+        temp_anomalies = odataframe[anomalyframe['Reconstruction.MSE'] > (anomalies_thresholds['global_mse']['max'] * max)
                                    or
                                    anomalyframe['Reconstruction.MSE'] < (anomalies_thresholds['global_mse']['min'] *min)]
+        self._frame_list.append(temp_anomalies.frame_id)
         if temp_anomalies.nrows > 0:
             anomalies['global_mse'] = temp_anomalies.as_data_frame(use_pandas=True)
 
@@ -1046,14 +1050,21 @@ class H2OHandler(object):
                                    self._labels["cor_struct"],  str(data_initial['correlation']))
 
         base_ar['data_initial'] = data_initial
-        predict_frame, data_normalized, _, norm_executed = self.execute_normalization(dataframe=predict_frame,
+        npredict_frame, data_normalized, _, norm_executed = self.execute_normalization(dataframe=predict_frame,
                                                                                       base_ns=base_ns)
         if not norm_executed:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["exec_norm"],
                                    'No Normalizations Required')
         else:
+            # Transforming original dataframe to H2OFrame
+            predict_frame = H2OFrame(python_obj=predict_frame,
+                                     destination_frame='predict_frame_' + base_ar['model_id'])
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+                                   'test_frame (' + str(predict_frame.nrows) + ')')
+            self._frame_list.append(predict_frame.frame_id)
+
             base_ar['data_normalized'] = data_normalized
-            if objective_column in list(predict_frame.columns.values):
+            if objective_column in list(npredict_frame.columns.values):
                 try:
                     self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_normalized['correlation'][objective_column]))
@@ -1062,15 +1073,15 @@ class H2OHandler(object):
                                            str(data_normalized['correlation']))
 
         #Transforming to H2OFrame
-        predict_frame = H2OFrame(python_obj=predict_frame,
-                                 destination_frame='predict_frame_' + base_ar['model_id'])
+        npredict_frame = H2OFrame(python_obj=npredict_frame,
+                                  destination_frame='npredict_frame_' + base_ar['model_id'])
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
-                               'test_frame (' + str(predict_frame.nrows) + ')')
-        self._frame_list.append(predict_frame.frame_id)
+                               'test_frame (' + str(npredict_frame.nrows) + ')')
+        self._frame_list.append(npredict_frame.frame_id)
 
         if supervised:
             self.need_factor(atype=base_ar['model_parameters']['h2o']['types'][0]['type'],
-                             objective_column=objective_column, predict_frame=predict_frame)
+                             objective_column=objective_column, predict_frame=npredict_frame)
 
         base_ar['type'] = 'predict'
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
@@ -1090,22 +1101,31 @@ class H2OHandler(object):
                                self._labels['st_predict_model'],
                                base_model_id)
 
-        if objective_column in predict_frame.columns:
-            objective_type = predict_frame.type(objective_column)
+        if objective_column in npredict_frame.columns:
+            objective_type = npredict_frame.type(objective_column)
         else:
             objective_type = None
 
         start = time.time()
         if supervised:
-            accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, antype=antype,
+            accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame,
+                                                                    antype=antype,
                                                                     tolerance=tolerance, base_type=objective_type)
+            self._frame_list.append(prediction_dataframe.frame_id)
+
             base_ar['execution_seconds'] = time.time() - start
             base_ar['tolerance'] = tolerance
-            self._frame_list.append(prediction_dataframe.frame_id)
+
             prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
         else:
             if antype == 'anomalies':
-                predict_anomalies = self._predict_anomalies(predict_frame, base_ar['metrics']['anomalies'])
+                if norm_executed:
+                    predict_anomalies = self._predict_anomalies(predict_frame, npredict_frame,
+                                                                base_ar['metrics']['anomalies'])
+                else:
+                    predict_anomalies = self._predict_anomalies(npredict_frame, npredict_frame,
+                                                                base_ar['metrics']['anomalies'])
+
             base_ar['execution_seconds'] = time.time() - start
 
 
@@ -1114,9 +1134,9 @@ class H2OHandler(object):
             self._persistence.store_file(filename=base_ar['log_path'][0]['value'],
                                          storage_json=base_ar['log_path'])
 
-        if objective_column in predict_frame.columns:
+        if objective_column in npredict_frame.columns:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
-            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=predict_frame,
+            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
                                                                                             source=None, antype=antype)
 
             base_ar['metrics']['accuracy']['predict'] = accuracy
@@ -1135,7 +1155,9 @@ class H2OHandler(object):
 
         # Cleaning H2OCluster
         try:
-            H2Oremove(predict_frame)
+            H2Oremove(npredict_frame)
+            if norm_executed:
+                H2Oremove(predict_frame)
         except H2OError:
             self._logging.log_exec(analysis_id,
                                    self._h2o_session.session_id, self._labels["delete_frame"],

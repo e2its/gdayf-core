@@ -2,29 +2,29 @@ if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
     from gdayf.common.constants import *
+    from pprint import pprint
 
     source_data = list()
-    source_data.append("/Data/Data/datasheets/Multinomial/PEM/")
-    source_data.append("PE-MULTINOM-3.csv")
+    source_data.append("/Data/Data/datasheets/Anomalies/CCPP/")
+    source_data.append("CPP.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                       amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=5)
+    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column=None,
+                                                       amode=ANOMALIES, metric='rmse', deep_impact=5)
 
     controller.save_models(recomendations)
-    controller.reconstruct_execution_tree(recomendations, metric='combined')
-    controller.remove_models(recomendations, mode=BEST)
+    controller.reconstruct_execution_tree(recomendations, metric='rmse')
+    controller.remove_models(recomendations, mode=ALL)
+
     #Prediction
     source_data = list()
-    source_data.append("/Data/Data/datasheets/Multinomial/PEM/")
-    source_data.append("PE-MULTINOM-3.csv")
-    model_source = list()
+    source_data.append("/Data/Data/datasheets/Anomalies/CCPP/")
+    source_data.append("CPP_modificado.csv")
 
     #controller = Controller()
-    print(recomendations[0]['load_path'][0]['value'])
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                   model_file=recomendations[0]['json_path'][0]['value'])
-    print(prediction_frame)
+    pprint(prediction_frame)
 
     # Save Pojo
     #controller = Controller()
@@ -39,6 +39,3 @@ if __name__ == "__main__":
     controller.remove_models(recomendations, mode=ALL)
     controller.clean_handlers()
     del controller
-
-
-

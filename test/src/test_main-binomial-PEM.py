@@ -4,12 +4,12 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/binary/PEM/")
+    source_data.append("/Data/Data/datasheets/binary/PEM/")
     source_data.append("PE-BINARY.csv")
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                       amode=FAST_PARANOIAC, metric='accuracy', deep_impact=10)
+                                                       amode=FAST_PARANOIAC, metric='accuracy', deep_impact=5)
 
     controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/binary/PEM/")
+    source_data.append("Data/Data/datasheets/binary/PEM/")
     source_data.append("PE-BINARY.csv")
     model_source = list()
 

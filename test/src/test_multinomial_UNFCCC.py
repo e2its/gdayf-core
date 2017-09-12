@@ -7,7 +7,7 @@ if __name__ == "__main__":
     from pprint import pprint
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/Europe-datasheet/Pollutant/")
+    source_data.append("/Data/Data/datasheets/Europe-datasheet/Pollutant/")
     source_data.append("UNFCCC_v8-missing.csv")
 
     #Reducing rows
@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/Europe-datasheet/Pollutant/")
+    source_data.append("/Data/Data/datasheets/Europe-datasheet/Pollutant/")
     source_data.append("UNFCCC_v8-missing-test.csv")
 
     #controller = Controller()
