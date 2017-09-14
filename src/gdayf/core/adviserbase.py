@@ -77,8 +77,6 @@ class Adviser(object):
                 self.an_objective = ATypesMetadata(clustering=True)
                 return self.analysisclustering(dataframe_metadata, objective_column, amode=atype)
 
-
-
     ## Method oriented to execute smart normal and fast analysis
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
@@ -265,19 +263,6 @@ class Adviser(object):
             self.base_iteration(amode, dataframe_metadata, objective_column)
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
-        elif self.deepness == 2:
-            # Get all models
-            fw_model_list = list()
-            aux_loop_controller = len(self.analysis_recommendation_order)
-            for indexer in range(0, aux_loop_controller):
-                try:
-                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                except TypeError:
-                    pass
-            #if fw_model_list is not None:
-            self.next_analysis_list.extend(fw_model_list)
-            if len(self.next_analysis_list) == 0:
-                    self.next_analysis_list = None
         elif self.next_analysis_list is not None:
             fw_model_list = list()
             # Added 31/08/2017
@@ -297,7 +282,7 @@ class Adviser(object):
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     pass and look for next best model on this type'''
-                    pass
+                    best_models.append(model_type)
             #if fw_model_list is not None:
             self.next_analysis_list.extend(fw_model_list)
             if len(self.next_analysis_list) == 0:
@@ -363,7 +348,6 @@ class Adviser(object):
             ar_structure['status'] = -1
             self.next_analysis_list.append(ar_structure)
             self.analyzed_models.append(self.generate_vectors(ar_structure, norm_sets))
-
 
     ## Method oriented to get frameworks default values from config
     # @param self object pointer
@@ -495,6 +479,23 @@ class Adviser(object):
         except KeyError:
             return 10e+308, 0.0, 0.0
 
+    ##Method get clustering distance for generic model
+    # @param model
+    # @return The Total Within Cluster Sum-of-Square Error metric, inverse The Between Cluster Sum-of-Square Error,
+    # objective or 10e+308, 0.0, objective if not exists
+    @staticmethod
+    def get_cdistance(model):
+        try:
+            return float(model['metrics']['execution']['train']['tot_withinss']), \
+                   1/float(model['metrics']['execution']['train']['betweenss']), \
+                   0.0
+        except ZeroDivisionError:
+            return float(model['metrics']['execution']['train']['tot_withinss']), \
+                   10e+308, \
+                   0.0
+        except KeyError:
+            return 10e+308, 0.0, 0.0
+
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
     # @param analysis_id
@@ -509,6 +510,8 @@ class Adviser(object):
             return sorted(model_list, key=self.get_test_accuracy, reverse=True)
         elif self.metric == 'combined':
             return sorted(model_list, key=self.get_combined, reverse=True)
+        elif self.metric == 'cdistance':
+            return sorted(model_list, key=self.get_cdistance)
         else:
             return model_list
 

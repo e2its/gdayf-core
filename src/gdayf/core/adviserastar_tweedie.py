@@ -65,7 +65,7 @@ class AdviserAStar(Adviser):
             nv_improvement = config['nv_improvement']
             nv_divisor = config['nv_divisor']
             a_hidden_increment = config['a_hidden_increment']
-
+            clustering_increment = config['clustering_increment']
 
             if model['model'] == 'H2OGradientBoostingEstimator':
                 if (self.deepness == 2) and model['types'][0]['type'] == 'regression':
@@ -361,6 +361,29 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['mini_batch_size']['value'] = \
                         round(model_aux['parameters']['mini_batch_size']['value'] / dpl_batch_reduced_divisor)
+                    self.safe_append(model_list, new_armetadata)
+
+            elif model['model'] == 'H2OKMeansEstimator':
+                '''if self.deepness == 2:
+                    for each_init in model['parameters']['init']['type']:
+                        if each_init != 'user':
+                            new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                            model_aux = new_armetadata['model_parameters']['h2o']
+                            model_aux['parameters']['init']['value'] = each_init
+                            self.safe_append(model_list, new_armetadata)'''
+
+                '''if model['parameters']['nfolds']['value'] < nfold_limit:
+                    new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                    model_aux = new_armetadata['model_parameters']['h2o']
+                    model_aux['parameters']['nfolds']['value'] += nfold_increment
+                    self.safe_append(model_list, new_armetadata)'''
+
+                if scoring_metric.shape[0] == 0 or \
+                        (int(scoring_metric['number_of_reassigned_observations'][-1:]) >= 0):
+                    new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                    model_aux = new_armetadata['model_parameters']['h2o']
+                    model_aux['parameters']['max_iterations']['value'] = \
+                        int(model_aux['parameters']['max_iterations']['value'] * clustering_increment)
                     self.safe_append(model_list, new_armetadata)
         else:
             return None

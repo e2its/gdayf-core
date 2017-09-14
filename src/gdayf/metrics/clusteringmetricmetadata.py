@@ -15,6 +15,10 @@ class ClusteringMetricMetadata(MetricMetadata):
     # @param self object pointer
     def __init__(self):
         MetricMetadata.__init__(self)
+        self['betweenss'] = None
+        self['tot_withinss'] = None
+        self['totss'] = None
+        self['centroid_stats'] = None
 
     # Me#thod to set precision measure
     # Not implemented yet
@@ -27,7 +31,13 @@ class ClusteringMetricMetadata(MetricMetadata):
     def set_h2ometrics(self, perf_metrics):
         for parameter, _ in self.items():
             try:
-                self[parameter] = perf_metrics._metric_json[parameter]
+                if parameter == 'centroid_stats':
+                    self[parameter] = perf_metrics._metric_json[parameter].as_data_frame()
+                    self['k'] = int(self[parameter]['centroid'].max())
+                    self[parameter] = self[parameter].to_json(orient='split')
+                else:
+                    self[parameter] = perf_metrics._metric_json[parameter]
+
             except KeyError:
                 pass
             except AttributeError:

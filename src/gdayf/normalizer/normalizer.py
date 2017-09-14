@@ -67,6 +67,9 @@ class Normalizer (object):
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
+                        if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
+                            normoption.set_stdmean()
+                            norms.append({col: normoption.copy()})
 
                 self._logging.log_exec('gDayF', "Normalizer", self._labels["norm_set_establish"], norms)
                 if len(norms) != 0:
@@ -93,10 +96,13 @@ class Normalizer (object):
             if type == 'pandas':
                 for description in columns:
                     col = description['name']
-                    if an_objective[0]['type'] in ['anomalies', 'clustering']:
+                    if an_objective[0]['type'] in ['anomalies']:
                         normoption.set_stdmean()
                         norms.append({col: normoption.copy()})
-                return norms.copy()
+                if len(norms) == 0:
+                    return [None]
+                else:
+                    return norms.copy()
             else:
                 return [None]
         else:

@@ -5,7 +5,7 @@ from gdayf.common.dfmetada import DFMetada
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
-from gdayf.common.utils import get_model_fw
+from gdayf.common.utils import get_model_fw, metrics_types, accuracy_metrics, regression_metrics, clustering_metrics
 from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data
 from gdayf.common.armetadata import ArMetadata
@@ -43,7 +43,6 @@ class Controller(object):
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param armetadata
     # @param model_file String Path indicating model_file ArMetadata.json structure
-
     def exec_prediction(self, datapath, armetadata=None, model_file=None):
 
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], 'prediction')
@@ -136,7 +135,19 @@ class Controller(object):
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined']
     # @param deep_impact  deep analysis
     # @return status, adviser.analysis_recommendation_order
-    def exec_sanalysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=0, analysis_id='N/A'):
+    def exec_sanalysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=3, **kwargs):
+        # Clustering variables
+        k = None
+        estimate_k = False
+
+        for pname, pvalue in kwargs.items():
+            if pname == 'k':
+                assert isinstance(pvalue, int)
+                k = pvalue
+            elif pname == 'estimate_k':
+                assert isinstance(pvalue, bool)
+                estimate_k = pvalue
+
 
         supervised = True
         if objective_column is None:
@@ -163,10 +174,10 @@ class Controller(object):
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
-            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape) )
+            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
             pd_dataset = datapath
             id_datapath = 'Dataframe' + \
-                          '_' +str(pd_dataset.size) + \
+                          '_' + str(pd_dataset.size) + \
                           '_' + str(pd_dataset.shape[0]) + \
                           '_' + str(pd_dataset.shape[1])
         else:
@@ -185,18 +196,27 @@ class Controller(object):
         while adviser.next_analysis_list is not None:
             for each_model in adviser.next_analysis_list:
                 fw = get_model_fw(each_model)
-                if get_model_fw(each_model) == 'h2o':
+                if k is not None:
+                    try:
+                        each_model["model_parameters"][fw]["parameters"]["k"]["value"] = k
+                        each_model["model_parameters"][fw]["parameters"]["k"]["seleccionable"] = True
+                        each_model["model_parameters"][fw]["parameters"]["estimate_k"]["value"] = estimate_k
+                        each_model["model_parameters"][fw]["parameters"]["estimate_k"]["seleccionable"] = True
+                    except KeyError:
+                        pass
+
+                if fw == 'h2o':
                     self.init_handler(fw)
 
                 if pd_test_dataset is not None:
-                    _, analyzed_model = self.model_handler['h2o']['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                            training_pframe=pd_dataset,
-                                                                                            base_ar=each_model,
-                                                                                            test_frame=pd_test_dataset)
+                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
+                                                                                         training_pframe=pd_dataset,
+                                                                                         base_ar=each_model,
+                                                                                         test_frame=pd_test_dataset)
                 else:
-                    _, analyzed_model = self.model_handler['h2o']['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                            training_frame=pd_dataset,
-                                                                                            base_ar=each_model)
+                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
+                                                                                         training_frame=pd_dataset,
+                                                                                         base_ar=each_model)
 
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
@@ -226,11 +246,23 @@ class Controller(object):
             else:
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
                                        model["normalizations_set"])
-            if supervised:
+
+            if metric in accuracy_metrics:
                 self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
                                        model['metrics']['accuracy'])
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
-                                   model['metrics']['execution']['train']['RMSE'])
+            if metric in regression_metrics or accuracy_metrics:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
+                                       model['metrics']['execution']['train']['RMSE'])
+            if metric in clustering_metrics:
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ckmetric_order"],
+                                       model['metrics']['execution']['train']['k'])
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ctmetric_order"],
+                                       model['metrics']['execution']['train']['tot_withinss'])
+                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["cbmetric_order"],
+                                       model['metrics']['execution']['train']['betweenss'])
+
+
+
 
 
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])

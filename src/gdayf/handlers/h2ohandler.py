@@ -416,6 +416,7 @@ class H2OHandler(object):
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
     # on dataframe objective's column
     # @param self object pointer
+    # @param objective objective column if apply
     # @param dataframe normalized H2OFrame
     # @param  antype Atypemetadata().get_artypes() values allowed
     # @param  base type BugFix on regression with range mixing int and float
@@ -522,6 +523,33 @@ class H2OHandler(object):
 
         return anomalies
 
+    ## Generate detected anomalies on dataframe
+    # @param self object pointer
+    # @param odataframe original H2OFrame
+    # @param dataframe normalized H2OFrame
+    # @param objective objective column if apply
+    # @return OrderedDict with anomalies
+    def _predict_clustering(self, odataframe, dataframe, objective=None):
+
+        accuracy = -1.0
+        dataframe_cols = dataframe.columns
+        prediction_dataframe = self._model_base.predict(dataframe)
+        self._frame_list.append(prediction_dataframe.frame_id)
+        prediccion = odataframe.cbind(prediction_dataframe)
+        self._frame_list.append(prediction_dataframe.frame_id)
+
+        prediction_columns = prediccion.columns
+        for element in dataframe_cols:
+            prediction_columns.remove(element)
+        predictor_col = prediction_columns[0]
+
+        if objective in dataframe.columns:
+            success = prediccion[predictor_col] == prediccion[objective]
+            accuracy = "Valid"
+        if accuracy not in [0.0, -1.0]:
+            accuracy = success.sum() / dataframe.nrows
+
+        return accuracy, prediccion
 
     ## Generate model full values parameters for execution analysis
     # @param self object pointer
@@ -1126,7 +1154,15 @@ class H2OHandler(object):
                     predict_anomalies = self._predict_anomalies(npredict_frame, npredict_frame,
                                                                 base_ar['metrics']['anomalies'])
 
+            if antype == 'clustering':
+                if norm_executed:
+                    accuracy, prediction_dataframe = self._predict_clustering(predict_frame, npredict_frame)
+                else:
+                    accuracy, prediction_dataframe = self._predict_clustering(npredict_frame, npredict_frame)
+                self._frame_list.append(prediction_dataframe.frame_id)
+
             base_ar['execution_seconds'] = time.time() - start
+            prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
 
 
         if self._debug:
@@ -1134,11 +1170,10 @@ class H2OHandler(object):
             self._persistence.store_file(filename=base_ar['log_path'][0]['value'],
                                          storage_json=base_ar['log_path'])
 
+        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+        base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
+                                                                                        source=None, antype=antype)
         if objective_column in npredict_frame.columns:
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
-            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
-                                                                                            source=None, antype=antype)
-
             base_ar['metrics']['accuracy']['predict'] = accuracy
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
                                base_model_id + ' - ' + str(base_ar['metrics']['accuracy']['predict']))
@@ -1171,9 +1206,8 @@ class H2OHandler(object):
                                    self._model_base.model_id)
         H2Oapi("POST /3/GarbageCollect")
 
-        if not supervised:
-            if antype == 'anomalies':
-                prediction = predict_anomalies
+        if antype == 'anomalies':
+            prediction = predict_anomalies
         else:
             prediction = prediction_dataframe
 
