@@ -2919,5 +2919,6 @@
         "clustering_increment": 2.0
       }
     }
-  }
+  },
+  "common": {"version" : "0.1.2"}
 }

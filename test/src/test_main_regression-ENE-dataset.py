@@ -8,12 +8,17 @@ if __name__ == "__main__":
     source_data.append("ENB2012_data-Y1.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='Y2',
-                                                       amode=FAST_PARANOIAC, metric='rmse', deep_impact=3)
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
+                                                      amode=FAST_PARANOIAC, metric='rmse', deep_impact=2)
 
     controller.save_models(recomendations)
-    controller.reconstruct_execution_tree(recomendations, metric='rmse')
-    controller.remove_models(recomendations, mode=ALL)
+
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='rmse', deep_impact=1)
+
+    controller.remove_models(recomendations.extend(recomendations2), mode=ALL)
+    controller.reconstruct_execution_tree(recomendations.extend(recomendations2), metric='rmse')
 
     #Prediction
     source_data = list()

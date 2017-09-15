@@ -23,8 +23,9 @@ class AdviserAStar(Adviser):
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
-    def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
-        super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric)
+    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
+        super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
+                                           dataframe_name=dataframe_name, hash_dataframe=hash_dataframe)
 
     ## Method manging generation of possible optimized models
     # params: results for Handlers (gdayf.handlers)

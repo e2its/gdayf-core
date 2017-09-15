@@ -767,7 +767,7 @@ class H2OHandler(object):
 
         final_ar_model = copy.deepcopy(base_ar)
         final_ar_model['status'] = self._labels['failed_op']
-        final_ar_model['version'] = cluster().version
+        final_ar_model['model_parameters']['h2o']['id'] = cluster().version
         model_timestamp = str(time.time())
         final_ar_model['data_initial'] = data_initial
         final_ar_model['data_normalized'] = data_normalized
@@ -1213,7 +1213,6 @@ class H2OHandler(object):
 
         return prediction, base_ar
 
-
     ## Internal method to get an H2Omodel from server or file trapasparent to user
     # @param self Object pointer
     # @param base_ar armetadata to load from fs
@@ -1267,8 +1266,6 @@ def generate_commands_parameters(each_model, model_command, train_command, train
                     train_command.append(", %s=%s" % (key, value['value']))
                 else:
                     model_command.append(", %s=%s" % (key, value['value']))
-
-
 
 ## Auxiliary function to get the level of tolerance for regression analysis
 # @param columns list() of OrderedDict() [{Column description}]

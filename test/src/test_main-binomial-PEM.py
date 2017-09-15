@@ -8,8 +8,8 @@ if __name__ == "__main__":
     source_data.append("PE-BINARY.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                       amode=FAST_PARANOIAC, metric='accuracy', deep_impact=5)
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
+                                                      amode=FAST_PARANOIAC, metric='accuracy', deep_impact=5)
 
     controller.save_models(recomendations, mode=EACH_BEST)
     controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')

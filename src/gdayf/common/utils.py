@@ -8,15 +8,7 @@ from pandas import read_json
 from json import dumps
 from copy import deepcopy
 from numpy.random import rand
-
-dtypes = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
-ftypes = ['float', 'float16', 'float32', 'float64']
-itypes = ['int', 'int16', 'int32', 'int64']
-metrics_types = ['accuracy', 'test_accuracy', 'combined', 'rmse', 'cdistance']
-accuracy_metrics = ['accuracy', 'test_accuracy', 'combined']
-regression_metrics = ['rmse']
-clustering_metrics = ['cdistance']
-
+from gdayf.common.dfmetada import compare_dict
 
 ## Function oriented to get the hash_key for a file
 # @param hash_type in ['MD5', 'SHS256']
@@ -45,17 +37,6 @@ def decode_json_to_dataframe(json_string, orient='split'):
     return read_json(json_string, orient=orient)
 
 
-## Function oriented compare two dicts based on hash_key(json transformations)
-# @param dict1
-# @param dict2
-# @return True if equals false in other case
-def compare_dict(dict1, dict2):
-    if dict1 is None or dict2 is None:
-        return dict1 is None and dict2 is None
-    else:
-        return md5(dumps(dict1)) == md5(dumps(dict2))
-
-
 ## Function oriented compare two normalizations_sets based on hash_key(json transformations)
 # @param list1 List of Dict
 # @param list2 List of Dict
@@ -67,7 +48,7 @@ def compare_list_ordered_dict(list1, list2):
         return False
     else:
         for i in range(0, len(list1)):
-            if md5(dumps(list[i])) != md5(dumps(list2[i].encode('utf8')).hexdigest()):
+            if not compare_dict(list1[i], list1[2]):
                 return False
         return True
 
