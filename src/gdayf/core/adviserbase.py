@@ -603,7 +603,7 @@ class Adviser(object):
     ## Compare to execution vectors
     # @param vector1 - model_execution vector
     # @param vector2 - model_execution vector
-    # @return True if equal False if inequal
+    # @return True if equal False if inequity
     @ staticmethod
     def compare_vectors(vector1, vector2):
         return vector1[0] == vector2[0] and vector1[1] == vector2[1] \

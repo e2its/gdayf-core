@@ -18,6 +18,11 @@ if __name__ == "__main__":
                                                       amode=FAST_PARANOIAC, metric='rmse', deep_impact=5)
 
     controller.save_models(recomendations)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='combined', deep_impact=1)
+
+    recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
     controller.remove_models(recomendations, mode=ALL)
 

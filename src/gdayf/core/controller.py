@@ -415,10 +415,10 @@ class Controller(object):
             exclusion = list()
             model_list = list()
             for model in arlist:
-                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
+                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
                     model['normalizations_set']) not in exclusion:
                     model_list.append(model)
-                    exclusion.append((get_model_fw(model),model['model_parameters'][get_model_fw(model)]['model'],
+                    exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
                                       model['normalizations_set'])
                                      )
         elif mode == ALL:

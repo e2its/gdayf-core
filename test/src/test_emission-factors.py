@@ -16,8 +16,12 @@ if __name__ == "__main__":
                                                       amode=POC, metric='combined', deep_impact=3)
 
     controller.save_models(recomendations, mode=EACH_BEST)
-    controller.reconstruct_execution_tree(recomendations, metric='combined')
-    controller.remove_models(recomendations, mode=ALL)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='combined', deep_impact=1)
+
+    controller.remove_models(recomendations.extend(recomendations2), mode=ALL)
+    controller.reconstruct_execution_tree(recomendations.extend(recomendations2), metric='combined')
 
     #Prediction
     source_data = list()

@@ -13,6 +13,11 @@ if __name__ == "__main__":
                                                       k=4, estimate_k=True)
 
     controller.save_models(recomendations)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='cdistance', deep_impact=1)
+
+    recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='cdistance')
     controller.remove_models(recomendations, mode=ALL)
 

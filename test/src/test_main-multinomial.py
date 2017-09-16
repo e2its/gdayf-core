@@ -12,8 +12,14 @@ if __name__ == "__main__":
                                                       amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=5)
 
     controller.save_models(recomendations)
-    controller.reconstruct_execution_tree(recomendations, metric='combined')
-    controller.remove_models(recomendations, mode=BEST)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='test-accuracy', deep_impact=1)
+
+    recomendations.extend(recomendations2)
+    controller.reconstruct_execution_tree(recomendations, metric='test-accuracy')
+    controller.remove_models(recomendations, mode=ALL)
+
     #Prediction
     source_data = list()
     source_data.append("/Data/Data/datasheets/Multinomial/PEM/")

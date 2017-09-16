@@ -1153,6 +1153,7 @@ class H2OHandler(object):
                 else:
                     predict_anomalies = self._predict_anomalies(npredict_frame, npredict_frame,
                                                                 base_ar['metrics']['anomalies'])
+                base_ar['execution_seconds'] = time.time() - start
 
             if antype == 'clustering':
                 if norm_executed:
@@ -1161,8 +1162,11 @@ class H2OHandler(object):
                     accuracy, prediction_dataframe = self._predict_clustering(npredict_frame, npredict_frame)
                 self._frame_list.append(prediction_dataframe.frame_id)
 
-            base_ar['execution_seconds'] = time.time() - start
-            prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
+                base_ar['execution_seconds'] = time.time() - start
+                prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
+
+
+
 
 
         if self._debug:

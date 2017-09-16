@@ -12,6 +12,11 @@ if __name__ == "__main__":
                                                       amode=ANOMALIES, metric='rmse', deep_impact=3)
 
     controller.save_models(recomendations)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='rmse', deep_impact=1)
+
+    recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='rmse')
     controller.remove_models(recomendations, mode=ALL)
 
