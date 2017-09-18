@@ -5,7 +5,7 @@
   "frameworks": {
     "h2o": {
       "conf": {
-        "path_localfs": "D:/Data/models",
+        "path_localfs": "/Data/Data/models",
         "download_fs_type": "local_fs",
         "download_fs": "downloads",
         "path_hdfs": null,
@@ -13,7 +13,7 @@
         "primary_path": "path_localfs",
         "url": "http://127.0.0.1:54321",
         "nthreads": 4,
-        "ice_root": "D:/Data/logs",
+        "ice_root": "/Data/Data/logs",
         "max_mem_size": "8G",
         "start_h2o": true,
         "debug": false,
@@ -23,7 +23,12 @@
         "min_rows_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_threshold" : 100000,
-        "training_frame_ratio" : 0.80
+        "training_frame_ratio" : 0.80,
+        "anomaly_threshold":
+        {
+          "columns" :0.15,
+          "global_mse":0.05
+        }
       },
       "models": [
         {
@@ -938,10 +943,10 @@
                 "type": "boolean"
               },
               "activation": {
-              "value": "rectifier_with_dropout",
+              "value": "tanh_with_dropout",
                 "seleccionable": true,
                 "type": [
-                  "tanh_with_dropout"
+                  "rectifier_with_dropout"
                 ]
               },
               "input_dropout_ratio": {
@@ -2065,7 +2070,7 @@
           "model": "H2OAutoEncoderEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 100000,
+          "min_rows_applicability": 0,
           "enabled": true,
           "types": [
             {
@@ -2154,7 +2159,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [16, 2, 16],
+                "value": [8, 2, 8],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -2193,8 +2198,8 @@
                 "type": "int"
               },
               "score_each_iteration": {
-                "value": false,
-                "seleccionable": false,
+                "value": true,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "score_interval": {
@@ -2214,7 +2219,7 @@
               },
               "score_duty_cycle": {
                 "value": 0.2,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "score_validation_sampling": {
@@ -2226,12 +2231,12 @@
             "stopping":{
               "stopping_rounds": {
                 "value": 3,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "int"
               },
               "stopping_metric": {
                 "value": "auto",
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": [
                   "auto",
                   "deviance",
@@ -2248,17 +2253,17 @@
               },
               "stopping_tolerance": {
                 "value": 0.00005,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "classification_stop": {
                 "value": 0.0001,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "regression_stop": {
                 "value": 0.0001,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "overwrite_with_best_model": {
@@ -2273,36 +2278,6 @@
               }
             },
             "xval":{
-              "nfolds": {
-                "value": 3,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "fold_assignment": {
-                "value": "auto",
-                "seleccionable": true,
-                "type": [
-                  "auto",
-                  "random",
-                  "modulo",
-                  "stratified"
-                ]
-              },
-              "fold_column": {
-                "value": null,
-                "seleccionable": false,
-                "type": "str"
-              },
-              "keep_cross_validation_predictions": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              },
-              "keep_cross_validation_fold_assignment": {
-                "value": false,
-                "seleccionable": true,
-                "type": "boolean"
-              }
             },
             "sampling":{
               "balance_classes": {
@@ -2311,15 +2286,15 @@
                 "type": "boolean"
               },
               "activation": {
-              "value": "tanh_with_dropout",
+              "value": "tanh",
                 "seleccionable": true,
                 "type": [
-                  "rectifier_with_dropout"
+                  "rectifier"
                 ]
               },
               "input_dropout_ratio": {
                 "value": 0.0,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "hidden_dropout_ratios": {
@@ -2391,7 +2366,7 @@
                 "type": "float"
               },
               "rate_decay": {
-                "value": 0.9,
+                "value": 0.95,
                 "seleccionable": false,
                 "type": "float"
               }
@@ -2596,6 +2571,176 @@
               }
             }
           }
+        },
+        {
+          "model": "H2OKMeansEstimator",
+          "id": null,
+          "module": "h2o.estimators.kmeans",
+          "min_rows_applicability": 0,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "effort":{
+              "k": {
+                "value": 4,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "estimate_k": {
+                "value": false,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_iterations": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others": {
+              "init": {
+                "value": "plus_plus",
+                "seleccionable": true,
+                "type": ["random","furthest","user"]
+              },
+              "user_points": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "standardize": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "categorical_encoding": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen",
+                  "label_encoder",
+                  "sort_by_response",
+                  "enum_limited"
+                ]
+              }
+            }
+          }
         }
       ]
     }
@@ -2614,7 +2759,7 @@
       "info": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "D:\\Data\\logs\\1-gDayF-info.log",
+        "filename": "/Data/Data/logs/1-gDayF-info.log",
         "level": "INFO",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -2623,14 +2768,14 @@
       "debug": {
         "class": "logging.FileHandler",
         "formatter": "standard",
-        "filename": "D:\\Data\\logs\\2-gDayF-debug.log",
+        "filename": "/Data/Data/logs/2-gDayF-debug.log",
         "level": "DEBUG",
         "encoding": "utf8"
       },
       "error": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "D:\\Data\\logs\\3-gDayF-error.log",
+        "filename": "/Data/Data/logs/3-gDayF-error.log",
         "level": "ERROR",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -2690,7 +2835,7 @@
   },
   "storage": {
     "path_localfs":
-      {"value": "D:/Data/models" , "type":"localfs",
+      {"value": "/Data/Data/models" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
     "path_hdfs": null,
@@ -2725,7 +2870,8 @@
     "minimal_normalizations_enabled": true,
     "non_minimal_normalizations_enabled": true,
     "base_normalization_enabled": true,
-    "exclusion_missing_threshold": 0.3
+    "exclusion_missing_threshold": 0.3,
+    "clustering_standardize_enabled" : false
   },
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
@@ -2769,8 +2915,10 @@
         "nv_min_sdev": [1e-3],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "a_hidden_increment": 2
+        "a_hidden_increment": 1.5,
+        "clustering_increment": 2.0
       }
     }
-  }
+  },
+  "common": {"version" : "0.1.2"}
 }

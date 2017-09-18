@@ -4,19 +4,25 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/binary/FODSET/")
+    source_data.append("/Data/Data/datasheets/binary/FODSET/")
     source_data.append("football.train2.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='HomeWin',
-                                                       amode=FAST_PARANOIAC, metric='combined', deep_impact=3)
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='HomeWin',
+                                                      amode=FAST, metric='combined', deep_impact=3)
 
     controller.save_models(recomendations, mode=EACH_BEST)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='combined', deep_impact=1)
+
+    recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
-    controller.remove_models(recomendations, mode=BEST_3)
+    controller.remove_models(recomendations, mode=ALL)
+
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/binary/FODSET/")
+    source_data.append("/Data/Data/datasheets/binary/FODSET/")
     source_data.append("football.test2.csv")
     model_source = list()
 

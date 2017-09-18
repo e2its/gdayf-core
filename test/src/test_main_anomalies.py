@@ -4,21 +4,26 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/Anomalies/CCPP")
-    source_data.append("CPP.csv")
+    source_data.append("/Data/Data/datasheets/Anomalies/UCI CBM Dataset/")
+    source_data.append("UCI-CBM.csv")
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data), objective_column='Y2',
-                                                       amode=ANOMALIES, metric='rmse', deep_impact=3)
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
+                                                      amode=ANOMALIES, metric='rmse', deep_impact=3)
 
     controller.save_models(recomendations)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='rmse', deep_impact=1)
+
+    recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='rmse')
     controller.remove_models(recomendations, mode=ALL)
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/ENB2012/")
-    source_data.append("ENB2012_data-Y1.csv")
+    source_data.append("/Data/Data/datasheets/Anomalies/UCI CBM Dataset/")
+    source_data.append("UCI-CBM.csv")
 
     #controller = Controller()
     prediction_frame = controller.exec_prediction(datapath=''.join(source_data),

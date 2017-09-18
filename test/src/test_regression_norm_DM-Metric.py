@@ -5,7 +5,7 @@ if __name__ == "__main__":
     from pprint import pprint
 
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/DM-Metric/")
+    source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
     source_data.append("DM-Metric-missing.csv")
 
     #Generating missing values
@@ -13,17 +13,22 @@ if __name__ == "__main__":
 
     #Analysis
     controller = Controller()
-    status, recomendations = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                       objective_column='Weather_Temperature',
-                                                       amode=FAST_PARANOIAC, metric='rmse', deep_impact=10)
+    status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
+                                                      objective_column='Weather_Temperature',
+                                                      amode=FAST_PARANOIAC, metric='rmse', deep_impact=5)
 
     controller.save_models(recomendations)
+    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-4:-2],
+                                                        metric='combined', deep_impact=1)
+
+    recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='combined')
     controller.remove_models(recomendations, mode=ALL)
 
     #Prediction
     source_data = list()
-    source_data.append("D:/Data/datasheets/regression/DM-Metric/")
+    source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
     source_data.append("DM-Metric-missing-test.csv")
 
     #controller = Controller()

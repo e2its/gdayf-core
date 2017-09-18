@@ -13,14 +13,16 @@ from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.common.utils import ftypes
-from gdayf.common.utils import compare_dict, compare_list_ordered_dict
+from gdayf.common.constants import FTYPES
+from gdayf.common.dfmetada import compare_dict
+from gdayf.common.utils import compare_list_ordered_dict
 from gdayf.common.utils import get_model_fw
 from gdayf.common.constants import *
 from collections import OrderedDict
 from time import time
 from hashlib import md5 as md5
 from json import dumps
+from copy import deepcopy
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
@@ -34,7 +36,7 @@ class Adviser(object):
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
-    def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
+    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
         self._labels = LoadLabels().get_config()['messages']['adviser']
         self._logging = LogsHandler()
         self.timestamp = time()
@@ -46,6 +48,8 @@ class Adviser(object):
         self.excluded_models = list()
         self.next_analysis_list = list()
         self.metric = metric
+        self.dataframe_name = dataframe_name
+        self.hash_dataframe = hash_dataframe
 
     ## Main method oriented to execute smart analysis
     # @param self object pointer
@@ -54,17 +58,27 @@ class Adviser(object):
     # @param objective_column string indicating objective column
     # @return ArMetadata()'s Prioritized queue
     def set_recommendations(self, dataframe_metadata, objective_column, atype=POC):
+        supervised = True
+        if objective_column is None:
+            supervised = False
         self._logging.log_exec(self.analysis_id, 'AdviserAStar',
                                self._labels["ana_type"],
                                str(atype) + ' (' + str(self.deepness) + ')')
-        self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
-        if atype == POC:
-            return self.analysispoc(dataframe_metadata, objective_column, amode=FAST)
-        if atype in [FAST, NORMAL]:
-            return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
-        elif atype in [FAST_PARANOIAC, PARANOIAC]:
-            return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
-
+        if supervised:
+            self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
+            if atype == POC:
+                return self.analysispoc(dataframe_metadata, objective_column, amode=FAST)
+            if atype in [FAST, NORMAL]:
+                return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
+            elif atype in [FAST_PARANOIAC, PARANOIAC]:
+                return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
+        else:
+            if atype in [ANOMALIES]:
+                self.an_objective = ATypesMetadata(anomalies=True)
+                return self.analysisanomalies(dataframe_metadata, objective_column, amode=atype)
+            elif atype in [CLUSTERING]:
+                self.an_objective = ATypesMetadata(clustering=True)
+                return self.analysisclustering(dataframe_metadata, objective_column, amode=atype)
 
     ## Method oriented to execute smart normal and fast analysis
     # @param self object pointer
@@ -133,6 +147,19 @@ class Adviser(object):
         self.deepness += 1
         return self.analysis_id, self.next_analysis_list
 
+    ## Method oriented to execute new analysis
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param objective_column string indicating objective column
+    # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
+    # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
+    def analysis_specific(self, dataframe_metadata, list_ar_metadata):
+        self.next_analysis_list.clear()
+        if self.deepness == 1:
+            #Check_dataframe_metadata compatibility
+            self.base_specific(dataframe_metadata, list_ar_metadata)
+        return self.analysis_id, self.next_analysis_list
+
     ## Method oriented to execute smart normal and fast analysis
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
@@ -186,37 +213,183 @@ class Adviser(object):
         self.deepness += 1
         return self.analysis_id, self.next_analysis_list
 
+    ## Method oriented to execute unsupervised anomalies models
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param amode [ANOMALIES]
+    # @param objective_column string indicating objective column
+    # @return analysis_id,(framework, Ordered[(algorithm_metadata.json, normalizations_sets.json)])
+
+    def analysisanomalies(self, dataframe_metadata, objective_column, amode):
+        self.next_analysis_list.clear()
+        if self.deepness == 1:
+            self.base_iteration(amode, dataframe_metadata, objective_column)
+        elif self.deepness > self.deep_impact:
+            self.next_analysis_list = None
+        elif self.deepness == 2:
+            # Get all models
+            fw_model_list = list()
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                except TypeError:
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        elif self.next_analysis_list is not None:
+            fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    # Modified 31/08/2017
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models:
+                        print("Trace:%s-%s"%(model_type, best_models))
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        best_models.append(model_type)
+                        # End - Modified 31/08/2017
+                except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    pass and look for next best model on this type'''
+                    pass
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        self.deepness += 1
+        return self.analysis_id, self.next_analysis_list
+
+    ## Method oriented to execute unsupervised clustering models
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param amode [CLUSTERING]
+    # @param objective_column string indicating objective column
+    # @return analysis_id,(framework, Ordered[(algorithm_metadata.json, normalizations_sets.json)])
+
+    def analysisclustering(self, dataframe_metadata, objective_column, amode):
+        self.next_analysis_list.clear()
+        if self.deepness == 1:
+            self.base_iteration(amode, dataframe_metadata, objective_column)
+        elif self.deepness > self.deep_impact:
+            self.next_analysis_list = None
+        elif self.next_analysis_list is not None:
+            fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    # Modified 31/08/2017
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models:
+                        print("Trace:%s-%s"%(model_type, best_models))
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        best_models.append(model_type)
+                        # End - Modified 31/08/2017
+                except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    pass and look for next best model on this type'''
+                    best_models.append(model_type)
+            #if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                    self.next_analysis_list = None
+        self.deepness += 1
+        return self.analysis_id, self.next_analysis_list
+
+    ## Method oriented to generate specific candidate metadata
+    # @param self object pointer
+    # @param dataframe_metadata DFMetadata()
+    # @param list_ar_metadata
+    def base_specific(self, dataframe_metadata, list_ar_metadata):
+        version = LoadConfig().get_config()['common']['version']
+        for ar_metadata in list_ar_metadata:
+
+            ar_structure = ArMetadata()
+            if ar_metadata['dataset_hash_value'] == self.hash_dataframe:
+                self.analysis_id = ar_metadata['model_id']
+                ar_structure['predecessor'] = ar_metadata['model_parameters'][get_model_fw(ar_metadata)] \
+                    ['parameters']['model_id']['value']
+                ar_structure['round'] = int(ar_metadata['round']) + 1
+            else:
+                ar_structure['predecessor'] = 'root'
+
+            ar_structure['model_id'] = self.analysis_id
+            ar_structure['version'] = version
+            ar_structure['objective_column'] = ar_metadata['objective_column']
+            ar_structure['timestamp'] = self.timestamp
+            ar_structure['normalizations_set'] = ar_metadata['normalizations_set']
+            ar_structure['dataset'] = self.dataframe_name
+            ar_structure['dataset_hash_value'] = self.hash_dataframe
+            ar_structure['data_initial'] = dataframe_metadata
+            ar_structure['data_normalized'] = None
+            ar_structure['model_parameters'] = ar_metadata['model_parameters']
+            ar_structure['ignored_parameters'] = None
+            ar_structure['full_parameters_stack'] = None
+            ar_structure['status'] = -1
+            self.next_analysis_list.append(ar_structure)
+            self.analyzed_models.append(self.generate_vectors(ar_structure, ar_metadata['normalizations_set']))
+
     ## Method oriented to select initial candidate models
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
     # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @param objective_column string indicating objective column
     def base_iteration(self, amode, dataframe_metadata, objective_column):
+        version = LoadConfig().get_config()['common']['version']
+        supervised = True
+        if objective_column is None:
+            supervised = False
+
         fw_model_list = self.get_candidate_models(self.an_objective, amode)
+
         aux_model_list = list()
         norm = Normalizer()
-        minimal_nmd = [norm.define_minimal_norm(objective_column=objective_column)]
-        for fw, model, _ in fw_model_list:
-            aux_model_list.append((fw, model, minimal_nmd))
-        fw_model_list = aux_model_list
-        nmd = norm.define_normalizations(dataframe_metadata=dataframe_metadata,
+        #modified 11/09/2017
+        #minimal_nmd = [norm.define_minimal_norm(objective_column=objective_column)]
+        minimal_nmd = norm.define_minimal_norm(dataframe_metadata=dataframe_metadata,
                                                objective_column=objective_column,
                                                an_objective=self.an_objective)
+        for fw, model, _ in fw_model_list:
+            aux_model_list.append((fw, model, deepcopy(minimal_nmd)))
+        fw_model_list = aux_model_list
 
         self.applicability(fw_model_list, nrows=dataframe_metadata['rowcount'])
+
+        nmd = norm.define_normalizations(dataframe_metadata=dataframe_metadata,
+                                         objective_column=objective_column,
+                                         an_objective=self.an_objective)
+
         if nmd is not None:
             nmdlist = list()
             for fw, model, _ in fw_model_list:
-                nmdlist.append((fw, model, nmd))
+                if minimal_nmd[0] is not None:
+                    whole_nmd = deepcopy(minimal_nmd)
+                    whole_nmd.extend(deepcopy(nmd))
+                    nmdlist.append((fw, model, whole_nmd))
+                else:
+                    nmdlist.append((fw, model, deepcopy(nmd)))
+
             fw_model_list.extend(nmdlist)
 
         for fw, model_params, norm_sets in fw_model_list:
             ar_structure = ArMetadata()
             ar_structure['model_id'] = self.analysis_id
-            ar_structure['version'] = '0.0.1'
+            ar_structure['version'] = version
             ar_structure['objective_column'] = objective_column
             ar_structure['timestamp'] = self.timestamp
             ar_structure['normalizations_set'] = norm_sets
+            ar_structure['dataset'] = self.dataframe_name
+            ar_structure['dataset_hash_value'] = self.hash_dataframe
             ar_structure['data_initial'] = dataframe_metadata
             ar_structure['data_normalized'] = None
             ar_structure['model_parameters'] = OrderedDict()
@@ -227,7 +400,6 @@ class Adviser(object):
             ar_structure['status'] = -1
             self.next_analysis_list.append(ar_structure)
             self.analyzed_models.append(self.generate_vectors(ar_structure, norm_sets))
-
 
     ## Method oriented to get frameworks default values from config
     # @param self object pointer
@@ -246,7 +418,7 @@ class Adviser(object):
             if each_column['name'] == objective_column:
                 if int(each_column['cardinality']) == 2:
                     return ATypesMetadata(binomial=True)
-                if each_column['type'] not in ftypes:
+                if each_column['type'] not in FTYPES:
                     if int(each_column['cardinality']) > 2:
                         return ATypesMetadata(multinomial=True)
                 elif int(each_column['cardinality']) <= (dataframe_metadata['rowcount']*config['multi_limit']):
@@ -359,6 +531,23 @@ class Adviser(object):
         except KeyError:
             return 10e+308, 0.0, 0.0
 
+    ##Method get clustering distance for generic model
+    # @param model
+    # @return The Total Within Cluster Sum-of-Square Error metric, inverse The Between Cluster Sum-of-Square Error,
+    # objective or 10e+308, 0.0, objective if not exists
+    @staticmethod
+    def get_cdistance(model):
+        try:
+            return float(model['metrics']['execution']['train']['tot_withinss']), \
+                   1/float(model['metrics']['execution']['train']['betweenss']), \
+                   0.0
+        except ZeroDivisionError:
+            return float(model['metrics']['execution']['train']['tot_withinss']), \
+                   10e+308, \
+                   0.0
+        except KeyError:
+            return 10e+308, 0.0, 0.0
+
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
     # @param analysis_id
@@ -373,6 +562,8 @@ class Adviser(object):
             return sorted(model_list, key=self.get_test_accuracy, reverse=True)
         elif self.metric == 'combined':
             return sorted(model_list, key=self.get_combined, reverse=True)
+        elif self.metric == 'cdistance':
+            return sorted(model_list, key=self.get_cdistance)
         else:
             return model_list
 
@@ -412,7 +603,7 @@ class Adviser(object):
     ## Compare to execution vectors
     # @param vector1 - model_execution vector
     # @param vector2 - model_execution vector
-    # @return True if equal False if inequal
+    # @return True if equal False if inequity
     @ staticmethod
     def compare_vectors(vector1, vector2):
         return vector1[0] == vector2[0] and vector1[1] == vector2[1] \

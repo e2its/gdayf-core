@@ -2,9 +2,10 @@
 
 from json import dumps, loads
 from collections import OrderedDict
-from gdayf.common.utils import dtypes
+from gdayf.common.constants import DTYPES
 from copy import deepcopy
 from pandas import cut, value_counts, qcut
+from hashlib import md5 as md5
 import operator
 
 
@@ -32,7 +33,7 @@ class DFMetada(OrderedDict):
                     auxdict[comp] = str(summary[comp])
                 except KeyError:
                     auxdict[comp] = 'NaN'
-            if typedf in dtypes:
+            if typedf in DTYPES:
                 auxdict['zeros'] = str(dataframe[dataframe.loc[:, col] == 0][col].count())
             else:
                 auxdict['zeros'] = 'NaN'
@@ -73,6 +74,34 @@ class DFMetada(OrderedDict):
 
     def popitem(self, last=True):
         return 1
+
+## Function oriented compare two dicts based on hash_key(json transformations)
+# @param dict1
+# @param dict2
+# @return True if equals false in other case
+'''def compare_dict(dict1, dict2):
+    if dict1 is None or dict2 is None:
+        return dict1 is None and dict2 is None
+    else:
+        if isinstance(dict1, DFMetada) or :
+            ddict1 = dumps(dict1)
+        else:
+            ddict1 = dumps(dict1.encode('utf8')).hexdigest()
+        if isinstance(dict1, DFMetada):
+            ddict2 = dumps(dict2)
+        else:
+            ddict2 = dumps(dict2.encode('utf8')).hexdigest()
+
+        return md5(ddict1) == md5(ddict2)'''
+def compare_dict(dict1, dict2):
+    if dict1 is None or dict2 is None:
+        return dict1 is None and dict2 is None
+    else:
+        ddict1 = dumps(OrderedDict(dict1))
+        ddict2 = dumps(OrderedDict(dict2))
+        print( md5(ddict1.encode('utf-8')))
+        print( md5(ddict2.encode('utf-8')))
+        return md5(ddict1.encode('utf-8')) == md5(ddict2.encode('utf-8'))
 
 if __name__ == "__main__":
     from gdayf.handlers.inputhandler import inputHandlerCSV

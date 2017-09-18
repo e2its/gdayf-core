@@ -31,6 +31,8 @@ class ArMetadata (OrderedDict):
         self['load_path'] = None
         self['metrics'] = OrderedDict()
         self['normalizations_set'] = None
+        self['dataset'] = None
+        self['dataset_hash_value'] = None
         self['data_initial'] = None
         self['data_normalized'] = None
         self['model_parameters'] = None
@@ -63,6 +65,8 @@ class ArMetadata (OrderedDict):
         new_model['tolerance'] = 0.0
         new_model['predecessor'] = self['model_parameters'][get_model_fw(self)]['parameters']['model_id']['value']
         new_model['normalizations_set'] = deepcopy(self['normalizations_set'])
+        new_model['dataset'] = deepcopy(self['dataset'])
+        new_model['dataset_hash_value'] = deepcopy(self['dataset_hash_value'])
         new_model['data_initial'] = deepcopy(self['data_initial'])
         new_model['data_normalized'] = deepcopy(self['data_normalized'])
         new_model['model_parameters'] = deepcopy(self['model_parameters'])

@@ -23,8 +23,9 @@ class AdviserAStar(Adviser):
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
-    def __init__(self, analysis_id, deep_impact=2, metric='accuracy'):
-        super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric)
+    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
+        super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
+                                           dataframe_name=dataframe_name, hash_dataframe=hash_dataframe)
 
     ## Method manging generation of possible optimized models
     # params: results for Handlers (gdayf.handlers)
@@ -65,7 +66,7 @@ class AdviserAStar(Adviser):
             nv_improvement = config['nv_improvement']
             nv_divisor = config['nv_divisor']
             a_hidden_increment = config['a_hidden_increment']
-
+            clustering_increment = config['clustering_increment']
 
             if model['model'] == 'H2OGradientBoostingEstimator':
                 if (self.deepness == 2) and model['types'][0]['type'] == 'regression':
@@ -313,15 +314,15 @@ class AdviserAStar(Adviser):
                         model_aux['parameters']['rho']['value'] = learning['learn']
                         model_aux['parameters']['epsilon']['value'] = learning['improvement']
                         self.safe_append(model_list, new_armetadata)
-                if self.deepness == 2:
+
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['sparse']['value'] = not model_aux['parameters']['sparse']['value']
                     self.safe_append(model_list, new_armetadata)
-                if self.deepness > 2 and model['parameters']['activation']['value'] == "tanh_with_dropout":
+                if self.deepness > 1 and model['parameters']['activation']['value'] == "rectifier":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['activation']['value'] = 'rectifier_with_dropout'
+                    model_aux['parameters']['activation']['value'] = 'tanh'
                     self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2 and model['parameters']['initial_weight_distribution']['value'] == "normal":
                     new_armetadata = armetadata.copy_template(deepness=self.deepness)
@@ -333,15 +334,16 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['initial_weight_distribution']['value'] = "normal"
                     self.safe_append(model_list, new_armetadata)
-                elif self.deepness <= self.deep_impact and \
-                     len(armetadata['model_parameters']['h2o']['parameters']['hidden']['value']) < 7:
+
+                if self.deepness <= self.deep_impact:
                         new_armetadata = armetadata.copy_template(deepness=self.deepness)
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        next_hidden = [model_aux['parameters']['hidden']['value'] * a_hidden_increment]
-                        model_aux['parameters']['hidden']['value'] = next_hidden\
-                            .extend(model_aux['parameters']['hidden']['value'])\
-                            .append(next_hidden)
+                        next_hidden = int(round(model_aux['parameters']['hidden']['value'][0] * a_hidden_increment, 0))
+                        model_aux['parameters']['hidden']['value'] = [next_hidden,
+                                                                      model_aux['parameters']['hidden']['value'][1],
+                                                                      next_hidden]
                         self.safe_append(model_list, new_armetadata)
+
                 if scoring_metric.shape[0] == 0 or \
                         (scoring_metric['epochs'].max() >= \
                         model['parameters']['epochs']['value']):
@@ -360,6 +362,29 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['mini_batch_size']['value'] = \
                         round(model_aux['parameters']['mini_batch_size']['value'] / dpl_batch_reduced_divisor)
+                    self.safe_append(model_list, new_armetadata)
+
+            elif model['model'] == 'H2OKMeansEstimator':
+                '''if self.deepness == 2:
+                    for each_init in model['parameters']['init']['type']:
+                        if each_init != 'user':
+                            new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                            model_aux = new_armetadata['model_parameters']['h2o']
+                            model_aux['parameters']['init']['value'] = each_init
+                            self.safe_append(model_list, new_armetadata)'''
+
+                '''if model['parameters']['nfolds']['value'] < nfold_limit:
+                    new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                    model_aux = new_armetadata['model_parameters']['h2o']
+                    model_aux['parameters']['nfolds']['value'] += nfold_increment
+                    self.safe_append(model_list, new_armetadata)'''
+
+                if scoring_metric.shape[0] == 0 or \
+                        (int(scoring_metric['number_of_reassigned_observations'][-1:]) >= 0):
+                    new_armetadata = armetadata.copy_template(deepness=self.deepness)
+                    model_aux = new_armetadata['model_parameters']['h2o']
+                    model_aux['parameters']['max_iterations']['value'] = \
+                        int(model_aux['parameters']['max_iterations']['value'] * clustering_increment)
                     self.safe_append(model_list, new_armetadata)
         else:
             return None

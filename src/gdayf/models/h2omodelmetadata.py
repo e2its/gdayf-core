@@ -21,7 +21,7 @@ class H2OModelMetadata(ModelMetadata):
     # This method is used to load config parameters adapting its to specific analysis requirements
     # @param model_type catalogued H2O model
     # @param atype AtypeMetadata
-    # @param amode Analysis mode FAST=0 NORMAL=1 PARANOIAC= 2. Define early_stopping parameters inclusion
+    # @param amode Analysis mode. Define early_stopping parameters inclusion
     # @return H2O model json compatible (OrderedDict())
     def generate_models(self, model_type, atype, amode=POC):
         if atype[0]['type'] == 'binomial':

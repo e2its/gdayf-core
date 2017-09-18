@@ -5,11 +5,9 @@ from sklearn import preprocessing
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.common.utils import dtypes
-from collections import OrderedDict
-import numpy
+from gdayf.common.constants import DTYPES
 from gdayf.common.normalizationset import NormalizationSet
-from copy import deepcopy
+
 
 
 ## Class oriented to manage normalizations on dataframes for improvements on accuracy
@@ -36,18 +34,19 @@ class Normalizer (object):
             norms = list()
             normoption = NormalizationSet()
             if type == 'pandas':
+                '''Modified 11/09/2017
                 for description in columns:
                     col = description['name']
                     self._logging.log_exec('gDayF', "Normalizer", self._labels["col_analysis"],
                                            description['name'] + ' - ' + description['type'])
-                    if col == objective_column:
-                        norm_aux = self.define_minimal_norm(col)
+                    if objective_column is not None and col == objective_column:
+                        norm_aux = self.define_minimal_norm(dataframe_metadata, an_objective, objective_column)
                         if norm_aux is not None:
                             norms.append(norm_aux)
-
                         if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
                             norms.append({col: normoption.copy()})
+                '''
                 for description in columns:
                     col = description['name']
                     if col != objective_column:
@@ -62,26 +61,57 @@ class Normalizer (object):
                             elif an_objective[0]['type'] in ['regression']:
                                 normoption.set_progressive_missing_values(objective_column)
                                 norms.append({col: normoption.copy()})
+                            elif an_objective[0]['type'] in ['anomalies']:
+                                normoption.set_mean_missing_values(objective_column, full=True)
+                                norms.append({col: normoption.copy()})
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
+                        if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
+                            normoption.set_stdmean()
+                            norms.append({col: normoption.copy()})
+
                 self._logging.log_exec('gDayF', "Normalizer", self._labels["norm_set_establish"], norms)
-                return norms.copy()
+                if len(norms) != 0:
+                    return norms.copy()
+                else:
+                    return None
             else:
                 return None
 
     ## Method oriented to specificate minimal data_normalizations
+    # @param dataframe_metadata DFMetadata()
+    # @param an_objective ATypesMetadata
     # @param objective_column string indicating objective column
     # @return None if nothing to DO or Normalization_sets orderdict() on other way
-    def define_minimal_norm(self, objective_column):
+    def define_minimal_norm(self, dataframe_metadata, an_objective, objective_column):
+
+        type = dataframe_metadata['type']
         if not self._config['minimal_normalizations_enabled']:
-            return None
-        else:
-            norms = OrderedDict()
+            return [None]
+        elif objective_column is None:
+            columns = dataframe_metadata['columns']
+            norms = list()
             normoption = NormalizationSet()
-            normoption.set_drop_missing()
-            norms[objective_column] = normoption.copy()
-            return norms.copy()
+            if type == 'pandas':
+                for description in columns:
+                    col = description['name']
+                    if an_objective[0]['type'] in ['anomalies']:
+                        normoption.set_stdmean()
+                        norms.append({col: normoption.copy()})
+                if len(norms) == 0:
+                    return [None]
+                else:
+                    return norms.copy()
+            else:
+                return [None]
+        else:
+            if type == 'pandas':
+                norms = list()
+                normoption = NormalizationSet()
+                normoption.set_drop_missing()
+                norms.append({objective_column: normoption.copy()})
+                return norms.copy()
 
     ## Main method oriented to define and manage normalizations sets applying normalizations
     # @param self object pointer
@@ -106,7 +136,7 @@ class Normalizer (object):
                         self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'])
                     elif norms['class'] == 'stdmean':
-                        self.normalizeStdMean(dataframe[col])
+                        dataframe.loc[:, col] = self.normalizeStdMean(dataframe[col])
                         self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'])
                     elif norms['class'] == 'working_range':
@@ -277,7 +307,7 @@ class Normalizer (object):
             return dataframe.fillna(dataframe.mean())
         else:
             nullfalse = dataframe[dataframe[:][col].notnull()][[col, objective_col]]
-            if objective_col in dtypes:
+            if objective_col in DTYPES:
                 nullfalse_gb = nullfalse.groupby(objective_col).mean()
             else:
                 nullfalse_gb = nullfalse.groupby(objective_col).agg(lambda x: x.value_counts().index[0])
