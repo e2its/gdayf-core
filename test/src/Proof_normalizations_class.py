@@ -7,7 +7,7 @@ from pprint import pprint
 from gdayf.normalizer.normalizer import Normalizer
 
 if __name__ == '__main__':
-    path_file = r'D:\Data\datasheets\regression\DM-Metric'
+    path_file = '/Data/Data/datasheets/regression/DM-Metric'
     os.chdir(path_file)
     aggregated_file = pandas.read_csv(path.join(str(path_file), 'DM-Metric.csv'))
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
 
     norm = Normalizer()
     print(dataframe.dtypes)
-
+    '''
     dataframe.loc[:,'Date'] = norm.normalizeBase(dataframe.loc[:,'Date'])
     print(dataframe.dtypes)
 
@@ -31,12 +31,20 @@ if __name__ == '__main__':
     dataframe.loc[:, 'CO2_Comedor_Sensor'] = norm.normalizeWorkingRange(dataframe.loc[:,'CO2_Comedor_Sensor'],0,100)
     print(dataframe.loc[:,'CO2_Comedor_Sensor'].max())
     print(dataframe.loc[:,'CO2_Comedor_Sensor'].min())
-
+    '''
     #StdMean
-    dataframe.loc[:, 'CO2_Comedor_Sensor'] = norm.normalizeStdMean(dataframe.loc[:,'CO2_Comedor_Sensor'])
-    print(dataframe.loc[:, 'CO2_Comedor_Sensor'].std() )
+    print(dataframe.loc[:, 'CO2_Comedor_Sensor'])
+    print('Mean: '+ str(dataframe.loc[:,'CO2_Comedor_Sensor'].mean()))
+    print('STD: ' + str(dataframe.loc[:, 'CO2_Comedor_Sensor'].std()))
+    dataframe.loc[:, 'CO2_Comedor_Sensor'] = norm.normalizeStdMean(dataframe.loc[:, 'CO2_Comedor_Sensor'],
+                                                                   dataframe.loc[:, 'CO2_Comedor_Sensor'].mean(),
+                                                                   dataframe.loc[:, 'CO2_Comedor_Sensor'].std()
+                                                                   )
+    print(dataframe.loc[:, 'CO2_Comedor_Sensor'])
+    print('Mean: '+ str(dataframe.loc[:,'CO2_Comedor_Sensor'].mean()))
+    print('STD: ' + str(dataframe.loc[:, 'CO2_Comedor_Sensor'].std()))
     print(dataframe.shape[0])
-
+'''
     # DropMissing
     dataframe = norm.normalizeDropMissing(dataframe,objective_col)
     print(dataframe.shape[0])
@@ -58,7 +66,7 @@ if __name__ == '__main__':
     pprint(dataframe[dataframe.loc[:, objective_col].isnull() == True])
 
     # meanMissingValues
-    dataframe = norm.meanMissingValues(dataframe,col,objective_col)
+    dataframe = norm.meanMissingValues(dataframe, col, objective_col)
     pprint(dataframe[dataframe.loc[:, col].isnull() == True])
 
     # progressiveMissingValues
@@ -71,3 +79,4 @@ if __name__ == '__main__':
     print(dataframe.loc[:, 'Temperature_Exterior_Sensor'].shape[0])
 
     pprint(dataframe)
+'''

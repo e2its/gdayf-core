@@ -9,15 +9,17 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                      amode=FAST_PARANOIAC, metric='accuracy', deep_impact=3)
+                                                      amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=4)
+
+    controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
 
     controller.save_models(recomendations, mode=EACH_BEST)
-    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                        list_ar_metadata=recomendations[-4:-2],
-                                                        metric='accuracy', deep_impact=1)
+    '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-3:-2],
+                                                        metric='test_accuracy', deep_impact=3)
 
-    recomendations.extend(recomendations2)
-    controller.reconstruct_execution_tree(recomendations, metric='accuracy')
+    recomendations.extend(recomendations2)'''
+    controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
     controller.remove_models(recomendations, mode=ALL)
 
     #Prediction

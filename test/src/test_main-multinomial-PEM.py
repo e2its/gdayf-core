@@ -11,13 +11,15 @@ if __name__ == "__main__":
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
                                                       amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=5)
 
-    controller.save_models(recomendations)
-    status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                        list_ar_metadata=recomendations[-4:-2],
-                                                        metric='test-accuracy', deep_impact=1)
+    controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
 
-    recomendations.extend(recomendations2)
-    controller.reconstruct_execution_tree(recomendations, metric='test-accuracy')
+    controller.save_models(recomendations)
+    '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+                                                        list_ar_metadata=recomendations[-3:-2],
+                                                        metric='test_accuracy', deep_impact=3)
+
+    recomendations.extend(recomendations2)'''
+    controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
     controller.remove_models(recomendations, mode=ALL)
 
     #Prediction

@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 import numpy as np
 import pandas as pd
-from sklearn import preprocessing
+from collections import OrderedDict
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.common.constants import DTYPES
+from gdayf.common.constants import DTYPES, NO_STANDARDIZE
 from gdayf.common.normalizationset import NormalizationSet
+from copy import deepcopy
 
 
 
@@ -55,20 +56,30 @@ class Normalizer (object):
                             norms.append({col: normoption.copy()})
                         if int(description['missed']) > 0 and \
                            (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
-                            if an_objective[0]['type'] in ['binomial', 'multinomial']:
+                            if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
                                 normoption.set_mean_missing_values(objective_column, full=False)
                                 norms.append({col: normoption.copy()})
-                            elif an_objective[0]['type'] in ['regression']:
+                            elif an_objective[0]['type'] in ['regression'] and self._config['manage_on_train_errors']:
                                 normoption.set_progressive_missing_values(objective_column)
                                 norms.append({col: normoption.copy()})
                             elif an_objective[0]['type'] in ['anomalies']:
+                                normoption.set_mean_missing_values(objective_column, full=True)
+                                norms.append({col: normoption.copy()})
+                            else:
                                 normoption.set_mean_missing_values(objective_column, full=True)
                                 norms.append({col: normoption.copy()})
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
                         if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
-                            normoption.set_stdmean()
+                            normoption.set_stdmean(description['mean'], description['std'])
+                            norms.append({col: normoption.copy()})
+                        if self._config['standardize_enabled'] and description['type'] in DTYPES \
+                            and an_objective[0]['type'] not in ['clustering']\
+                            and int(description['cardinality']) > 1 \
+                            and(float(description['std']) / (float(description['max']) - float(description['min']))) \
+                                 > self._config['std_threshold']:
+                            normoption.set_stdmean(description['mean'], description['std'])
                             norms.append({col: normoption.copy()})
 
                 self._logging.log_exec('gDayF', "Normalizer", self._labels["norm_set_establish"], norms)
@@ -85,7 +96,6 @@ class Normalizer (object):
     # @param objective_column string indicating objective column
     # @return None if nothing to DO or Normalization_sets orderdict() on other way
     def define_minimal_norm(self, dataframe_metadata, an_objective, objective_column):
-
         type = dataframe_metadata['type']
         if not self._config['minimal_normalizations_enabled']:
             return [None]
@@ -113,10 +123,65 @@ class Normalizer (object):
                 norms.append({objective_column: normoption.copy()})
                 return norms.copy()
 
+    ## Method oriented to filter stdmean operations on non standardize algorithms
+    # @param normalizemd OrderedDict() compatible structure
+    # @param model_id Model_identification
+    # @return normalizemd OrderedDict() compatible structure
+    def filter_standardize(self, normalizemd, model_id):
+        filter_normalized = list()
+        for norm_set in normalizemd:
+            if norm_set is not None:
+                col = list(norm_set.keys())[0]
+                norms = norm_set.get(col)
+                if norms['class'] == 'stdmean' and model_id in NO_STANDARDIZE:
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["excluding"],
+                                           col + ' - ' + norms['class'])
+                else:
+                    filter_normalized.append(norm_set)
+        return filter_normalized
+
+    ## Method oriented to filter drop_missing operations on non standardize algorithms
+    # @param normalizemd OrderedDict() compatible structure
+    # @return normalizemd OrderedDict() compatible structure
+
+    def filter_drop_missing(self, normalizemd):
+        filter_normalized = list()
+        for norm_set in normalizemd:
+            if norm_set is not None:
+                col = list(norm_set.keys())[0]
+                norms = norm_set.get(col)
+                if norms['class'] == 'drop_missing':
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["excluding"],
+                                           col + ' - ' + norms['class'])
+                else:
+                    filter_normalized.append(norm_set)
+
+        return filter_normalized
+
+    ## Method oriented to filter filling_missing operations dependent of objective_column
+    # @param normalizemd OrderedDict() compatible structure
+    # @return normalizemd OrderedDict() compatible structure
+
+    def filter_objective_base(self, normalizemd):
+        filter_normalized = list()
+        for norm_set in normalizemd:
+            if norm_set is not None:
+                col = list(norm_set.keys())[0]
+                norms = norm_set.get(col)
+                if norms['class'] == 'progressive_missing_values' or \
+                   (norms['class'] == 'mean_missing_values' and not norms['objective']['full']):
+                    self._logging.log_exec('gDayF', "Normalizer", self._labels["excluding"],
+                                           col + ' - ' + norms['class'])
+                else:
+                    filter_normalized.append(norm_set)
+
+        return filter_normalized
+
     ## Main method oriented to define and manage normalizations sets applying normalizations
     # @param self object pointer
     # @param df dataframe
     # @param normalizemd OrderedDict() compatible structure
+    # @param model_id Algoritmh identificator
     # @return dataframe
     def normalizeDataFrame(self, df, normalizemd):
         self._logging.log_exec('gDayF', "Normalizer", self._labels["start_data_norm"])
@@ -132,13 +197,22 @@ class Normalizer (object):
                         self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'])
                     elif norms['class'] == 'drop_missing':
-                        dataframe = self.normalizeDropMissing(dataframe, col)
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                               col + ' - ' + norms['class'])
+                        try:
+                            dataframe = self.normalizeDropMissing(dataframe, col)
+                            self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                                   col + ' - ' + norms['class'])
+                        except KeyError:
+                            self._logging.log_exec('gDayF', "Normalizer", self._labels["excluding"],
+                                                   col + ' - ' + norms['class'])
                     elif norms['class'] == 'stdmean':
-                        dataframe.loc[:, col] = self.normalizeStdMean(dataframe[col])
+                        dataframe.loc[:, col] = self.normalizeStdMean(dataframe.loc[:, col],
+                                                                      norms['objective']['mean'],
+                                                                      norms['objective']['std']
+                                                                      )
                         self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
-                                               col + ' - ' + norms['class'])
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               str(norms['objective']['mean']) + ',' +
+                                               str(norms['objective']['std']) + ' ) ')
                     elif norms['class'] == 'working_range':
                         dataframe.loc[:, col] = self.normalizeWorkingRange(dataframe.loc[:, col],
                                                                            norms['objective']['minval'],
@@ -268,10 +342,12 @@ class Normalizer (object):
     # @param self object pointer
     # @param dataframe single column dataframe
     # @return dataframe
-    def normalizeStdMean(self, dataframe):
-        if (dataframe.dtype != np.object):
-            #dataframe = (dataframe - dataframe.mean()) / dataframe.std()
-            dataframe = preprocessing.scale(dataframe)
+    def normalizeStdMean(self, dataframe, mean, std):
+        if dataframe.dtype != np.object:
+            dataframe = dataframe.astype(np.float16)
+            dataframe = dataframe.apply(lambda x: x - float(mean))
+            dataframe = dataframe.apply(lambda x: x / float(std))
+            #dataframe = preprocessing.scale(dataframe)
         return dataframe.copy()
 
     ## Internal method oriented to manage bucketing for discretize

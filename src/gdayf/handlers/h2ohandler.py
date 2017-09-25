@@ -417,17 +417,18 @@ class H2OHandler(object):
     # on dataframe objective's column
     # @param self object pointer
     # @param objective objective column if apply
+    # @param odataframe original H2OFrame
     # @param dataframe normalized H2OFrame
     # @param  antype Atypemetadata().get_artypes() values allowed
     # @param  base type BugFix on regression with range mixing int and float
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model, prediction_dataframe
-    def _predict_accuracy(self, objective, dataframe, antype, base_type, tolerance=0.0):
+    def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
         accuracy = -1.0
         dataframe_cols = dataframe.columns
         prediction_dataframe = self._model_base.predict(dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
-        prediccion = dataframe.cbind(prediction_dataframe)
+        prediccion = odataframe.cbind(prediction_dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediction_columns = prediccion.columns
         for element in dataframe_cols:
@@ -625,23 +626,32 @@ class H2OHandler(object):
     # @param self object pointer
     # @param dataframe  pandas dataframe
     # @param base_ns NormalizationMetadata orderedDict() compatible
-    # @return (Dataframe, DFMetadata, Hash_value, True/False)
-    def execute_normalization(self, dataframe, base_ns):
+    # @param filtering STANDARDIZE if standardize filtering rules need to be applied
+    # or DROP drop_columns filtering rules need to be applied
+    # @param exist_objective True if exist False if not
+    # @return (Dataframe, DFMetadata, Hash_value, True/False, base_ns)
+    def execute_normalization(self, dataframe, base_ns, model_id, filtering='NONE', exist_objective=True):
         if base_ns is not None:
             data_norm = dataframe.copy(deep=True)
             self._logging.log_exec(self.analysis_id,
                                    self._h2o_session.session_id, self._labels["exec_norm"], str(base_ns))
             normalizer = Normalizer()
+            if not exist_objective:
+                base_ns = normalizer.filter_objective_base(normalizemd=base_ns)
+            if filtering == 'STANDARDIZE':
+                base_ns = normalizer.filter_standardize(normalizemd=base_ns, model_id=model_id)
+            elif filtering == 'DROP':
+                base_ns = normalizer.filter_drop_missing(normalizemd=base_ns)
             data_norm = normalizer.normalizeDataFrame(data_norm, base_ns)
             df_metadata = DFMetada()
             df_metadata.getDataFrameMetadata(dataframe=data_norm, typedf='pandas')
             df_metadata_hash_value = md5(json.dumps(df_metadata).encode('utf-8')).hexdigest()
-            return data_norm, df_metadata, df_metadata_hash_value, True
+            return data_norm, df_metadata, df_metadata_hash_value, True, base_ns
         else:
             df_metadata = DFMetada()
             df_metadata.getDataFrameMetadata(dataframe=dataframe, typedf='pandas')
             df_metadata_hash_value = md5(json.dumps(df_metadata).encode('utf-8')).hexdigest()
-            return dataframe, df_metadata, df_metadata_hash_value, False
+            return dataframe, df_metadata, df_metadata_hash_value, False, base_ns
 
             #base_ns = json.load(normalization, object_pairs_hook=NormalizationSet)
 
@@ -656,6 +666,14 @@ class H2OHandler(object):
         assert isinstance(analysis_id, str)
         assert isinstance(training_pframe, DataFrame)
         assert isinstance(base_ar, ArMetadata)
+
+        filtering = 'NONE'
+
+        for pname, pvalue in kwargs.items():
+            if pname == 'filtering':
+                assert isinstance(pvalue, str)
+                filtering = pvalue
+
 
         # python train parameters effective
         self.analysis_id = analysis_id
@@ -676,12 +694,15 @@ class H2OHandler(object):
             test_frame = None
 
         base_ns = get_model_ns(base_ar)
+        modelid = base_ar['model_parameters']['h2o']['model']
         assert isinstance(base_ns, list) or base_ns is None
         # Applying Normalizations
         data_initial = DFMetada()
         data_initial.getDataFrameMetadata(dataframe=training_pframe, typedf='pandas')
-        training_pframe, data_normalized, train_hash_value, norm_executed = \
-            self.execute_normalization(dataframe=training_pframe, base_ns=base_ns)
+        training_pframe, data_normalized, train_hash_value, norm_executed, base_ns = \
+            self.execute_normalization(dataframe=training_pframe, base_ns=base_ns, model_id=modelid,
+                                       filtering=filtering, exist_objective=True)
+
         df_metadata = data_initial
         if not norm_executed:
             data_normalized = None
@@ -694,6 +715,7 @@ class H2OHandler(object):
 
         else:
             df_metadata = data_normalized
+            base_ar['normalizations_set'] = base_ns
             try:
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_normalized['correlation'][objective_column]))
@@ -701,7 +723,9 @@ class H2OHandler(object):
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_initial['correlation']))
             if test_frame is not None:
-                test_frame, _, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns)
+                test_frame, _, _, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns,
+                                                                    model_id=modelid, filtering=filtering,
+                                                                    exist_objective=True)
 
         h2o_elements = H2Olist()
         if len(h2o_elements[h2o_elements['key'] == 'train_' + analysis_id + '_' + str(train_hash_value)]):
@@ -725,7 +749,7 @@ class H2OHandler(object):
                     self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
                 training_frame, valid_frame = \
                     H2OFrame(python_obj=training_pframe).\
-                        split_frame(ratios=[self._config['frameworks']['h2o']['conf']['training_frame_ratio']],
+                        split_frame(ratios=[self._config['frameworks']['h2o']['conf']['validation_frame_ratio']],
                                     destination_frames=['train_' + analysis_id + '_' + str(train_hash_value),
                                                         'valid_' + analysis_id + '_' + str(train_hash_value)])
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
@@ -772,7 +796,8 @@ class H2OHandler(object):
         final_ar_model['data_initial'] = data_initial
         final_ar_model['data_normalized'] = data_normalized
 
-        model_id = base_ar['model_parameters']['h2o']['model'] + '_' + model_timestamp
+
+        model_id = modelid + '_' + model_timestamp
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_id"], model_id)
 
         analysis_type = base_ar['model_parameters']['h2o']['types'][0]['type']
@@ -796,7 +821,7 @@ class H2OHandler(object):
 
         '''Generate commands: model and model.train()'''
         model_command = list()
-        model_command.append(base_ar['model_parameters']['h2o']['model'])
+        model_command.append(modelid)
         model_command.append("(")
         model_command.append("training_frame=training_frame")
         train_command = list()
@@ -1045,6 +1070,7 @@ class H2OHandler(object):
 
         antype = base_ar['model_parameters']['h2o']['types'][0]['type']
 
+        modelid = base_ar['model_parameters']['h2o']['model']
         base_ns = get_model_ns(base_ar)
 
         #Checking file source versus hash_value
@@ -1058,10 +1084,10 @@ class H2OHandler(object):
 
         objective_column = base_ar['objective_column']
 
-        supervised = True
+        exist_objective = True
         if objective_column is None:
-            supervised = False
-        if supervised:
+            exist_objective = False
+        if exist_objective:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["objective"],
                                    objective_column)
             # Recovering tolerance
@@ -1069,6 +1095,8 @@ class H2OHandler(object):
 
         data_initial = DFMetada()
         data_initial.getDataFrameMetadata(dataframe=predict_frame, typedf='pandas')
+        base_ar['data_initial'] = data_initial
+
         if objective_column in list(predict_frame.columns.values):
             try:
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
@@ -1076,10 +1104,19 @@ class H2OHandler(object):
             except KeyError:
                 self._logging.log_exec(analysis_id, self._h2o_session.session_id,
                                    self._labels["cor_struct"],  str(data_initial['correlation']))
+            npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
+                                                                                              base_ns=base_ns,
+                                                                                              model_id=modelid,
+                                                                                              filtering='NONE',
+                                                                                              exist_objective=True)
 
-        base_ar['data_initial'] = data_initial
-        npredict_frame, data_normalized, _, norm_executed = self.execute_normalization(dataframe=predict_frame,
-                                                                                      base_ns=base_ns)
+        else:
+            npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
+                                                                                              base_ns=base_ns,
+                                                                                              model_id=modelid,
+                                                                                              filtering='DROP',
+                                                                                              exist_objective=False)
+
         if not norm_executed:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["exec_norm"],
                                    'No Normalizations Required')
@@ -1107,7 +1144,7 @@ class H2OHandler(object):
                                'test_frame (' + str(npredict_frame.nrows) + ')')
         self._frame_list.append(npredict_frame.frame_id)
 
-        if supervised:
+        if exist_objective:
             self.need_factor(atype=base_ar['model_parameters']['h2o']['types'][0]['type'],
                              objective_column=objective_column, predict_frame=npredict_frame)
 
@@ -1135,10 +1172,16 @@ class H2OHandler(object):
             objective_type = None
 
         start = time.time()
-        if supervised:
-            accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame,
-                                                                    antype=antype,
-                                                                    tolerance=tolerance, base_type=objective_type)
+        if exist_objective:
+            if predict_frame.nrows == npredict_frame.nrows:
+                accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
+                                                                        antype=antype,
+                                                                        tolerance=tolerance, base_type=objective_type)
+            else:
+                accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame, npredict_frame,
+                                                                        antype=antype,
+                                                                        tolerance=tolerance, base_type=objective_type)
+
             self._frame_list.append(prediction_dataframe.frame_id)
 
             base_ar['execution_seconds'] = time.time() - start
@@ -1165,17 +1208,14 @@ class H2OHandler(object):
                 base_ar['execution_seconds'] = time.time() - start
                 prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
 
-
-
-
-
         if self._debug:
             connection().stop_logging()
             self._persistence.store_file(filename=base_ar['log_path'][0]['value'],
                                          storage_json=base_ar['log_path'])
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
-        base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
+        if not exist_objective or objective_type is not None:
+            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
                                                                                         source=None, antype=antype)
         if objective_column in npredict_frame.columns:
             base_ar['metrics']['accuracy']['predict'] = accuracy

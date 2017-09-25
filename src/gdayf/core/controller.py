@@ -19,6 +19,7 @@ from pandas import DataFrame
 import importlib
 from json import load
 from json.decoder import JSONDecodeError
+from time import time
 
 
 ## Core class oriented to mange the comunication and execution messages pass for all components on system
@@ -187,11 +188,13 @@ class Controller(object):
 
         pd_test_dataset = None
         if metric == 'combined' or 'test_accuracy':
-            pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
+            pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset,
+                                                            train_perc=self._config['common']['test_frame_ratio'])
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
 
-        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath, metric=metric,
+        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath + '_' + str(time()),
+                                            metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
                                             hash_dataframe=hash_dataframe)
 
@@ -217,11 +220,13 @@ class Controller(object):
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
                                                                                          training_pframe=pd_dataset,
                                                                                          base_ar=each_model,
-                                                                                         test_frame=pd_test_dataset)
+                                                                                         test_frame=pd_test_dataset,
+                                                                                         filtering='STANDARDIZE')
                 else:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
                                                                                          training_frame=pd_dataset,
-                                                                                         base_ar=each_model)
+                                                                                         base_ar=each_model,
+                                                                                         filtering='STANDARDIZE')
 
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
@@ -235,42 +240,51 @@ class Controller(object):
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
         self._logging.log_exec(adviser.analysis_id, 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
-        best_check = True
-        for model in adviser.analysis_recommendation_order:
-            if best_check:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["best_model"],
-                                    model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
-                best_check = False
-            else:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["res_model"],
-                                    model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"], model['round'])
-            if model["normalizations_set"] is None:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"], [])
-            else:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
-                                       model["normalizations_set"])
-
-            if metric in ACCURACY_METRICS:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
-                                       model['metrics']['accuracy'])
-            if metric in REGRESSION_METRICS or ACCURACY_METRICS:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
-                                       model['metrics']['execution']['train']['RMSE'])
-            if metric in CLUSTERING_METRICS:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ckmetric_order"],
-                                       model['metrics']['execution']['train']['k'])
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ctmetric_order"],
-                                       model['metrics']['execution']['train']['tot_withinss'])
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["cbmetric_order"],
-                                       model['metrics']['execution']['train']['betweenss'])
+        self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric, supervised)
 
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
         self.clean_handlers()
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
+
+    # Method oriented to log leaderboard against selected metrics
+    # @param analysis_id
+    # @param ar_list List of AR models Execution Data
+    # @param metric to execute order ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
+    # @param accuracy oriented to visualize accuracy or not
+    def log_model_list(self, analysis_id, ar_list, metric, accuracy=True):
+        best_check = True
+        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
+        for model in ordered_list:
+            if best_check:
+                self._logging.log_exec(analysis_id, 'controller', self._labels["best_model"],
+                                       model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
+                best_check = False
+            else:
+                self._logging.log_exec(analysis_id, 'controller', self._labels["res_model"],
+                                       model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
+
+            self._logging.log_exec(analysis_id, 'controller', self._labels["round_reach"], model['round'])
+            if model["normalizations_set"] is None:
+                self._logging.log_exec(analysis_id, 'controller', self._labels["norm_app"], [])
+            else:
+                self._logging.log_exec(analysis_id, 'controller', self._labels["norm_app"],
+                                       model["normalizations_set"])
+
+            if metric in ACCURACY_METRICS or REGRESSION_METRICS:
+                self._logging.log_exec(analysis_id, 'controller', self._labels["ametric_order"],
+                                       model['metrics']['accuracy'])
+                self._logging.log_exec(analysis_id, 'controller', self._labels["pmetric_order"],
+                                       model['metrics']['execution']['train']['RMSE'])
+            if metric in CLUSTERING_METRICS:
+                self._logging.log_exec(analysis_id, 'controller', self._labels["ckmetric_order"],
+                                       model['metrics']['execution']['train']['k'])
+                self._logging.log_exec(analysis_id, 'controller', self._labels["ctmetric_order"],
+                                       model['metrics']['execution']['train']['tot_withinss'])
+                self._logging.log_exec(analysis_id, 'controller', self._labels["cbmetric_order"],
+                                       model['metrics']['execution']['train']['betweenss'])
 
     ## Method leading and controlling analysis's executions on specific analysis
     # @param self object pointer
@@ -283,7 +297,7 @@ class Controller(object):
 
         self._logging.log_exec('gDayF', "Controller", self._labels["start"])
         self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
-        self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], 1)
+        self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
 
         if isinstance(datapath, str):
             try:
@@ -317,69 +331,48 @@ class Controller(object):
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
 
-        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath, metric=metric,
+        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath + '_' + str(time()),
+                                            metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
                                             hash_dataframe=hash_dataframe)
 
         adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=list_ar_metadata)
 
-        for each_model in adviser.next_analysis_list:
-            fw = get_model_fw(each_model)
-            if fw == 'h2o':
-                self.init_handler(fw)
 
-            if pd_test_dataset is not None:
-                _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                     training_pframe=pd_dataset,
-                                                                                     base_ar=each_model,
-                                                                                     test_frame=pd_test_dataset)
-            else:
-                _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                     training_frame=pd_dataset,
-                                                                                     base_ar=each_model)
-            if analyzed_model is not None:
-                adviser.analysis_recommendation_order.append(analyzed_model)
+        while adviser.next_analysis_list is not None:
 
-        adviser.next_analysis_list.clear()
-        adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
-                                                                        model_list=
-                                                                        adviser.analysis_recommendation_order)
+            for each_model in adviser.next_analysis_list:
+                fw = get_model_fw(each_model)
+                if fw == 'h2o':
+                    self.init_handler(fw)
+
+                if pd_test_dataset is not None:
+                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(
+                        analysis_id=adviser.analysis_id,
+                        training_pframe=pd_dataset,
+                        base_ar=each_model,
+                        test_frame=pd_test_dataset, filtering='NONE')
+                else:
+                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(
+                        analysis_id=adviser.analysis_id,
+                        training_frame=pd_dataset,
+                        base_ar=each_model , filtering='NONE')
+                if analyzed_model is not None:
+                    adviser.analysis_recommendation_order.append(analyzed_model)
+
+            adviser.next_analysis_list.clear()
+            adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
+                                                                            model_list=
+                                                                            adviser.analysis_recommendation_order)
+            adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=adviser.analysis_recommendation_order)
+
 
         self._logging.log_exec(adviser.analysis_id, 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
         self._logging.log_exec(adviser.analysis_id, 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
-        best_check = True
-        for model in adviser.analysis_recommendation_order:
-            if best_check:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["best_model"],
-                                    model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
-                best_check = False
-            else:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["res_model"],
-                                    model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
-            self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["round_reach"], model['round'])
-
-            if model["normalizations_set"] is None:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"], [])
-            else:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["norm_app"],
-                                       model["normalizations_set"])
-
-            if metric in ACCURACY_METRICS:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ametric_order"],
-                                       model['metrics']['accuracy'])
-            if metric in REGRESSION_METRICS or ACCURACY_METRICS:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["pmetric_order"],
-                                       model['metrics']['execution']['train']['RMSE'])
-            if metric in CLUSTERING_METRICS:
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ckmetric_order"],
-                                       model['metrics']['execution']['train']['k'])
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["ctmetric_order"],
-                                       model['metrics']['execution']['train']['tot_withinss'])
-                self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["cbmetric_order"],
-                                       model['metrics']['execution']['train']['betweenss'])
+        self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric)
 
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
@@ -458,8 +451,7 @@ class Controller(object):
         else:
             analysis_id = arlist[0]['model_id']
 
-        adviser = self.adviser.AdviserAStar(analysis_id=analysis_id, metric=metric)
-        ordered_list = adviser.priorize_models(adviser.analysis_id, arlist)
+        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=arlist, metric=metric)
 
         root = OrderedDict()
         root['data'] = None
@@ -498,7 +490,7 @@ class Controller(object):
                         found = True
                     counter += 1
                 if not found:
-                    self._logging.log_debug(adviser.analysis_id, 'controller', self._labels['fail_reconstruct'],
+                    self._logging.log_debug(analysis_id, 'controller', self._labels['fail_reconstruct'],
                                             model_id)
             level += 1
 
@@ -523,6 +515,18 @@ class Controller(object):
         print(storage)
         PersistenceHandler().store_json(storage, root)
         return root
+
+    ##Method oriented to priorize ARlist
+    # @param self object pointer
+    # @param analysis_id
+    # @param arlist Priorized ArMetadata list
+    # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
+    # @return OrderedDict() with execution tree data Analysis
+    def priorize_list(self, analysis_id, arlist, metric):
+        adviser = self.adviser.AdviserAStar(analysis_id=analysis_id, metric=metric)
+        ordered_list = adviser.priorize_models(adviser.analysis_id, arlist)
+        del adviser
+        return ordered_list
 
 
 if __name__ == '__main__':

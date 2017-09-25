@@ -22,8 +22,8 @@
         "enabled" : true,
         "min_rows_enabled": true,
         "train_balance_metric" : 0.2,
+        "validation_frame_ratio" : 0.85,
         "validation_frame_threshold" : 100000,
-        "training_frame_ratio" : 0.80,
         "anomaly_threshold":
         {
           "columns" :0.15,
@@ -381,7 +381,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 10000,
+          "min_rows_applicability": 0,
           "enabled": true,
           "types": [
             {
@@ -555,7 +555,7 @@
                 "type": "int"
               },
               "standardize": {
-                "value": true,
+                "value": false,
                 "seleccionable": true,
                 "type": "boolean"
               },
@@ -781,12 +781,12 @@
                 "type": "float"
               },
               "mini_batch_size": {
-                "value": 125,
+                "value": 128,
                 "seleccionable": true,
                 "type": "int"
               },
               "hidden": {
-                "value": [150, 75],
+                "value": [112, 75],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -943,10 +943,10 @@
                 "type": "boolean"
               },
               "activation": {
-              "value": "tanh_with_dropout",
+              "value": "rectifier_with_dropout",
                 "seleccionable": true,
                 "type": [
-                  "rectifier_with_dropout"
+                  "tanh_with_dropout"
                 ]
               },
               "input_dropout_ratio": {
@@ -970,7 +970,7 @@
                 "type": "float"
               },
               "standardize": {
-                "value": true,
+                "value": false,
                 "seleccionable": true,
                 "type": "boolean"
               }
@@ -2149,12 +2149,12 @@
             },
             "effort":{
               "epochs": {
-                "value": 50.0,
+                "value": 10.0,
                 "seleccionable": true,
                 "type": "float"
               },
               "mini_batch_size": {
-                "value": 125,
+                "value": 128,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -2286,10 +2286,10 @@
                 "type": "boolean"
               },
               "activation": {
-              "value": "tanh",
+              "value": "tanh_with_dropout",
                 "seleccionable": true,
                 "type": [
-                  "rectifier"
+                  "rectifier_with_dropout"
                 ]
               },
               "input_dropout_ratio": {
@@ -2298,8 +2298,8 @@
                 "type": "float"
               },
               "hidden_dropout_ratios": {
-                "value": [0.0, 0.0, 0.0],
-                "seleccionable": false,
+                "value": [0.025, 0.025, 0.025],
+                "seleccionable": true,
                 "type": "List[float]"
               },
               "l1": {
@@ -2869,9 +2869,12 @@
   "normalizer": {
     "minimal_normalizations_enabled": true,
     "non_minimal_normalizations_enabled": true,
+    "manage_on_train_errors" : true,
     "base_normalization_enabled": true,
     "exclusion_missing_threshold": 0.3,
-    "clustering_standardize_enabled" : false
+    "clustering_standardize_enabled" : true,
+    "standardize_enabled" : true,
+    "std_threshold" : 0.1
   },
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
@@ -2894,9 +2897,10 @@
         "dpl_divisor": 500,
         "h_dropout_ratio": 0.025,
         "epochs_increment": 2.0,
-        "hidden_increment": 2.0,
-        "dpl_min_batch_size": 10,
-        "dpl_batch_divisor": 1000,
+        "deeper_increment": 1.5,
+        "wider_increment": 1.5,
+        "dpl_min_batch_size": 8,
+        "dpl_batch_divisor": "1000: Not used",
         "dpl_batch_reduced_divisor": 2,
         "learning_conf" : [
           {"learn":0.5,"improvement":0.85},
@@ -2915,10 +2919,12 @@
         "nv_min_sdev": [1e-3],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "a_hidden_increment": 1.5,
         "clustering_increment": 2.0
       }
     }
   },
-  "common": {"version" : "0.1.2"}
+  "common": {
+    "version" : "0.1.3",
+    "test_frame_ratio" : 0.9
+  }
 }

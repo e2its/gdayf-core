@@ -86,6 +86,7 @@
         "ignored_list": ":Establishing column's exclusion over missing values threshold:",
         "start_data_norm": ":Starting Dataframe Normalizations:",
         "applying": ":Applying Normalization:",
+        "excluding": ":Excluding Normalization on model (Not convenient):",
         "nothing_to_do": ":Nothing to Do:",
         "col_analysis": ":Column Basic Description:"
       }

@@ -41,7 +41,7 @@ class DFMetada(OrderedDict):
                 dataframe[col].isnull().values.ravel().sum())
             auxdict['cardinality'] = str(int(dataframe.loc[:, col].value_counts().describe()['count']))
             auxdict['histogram'] = OrderedDict()
-            if int(auxdict['cardinality']) < 41:
+            if int(auxdict['cardinality']) <= 40:
                 hist = dataframe.loc[:, col].value_counts().to_dict()
                 for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                     auxdict['histogram'][str(tupla[0])] = str(tupla[1])
@@ -52,13 +52,21 @@ class DFMetada(OrderedDict):
                     for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                         auxdict['histogram'][str(tupla[0])] = str(tupla[1])
                     del hist
-                except TypeError: #Bug? TypeError: Can't convert 'float' object to str implicitly
+                except TypeError:
                     auxHist = dataframe[col].value_counts()
                     auxdict['histogram']['max'] = str(auxHist.max())
                     auxdict['histogram']['min'] = str(auxHist.min())
                     auxdict['histogram']['mean'] = str(auxHist.mean())
                     auxdict['histogram']['std'] = str(auxHist.std())
                     del auxHist
+                except ValueError:
+                    auxHist = dataframe[col].value_counts()
+                    auxdict['histogram']['max'] = str(auxHist.max())
+                    auxdict['histogram']['min'] = str(auxHist.min())
+                    auxdict['histogram']['mean'] = str(auxHist.mean())
+                    auxdict['histogram']['std'] = str(auxHist.std())
+                    del auxHist
+
             auxdict['distribution'] = 'Not implemented yet'
             self['columns'].append(auxdict)
         self['correlation'] = dataframe.corr().to_dict()

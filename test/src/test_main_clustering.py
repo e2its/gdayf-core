@@ -10,7 +10,7 @@ if __name__ == "__main__":
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
                                                       amode=CLUSTERING, metric='cdistance', deep_impact=10,
-                                                      k=4, estimate_k=True)
+                                                      k=6, estimate_k=True)
 
     controller.save_models(recomendations)
     status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),

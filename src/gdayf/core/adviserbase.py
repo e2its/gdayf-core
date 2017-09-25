@@ -40,7 +40,7 @@ class Adviser(object):
         self._labels = LoadLabels().get_config()['messages']['adviser']
         self._logging = LogsHandler()
         self.timestamp = time()
-        self.analysis_id = analysis_id + '_' + str(self.timestamp)
+        self.analysis_id = analysis_id
         self.an_objective = None
         self.deep_impact = deep_impact
         self.analysis_recommendation_order = list()
@@ -93,19 +93,45 @@ class Adviser(object):
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
         elif self.deepness == 2:
-            # Get all models
             fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
             aux_loop_controller = len(self.analysis_recommendation_order)
             for indexer in range(0, aux_loop_controller):
                 try:
-                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models:
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        best_models.append(model_type)
                 except TypeError:
-                    pass
-            #if fw_model_list is not None:
+                    ''' If all optimize_models doesn't return new models 
+                    register it as evaluated and seleted'''
+                    best_models.append(model_type)
             self.next_analysis_list.extend(fw_model_list)
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
         elif self.next_analysis_list is not None:
+            fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models and len(best_models) < 2:
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        #print("Trace:%s-%s" % (model_type, best_models))
+                        best_models.append(model_type)
+                except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    register it as evaluated and seleted'''
+                    best_models.append(model_type)
+
+            '''' Modified 20/09/2017
             # Get two most potential best models
             fw_model_list = list()
             for indexer in range(0, 2):
@@ -113,7 +139,7 @@ class Adviser(object):
                     fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
                 except TypeError:
                     pass
-            #if fw_model_list is not None:
+            #if fw_model_list is not None:'''
             self.next_analysis_list.extend(fw_model_list)
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
@@ -158,6 +184,34 @@ class Adviser(object):
         if self.deepness == 1:
             #Check_dataframe_metadata compatibility
             self.base_specific(dataframe_metadata, list_ar_metadata)
+        # Added 22/09/1974
+        elif self.deepness > self.deep_impact:
+            self.next_analysis_list = None
+        elif self.next_analysis_list is not None:
+            fw_model_list = list()
+            # Added 31/08/2017
+            best_models = list()
+            # End - Added 31/08/2017
+            aux_loop_controller = len(self.analysis_recommendation_order)
+            for indexer in range(0, aux_loop_controller):
+                try:
+                    # Modified 31/08/2017
+                    model = self.analysis_recommendation_order[indexer]
+                    model_type = model['model_parameters'][get_model_fw(model)]['model']
+                    if model_type not in best_models:
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        #print("Trace:%s-%s" % (model_type, best_models))
+                        best_models.append(model_type)
+                        # End - Modified 31/08/2017
+                except TypeError:
+                    ''' If all optimize_models doesn't return new models 
+                    pass and look for next best model on this type'''
+                    pass
+            # if fw_model_list is not None:
+            self.next_analysis_list.extend(fw_model_list)
+            if len(self.next_analysis_list) == 0:
+                self.next_analysis_list = None
+        self.deepness += 1
         return self.analysis_id, self.next_analysis_list
 
     ## Method oriented to execute smart normal and fast analysis
@@ -173,19 +227,6 @@ class Adviser(object):
             self.base_iteration(amode, dataframe_metadata, objective_column)
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
-        elif self.deepness == 2:
-            # Get all models
-            fw_model_list = list()
-            aux_loop_controller = len(self.analysis_recommendation_order)
-            for indexer in range(0, aux_loop_controller):
-                try:
-                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                except TypeError:
-                    pass
-            #if fw_model_list is not None:
-            self.next_analysis_list.extend(fw_model_list)
-            if len(self.next_analysis_list) == 0:
-                    self.next_analysis_list = None
         elif self.next_analysis_list is not None:
             fw_model_list = list()
             # Added 31/08/2017
@@ -198,8 +239,8 @@ class Adviser(object):
                     model = self.analysis_recommendation_order[indexer]
                     model_type = model['model_parameters'][get_model_fw(model)]['model']
                     if model_type not in best_models:
-                        print("Trace:%s-%s"%(model_type, best_models))
                         fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                        #print("Trace:%s-%s" % (model_type, best_models))
                         best_models.append(model_type)
                         # End - Modified 31/08/2017
                 except TypeError:
@@ -251,7 +292,7 @@ class Adviser(object):
                     model = self.analysis_recommendation_order[indexer]
                     model_type = model['model_parameters'][get_model_fw(model)]['model']
                     if model_type not in best_models:
-                        print("Trace:%s-%s"%(model_type, best_models))
+                        #print("Trace:%s-%s"%(model_type, best_models))
                         fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
                         best_models.append(model_type)
                         # End - Modified 31/08/2017
@@ -291,7 +332,7 @@ class Adviser(object):
                     model = self.analysis_recommendation_order[indexer]
                     model_type = model['model_parameters'][get_model_fw(model)]['model']
                     if model_type not in best_models:
-                        print("Trace:%s-%s"%(model_type, best_models))
+                        #print("Trace:%s-%s"%(model_type, best_models))
                         fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
                         best_models.append(model_type)
                         # End - Modified 31/08/2017

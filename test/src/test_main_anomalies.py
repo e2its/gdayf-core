@@ -9,12 +9,12 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
-                                                      amode=ANOMALIES, metric='rmse', deep_impact=3)
+                                                      amode=ANOMALIES, metric='rmse', deep_impact=5)
 
     controller.save_models(recomendations)
     status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                        list_ar_metadata=recomendations[-4:-2],
-                                                        metric='rmse', deep_impact=1)
+                                                        list_ar_metadata=recomendations[-3:-2],
+                                                        metric='rmse', deep_impact=3)
 
     recomendations.extend(recomendations2)
     controller.reconstruct_execution_tree(recomendations, metric='rmse')

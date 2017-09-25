@@ -22,11 +22,13 @@ class NormalizationSet (OrderedDict):
         self['class'] = "ignore_column"
         self['objective']['value'] = OrderedDict()
 
-    def set_stdmean(self):
+    def set_stdmean(self, mean=0, std=1):
         self.reset()
         self['type'] = "normalization"
         self['class'] = "stdmean"
         self['objective']['value'] = OrderedDict()
+        self['objective']['mean'] = mean
+        self['objective']['std'] = std
 
     def set_drop_missing(self):
         self.reset()
