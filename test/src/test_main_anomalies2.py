@@ -13,7 +13,7 @@ if __name__ == "__main__":
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
                                                           amode=ANOMALIES, metric='rmse', deep_impact=5)
 
-        controller.save_models(recomendations)
+        controller.save_models(recomendations, mode=BEST)
         '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
                                                             list_ar_metadata=recomendations[-3:-2],
                                                             metric='rmse', deep_impact=2)

@@ -393,10 +393,11 @@ class AdviserAStar(Adviser):
                 if self.deepness <= self.deep_impact:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        next_hidden = int(round(model_aux['parameters']['hidden']['value'][0] * wider_increment, 0))
-                        model_aux['parameters']['hidden']['value'] = [next_hidden,
-                                                                      model_aux['parameters']['hidden']['value'][1],
-                                                                      next_hidden]
+
+                        for iterador in range(0, len(model_aux['parameters']['hidden']['value'])):
+                            if iterador != int((float(len(model_aux['parameters']['hidden']['value'])) / 2) - 0.5):
+                                model_aux['parameters']['hidden']['value'][iterador] = \
+                                    int(round(model_aux['parameters']['hidden']['value'][iterador] * wider_increment, 0))
                         model_aux['parameters']['epochs']['value'] = epochs
                         self.safe_append(model_list, new_armetadata)
                         if len(model_aux['parameters']['hidden']['value']) < 5:

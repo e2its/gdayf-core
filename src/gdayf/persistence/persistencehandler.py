@@ -72,7 +72,7 @@ class PersistenceHandler(object):
             self._mkdir_hdfs(path=dirname(storage_json['value']),
                              grants=int(self._config['grants'], 8),
                              client=client)
-            with client.write(storage_json['value'], encoding='utf-8') as wfile:
+            with client.write(storage_json['value'], encoding='utf-8', overwrite=True) as wfile:
                 mmap_.seek(0)
                 iterator = 0
                 while iterator < mmap_.size():
@@ -194,9 +194,10 @@ class PersistenceHandler(object):
                 json_str = dumps(ar_json, indent=4)
                 json_bytes = json_str.encode('utf-8')
                 client.write(storage_json['value'],
-                                         data=gzip.compress(json_bytes))
+                             data=gzip.compress(json_bytes),
+                             overwrite=True)
             else:
-                client.write(storage_json['value'], data=dumps(ar_json, indent=4), encoding='utf-8')
+                client.write(storage_json['value'], data=dumps(ar_json, indent=4), encoding='utf-8', overwrite=True)
             return 0
         except HdfsError as execution_error:
             print(repr(execution_error))

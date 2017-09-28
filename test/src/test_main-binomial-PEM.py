@@ -9,7 +9,7 @@ if __name__ == "__main__":
     #Analysis
     controller = Controller()
     status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                      amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=4)
+                                                      amode=NORMAL, metric='test_accuracy', deep_impact=4)
 
     controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
 

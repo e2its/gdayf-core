@@ -170,40 +170,47 @@ class H2OHandler(object):
             self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                    self._labels["no_models"], ar_metadata)
             return None
+        load_storage = StorageMetadata()
+        for each_storage_type in load_storage.get_load_path():
+            if each_storage_type['type'] == 'localfs':
+                source_data = list()
+                primary_path = self._config['storage'][each_storage_type['type']]['value']
+                source_data.append(primary_path)
+                source_data.append('/')
+                source_data.append(user)
+                source_data.append('/')
+                source_data.append(ar_metadata['model_id'])
+                source_data.append('/')
+                source_data.append(config['download_dir'])
+                source_data.append('/')
+                source_data.append(model_id)
 
-        primary_path = self._config['storage']['primary_path']
-        fstype = self._config['storage'][primary_path]['type']
+                download_path = ''.join(source_data)
 
-        datafile = list()
-        datafile.append(self._config['storage'][primary_path]['value'])
-        datafile.append('/')
-        datafile.append(user)
-        datafile.append('/')
-        datafile.append(config['download_dir'])
-        datafile.append('/')
-        datafile.append(model_id)
-
-        download_path = ''.join(datafile)
-
-        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
-                               self._labels["down_path"], download_path)
-        persistence = PersistenceHandler()
-        persistence.mkdir(type=fstype, path=str(download_path), grants=int(self._config['storage']['grants'], 8))
-
-        if type.upper() == 'MOJO':
-            try:
-                file_path = self._model_base.download_mojo(path=str(download_path), get_genmodel_jar=True)
-            except H2OError:
-                load_fails = True
                 self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
-                                       self._labels["failed_op"], download_path)
-        else:
-            try:
-                file_path = download_pojo(self._model_base, path=str(download_path), get_jar=True)
-            except H2OError:
-                load_fails = True
-                self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
-                                       self._labels["failed_op"], download_path)
+                                       self._labels["down_path"], download_path)
+                persistence = PersistenceHandler()
+                persistence.mkdir(type=each_storage_type['type'], path=str(download_path),
+                                  grants=int(self._config['storage']['grants'], 8))
+
+                if type.upper() == 'MOJO':
+                    try:
+                        file_path = self._model_base.download_mojo(path=str(download_path), get_genmodel_jar=True)
+                        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                               self._labels["success_op"], file_path)
+                    except H2OError:
+                        load_fails = True
+                        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                               self._labels["failed_op"], download_path)
+                else:
+                    try:
+                        file_path = download_pojo(self._model_base, path=str(download_path), get_jar=True)
+                        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                               self._labels["success_op"], file_path)
+                    except H2OError:
+                        load_fails = True
+                        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
+                                               self._labels["failed_op"], download_path)
         try:
             if self._model_base is not None and remove_model:
                 H2Oremove(self._model_base.model_id)
@@ -212,10 +219,8 @@ class H2OHandler(object):
                                    self._h2o_session.session_id, self._labels["delete_objects"],
                                    self._model_base.model_id)
 
-        if not load_fails:
-            return download_path, hash_key('MD5', filename=file_path)
-        else:
-            return None
+        return load_fails
+
 
     ## Generate list of models_id for internal crossvalidation objects_
     # @param self object pointer
@@ -244,10 +249,12 @@ class H2OHandler(object):
                 except H2OError:
                     self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                            self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
-            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
-                                   ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
-                                   hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
-                                            ar_metadata['load_path'][counter_storage]['value'])
+
+                if ar_metadata['load_path'][counter_storage]['hash_value'] is not None:
+                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
+                               ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
+                               hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
+                                        ar_metadata['load_path'][counter_storage]['value'])
                                    )
             counter_storage += 1
         return load_fails
