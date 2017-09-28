@@ -5,12 +5,7 @@
   "frameworks": {
     "h2o": {
       "conf": {
-        "path_localfs": "/Data/Data/models",
-        "download_fs_type": "local_fs",
-        "download_fs": "downloads",
-        "path_hdfs": null,
-        "path_mongoDB": null,
-        "primary_path": "path_localfs",
+        "download_dir": "downloads",
         "url": "http://127.0.0.1:54321",
         "nthreads": 4,
         "ice_root": "/Data/Data/logs",
@@ -2834,18 +2829,28 @@
     }
   },
   "storage": {
-    "path_localfs":
-      {"value": "/Data/Data/models" , "type":"localfs",
+    "localfs":
+      {"value": "/Data/gdayf/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-    "path_hdfs": null,
-    "path_mongoDB": null,
-    "primary_path": "path_localfs",
+    "hdfs":
+      {"value": "/gdayf/experiments" , "type":"hdfs",
+        "url":"http://localhost:50070",
+        "uri":"hdfs://localhost:9000",
+        "hash_value": null, "hash_type":"MD5"
+      },
+    "mongoDB":
+      { "value": "http://localhost:0000",
+        "type":"mongoDB",
+        "hash_value": null, "hash_type":"MD5"
+      },
+    "primary_path": "localfs",
+    "grants": "644",
     "load_path": [
       {"value": "models" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-      {"value": "replica/models" , "type":"localfs",
+      {"value": "models" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"
       }
     ],
@@ -2853,7 +2858,7 @@
       {"value": "log" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-      {"value": "replica/log" , "type":"localfs",
+      {"value": "log" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"
       }
     ],
@@ -2861,7 +2866,7 @@
       {"value": "json" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-      {"value": "replica/json" , "type":"localfs",
+      {"value": "json" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"
       }
     ]

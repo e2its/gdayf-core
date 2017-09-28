@@ -267,19 +267,6 @@ class Adviser(object):
             self.base_iteration(amode, dataframe_metadata, objective_column)
         elif self.deepness > self.deep_impact:
             self.next_analysis_list = None
-        elif self.deepness == 2:
-            # Get all models
-            fw_model_list = list()
-            aux_loop_controller = len(self.analysis_recommendation_order)
-            for indexer in range(0, aux_loop_controller):
-                try:
-                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                except TypeError:
-                    pass
-            #if fw_model_list is not None:
-            self.next_analysis_list.extend(fw_model_list)
-            if len(self.next_analysis_list) == 0:
-                    self.next_analysis_list = None
         elif self.next_analysis_list is not None:
             fw_model_list = list()
             # Added 31/08/2017
@@ -620,7 +607,7 @@ class Adviser(object):
             if isinstance(parm_value, OrderedDict) and parm != 'model_id':
                 vector.append(parm_value['value'])
         #added 31/08/2017
-        if normalization_set[0] is None:
+        if normalization_set == [None]:
             norm_vector = normalization_set
         else:
             for normalization in normalization_set:

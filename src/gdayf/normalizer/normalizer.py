@@ -76,7 +76,8 @@ class Normalizer (object):
                             norms.append({col: normoption.copy()})
                         if self._config['standardize_enabled'] and description['type'] in DTYPES \
                             and an_objective[0]['type'] not in ['clustering']\
-                            and int(description['cardinality']) > 1 \
+                            and int(description['cardinality']) > 1 and description['mean'] != 0.0 and \
+                            description['std'] != 1.0 \
                             and(float(description['std']) / (float(description['max']) - float(description['min']))) \
                                  > self._config['std_threshold']:
                             normoption.set_stdmean(description['mean'], description['std'])
@@ -100,21 +101,28 @@ class Normalizer (object):
         if not self._config['minimal_normalizations_enabled']:
             return [None]
         elif objective_column is None:
+            return [None]
+
+            '''
             columns = dataframe_metadata['columns']
             norms = list()
+            
             normoption = NormalizationSet()
             if type == 'pandas':
                 for description in columns:
                     col = description['name']
-                    if an_objective[0]['type'] in ['anomalies']:
-                        normoption.set_stdmean()
+                    if an_objective[0]['type'] in ['anomalies'] and \
+                                    description['mean'] != 0.0 and \
+                                    description['std'] != 1.0:
+                        normoption.set_stdmean(mean=description['mean'], std=description['std'])
                         norms.append({col: normoption.copy()})
+                
                 if len(norms) == 0:
                     return [None]
                 else:
                     return norms.copy()
             else:
-                return [None]
+                return [None]'''
         else:
             if type == 'pandas':
                 norms = list()

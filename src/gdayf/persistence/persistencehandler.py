@@ -8,6 +8,7 @@ from gdayf.common.utils import hash_key
 from gdayf.conf.loadconfig import LoadConfig
 import gzip
 import mimetypes
+from hdfs import InsecureClient as Client, HdfsError
 
 
 
@@ -19,7 +20,7 @@ import mimetypes
 class PersistenceHandler(object):
     ## Class Constructor
     def __init__(self):
-        pass
+        self._config = LoadConfig().get_config()['storage']
 
     ## Method used to store a file on one persistence system ['localfs', ' hdfs', ' mongoDB']
     # using mmap structure to manage multi-persistence features
@@ -55,10 +56,55 @@ class PersistenceHandler(object):
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param mmap mmap structure containing the file to store
     # @returns status (0,1) (hash_key)
+    def _store_file_to_hdfs(self, storage_json, mmap_):
+        try:
+            client = Client(url=storage_json['url'])
+        except HdfsError as execution_error:
+            print(repr(execution_error))
+            return 1, None
+        except IOError as execution_error:
+            print(repr(execution_error))
+            return 1, None
+        except OSError as execution_error:
+            print(repr(execution_error))
+            return 1, None
+        try:
+            self._mkdir_hdfs(path=dirname(storage_json['value']),
+                             grants=int(self._config['grants'], 8),
+                             client=client)
+            with client.write(storage_json['value'], encoding='utf-8') as wfile:
+                mmap_.seek(0)
+                iterator = 0
+                while iterator < mmap_.size():
+                    wfile.write(mmap_.read())
+                    wfile.flush()
+                    iterator += 1
+                wfile.close()
+        except HdfsError as execution_error:
+            print(repr(execution_error))
+            return 1, None
+        except IOError as execution_error:
+            print(repr(execution_error))
+            return 1, None
+        except OSError as execution_error:
+            print(repr(execution_error))
+            return 1, None
+        finally:
+            del client
+
+        return 0, hash_key(hash_type=storage_json['hash_type'], filename=storage_json['value'])
+
+    ## Protected method used to store a file on ['hdfs']
+    #Not implemented yet !!
+    # using mmap structure to manage multi-persistence features
+    # @param self object pointer
+    # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
+    # @param mmap mmap structure containing the file to store
+    # @returns status (0,1) (hash_key)
     def _store_file_to_localfs(self, storage_json, mmap_):
         if not ospath.exists(path=storage_json['value']):
             try:
-                self._mkdir_localfs(path=dirname(storage_json['value']), grants=0o0777)
+                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
                 with open(storage_json['value'], 'wb') as wfile:
                     mmap_.seek(0)
                     iterator = 0
@@ -71,16 +117,6 @@ class PersistenceHandler(object):
                 return 1, None
 
         return 0, hash_key(hash_type=storage_json['hash_type'], filename=storage_json['value'])
-
-    ## Protected method used to store a file on ['hdfs']
-    #Not implemented yet !!
-    # using mmap structure to manage multi-persistence features
-    # @param self object pointer
-    # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
-    # @param mmap mmap structure containing the file to store
-    # @returns status (0,1) (hash_key)
-    def _store_file_to_hdfs(self, storage_json, mmap_):
-        return 1, None
 
     ## Protected method used to store a file on ['mongoDB']
     #Not implemented yet !!
@@ -120,7 +156,7 @@ class PersistenceHandler(object):
         compress = LoadConfig().get_config()['persistence']['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
-            self._mkdir_localfs(path=dirname(storage_json['value']), grants=0o0777)
+            self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
             if compress:
                 file = gzip.GzipFile(storage_json['value'], 'w')
                 json_str = dumps(ar_json, indent=4)
@@ -141,9 +177,39 @@ class PersistenceHandler(object):
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param ar_json file ArMetadata Class or OrderedDict() compatible object
+    # @param client Cliente HDFS
     # @return operation status (0 success) (1 error)
-    def _store_json_to_hdfs(self, storage_json, ar_json):
-        return 1
+    def _store_json_to_hdfs(self, storage_json, ar_json, client=None):
+        remove_client = False
+        if client is None:
+            client = Client(url=self._config['hdfs']['url'])
+            remove_client = True
+        compress = LoadConfig().get_config()['persistence']['compress_json']
+        #if not ospath.exists(storage_json['value']):
+        try:
+            self._mkdir_hdfs(path=dirname(storage_json['value']),
+                             grants=int(self._config['grants'], 8),
+                             client=client)
+            if compress:
+                json_str = dumps(ar_json, indent=4)
+                json_bytes = json_str.encode('utf-8')
+                client.write(storage_json['value'],
+                                         data=gzip.compress(json_bytes))
+            else:
+                client.write(storage_json['value'], data=dumps(ar_json, indent=4), encoding='utf-8')
+            return 0
+        except HdfsError as execution_error:
+            print(repr(execution_error))
+            return 1
+        except IOError as execution_error:
+            print(repr(execution_error))
+            return 1
+        except OSError as execution_error:
+            print(repr(execution_error))
+            return 1
+        finally:
+            if remove_client:
+                del client
 
     ## Protected method used to store a json on ['mongoDB'] persistence system
     # Not implemented yet!
@@ -164,11 +230,11 @@ class PersistenceHandler(object):
     # @return operation status (0 success) (1 error)
     def mkdir(self, type, path, grants):
         if type == 'localfs':
-            return self._mkdir_localfs(path, grants)
-        elif type == 'localfs':
-            return self._mkdir_hdfs(path, grants)
+            return self._mkdir_localfs(path=path, grants=grants)
+        elif type == 'hdfs':
+            return self._mkdir_hdfs(path=path, grants=grants)
         elif type == 'mongoDB':
-            return self._mkdir_mongoDB(path, grants)
+            return self._mkdir_mongoDB(path=path, grants=grants)
 
     ## Static protected  method used to check and make directory
     # on ['localfs']
@@ -190,13 +256,28 @@ class PersistenceHandler(object):
     # @param self object pointer
     # @param path directory or persistence structure to be created
     # @param grants on a 0o#### format (octalpython format)
+    # @param client Cliente HDFS
     # @return operation status (0 success) (1 error)
-    @staticmethod
-    def _mkdir_hdfs(path, grants):
+    def _mkdir_hdfs(self, path, grants, client=None):
+        remove_client = False
+        if client is None:
+            client = Client(url=self._config['hdfs']['url'])
+            remove_client = True
         try:
+            client.makedirs(hdfs_path=path, permission=grants)
             return 0
-        except IOError:
+        except HdfsError as execution_error:
+            print(repr(execution_error))
             return 1
+        except IOError as execution_error:
+            print(repr(execution_error))
+            return 1
+        except OSError as execution_error:
+            print(repr(execution_error))
+            return 1
+        finally:
+            if remove_client:
+                del client
 
     ## Static protected method used to check and make directory
     # on ['mongoDB']

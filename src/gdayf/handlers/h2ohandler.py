@@ -71,12 +71,10 @@ class H2OHandler(object):
         self._framework = 'h2o'
         self._config = LoadConfig().get_config()
         self._labels = LoadLabels().get_config()['messages']['corehandler']
-        self.path_localfs = self._config['frameworks'][self._framework]['conf']['path_localfs']
-        self.path_hdfs =self._config['frameworks'][self._framework]['conf']['path_hdfs']
-        self.path_mongoDB = self._config['frameworks'][self._framework]['conf']['path_mongoDB']
-        self.primary_path = \
-            self._config['frameworks'][self._framework]['conf'] \
-            [self._config['frameworks'][self._framework]['conf']['primary_path']]
+        self.localfs = self._config['storage']['localfs']['value']
+        self.hdfs =self._config['storage']['hdfs']['value']
+        self.mongoDB = self._config['storage']['mongoDB']['value']
+        self.primary_path = self._config['storage'][self._config['storage']['primary_path']]['value']
         self.url = self._config['frameworks'][self._framework]['conf']['url']
         self.nthreads = self._config['frameworks'][self._framework]['conf']['nthreads']
         self.ice_root = self._config['frameworks'][self._framework]['conf']['ice_root']
@@ -156,8 +154,9 @@ class H2OHandler(object):
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @param type ['pojo', 'mojo']
+    # @param user user_id
     # @return download_path, MD5 hash_key
-    def get_java_model(self, ar_metadata, type):
+    def get_java_model(self, ar_metadata, type, user):
         remove_model = False
         fw = get_model_fw(ar_metadata)
         model_id = ar_metadata['model_parameters'][fw]['parameters']['model_id']['value']
@@ -172,14 +171,24 @@ class H2OHandler(object):
                                    self._labels["no_models"], ar_metadata)
             return None
 
-        download_path = Path(config[config['primary_path']])
-        download_path = download_path.joinpath(config['download_fs'])
-        download_path = download_path.joinpath(model_id)
+        primary_path = self._config['storage']['primary_path']
+        fstype = self._config['storage'][primary_path]['type']
+
+        datafile = list()
+        datafile.append(self._config['storage'][primary_path]['value'])
+        datafile.append('/')
+        datafile.append(user)
+        datafile.append('/')
+        datafile.append(config['download_dir'])
+        datafile.append('/')
+        datafile.append(model_id)
+
+        download_path = ''.join(datafile)
+
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                self._labels["down_path"], download_path)
         persistence = PersistenceHandler()
-        persistence.mkdir(type='localfs', path=str(download_path), grants=0o0777)
-
+        persistence.mkdir(type=fstype, path=str(download_path), grants=int(self._config['storage']['grants'], 8))
 
         if type.upper() == 'MOJO':
             try:
@@ -224,9 +233,10 @@ class H2OHandler(object):
 
         while ar_metadata['load_path'] is not None and counter_storage < len(ar_metadata['load_path']) and load_fails:
 
-            if hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
-                        ar_metadata['load_path'][counter_storage]['value']) == \
-                    ar_metadata['load_path'][counter_storage]['hash_value']:
+            if ar_metadata['load_path'][counter_storage]['hash_value'] is None or \
+                            hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
+                            ar_metadata['load_path'][counter_storage]['value']) == \
+                            ar_metadata['load_path'][counter_storage]['hash_value']:
                 try:
                     self._model_base = load_model(ar_metadata['load_path'][counter_storage]['value'])
                     if self._model_base is not None:
@@ -234,12 +244,12 @@ class H2OHandler(object):
                 except H2OError:
                     self._logging.log_exec(self.analysis_id, self._h2o_session.session_id,
                                            self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
-            counter_storage += 1
             self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
                                    ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
                                    hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
                                             ar_metadata['load_path'][counter_storage]['value'])
                                    )
+            counter_storage += 1
         return load_fails
 
     ## Remove used dataframes during analysis execution_
@@ -260,14 +270,26 @@ class H2OHandler(object):
     # @return base path string
     def generate_base_path(self, base_ar, type_):
         assert type_ in ['PoC', 'train', 'predict']
-        if self.primary_path == self.path_mongoDB:
+        if self.primary_path == self.mongoDB:
             return None
-        elif self.primary_path == self.path_hdfs:
-            return None
+        elif self.primary_path == self.hdfs:
+            # Generating base_path
+            load_path = list()
+            load_path.append(self.hdfs)
+            load_path.append('/')
+            load_path.append(self._framework)
+            load_path.append('/')
+            load_path.append(base_ar['model_id'])
+            load_path.append('/')
+            load_path.append(type_)
+            load_path.append('/')
+            load_path.append(str(base_ar['timestamp']))
+            load_path.append('/')
+            return ''.join(load_path)
         else:
             # Generating base_path
             load_path = list()
-            load_path.append(self.path_localfs)
+            load_path.append(self.localfs)
             load_path.append('/')
             load_path.append(self._framework)
             load_path.append('/')
@@ -660,7 +682,7 @@ class H2OHandler(object):
     # @param analysis_id String (Analysis identificator)
     # @param training_pframe pandas.DataFrame
     # @param base_ar ar_template.json
-    # @param **kwargs extra arguments for test_frame inclusion
+    # @param **kwargs extra arguments
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
     def order_training(self, analysis_id, training_pframe, base_ar, **kwargs):
         assert isinstance(analysis_id, str)
@@ -668,11 +690,15 @@ class H2OHandler(object):
         assert isinstance(base_ar, ArMetadata)
 
         filtering = 'NONE'
+        user = 'guest'
 
         for pname, pvalue in kwargs.items():
             if pname == 'filtering':
                 assert isinstance(pvalue, str)
                 filtering = pvalue
+            if pname == 'user':
+                user = str(pvalue)
+
 
 
         # python train parameters effective
@@ -975,7 +1001,7 @@ class H2OHandler(object):
 
         final_ar_model['status'] = self._labels['success_op']
 
-        generate_json_path(final_ar_model)
+        generate_json_path(final_ar_model, user)
         self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
@@ -1001,8 +1027,9 @@ class H2OHandler(object):
 
     ## Method to save model to persistence layer from armetadata
     # @param armetadata structure to be stored
+    # @param user user_id
     # return saved_model (True/False)
-    def store_model(self, armetadata):
+    def store_model(self, armetadata, user='guest'):
         saved_model = False
 
         fw = get_model_fw(armetadata)
@@ -1010,30 +1037,35 @@ class H2OHandler(object):
         analysis_id = armetadata['model_id']
 
         if model_id + self._get_ext() not in H2Olist()['key'].tolist():
-
             return saved_model
         else:
             model_base = get_model(model_id + self._get_ext())
-
-        source_data = list()
-        source_data.append(self.primary_path)
-        source_data.append('/')
-        source_data.append(armetadata['model_id'])
-        source_data.append('/')
-        source_data.append(fw)
-        source_data.append('/')
-        source_data.append(armetadata['type'])
-        source_data.append('/')
-        source_data.append(str(armetadata['timestamp']))
-        source_data.append('/')
 
         #Updating status
         armetadata['status'] = self._labels["success_st"]
         # Generating load_path
         load_storage = StorageMetadata()
         for each_storage_type in load_storage.get_load_path():
+            source_data = list()
+            if each_storage_type['type'] == 'hdfs':
+                source_data.append(self._config['storage'][each_storage_type['type']]['uri'])
+            primary_path = self._config['storage'][each_storage_type['type']]['value']
+            source_data.append(primary_path)
+            source_data.append('/')
+            source_data.append(user)
+            source_data.append('/')
+            source_data.append(armetadata['model_id'])
+            source_data.append('/')
+            source_data.append(fw)
+            source_data.append('/')
+            source_data.append(armetadata['type'])
+            source_data.append('/')
+            source_data.append(str(armetadata['timestamp']))
+            source_data.append('/')
+
             load_path = ''.join(source_data) + each_storage_type['value']+'/'
-            self._persistence.mkdir(type=each_storage_type['type'], path=load_path, grants=0o0777)
+            self._persistence.mkdir(type=each_storage_type['type'], path=load_path,
+                                    grants=int(self._config['storage']['grants'], 8))
             if self._get_ext() == '.pojo':
                 download_pojo(model=model_base, path=load_path, get_jar=True)
             elif self._get_ext() == '.mojo':
@@ -1046,10 +1078,9 @@ class H2OHandler(object):
         armetadata['load_path'] = load_storage
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["msaved"], model_id)
 
-        generate_json_path(armetadata)
+        generate_json_path(armetadata, user=user)
         self._persistence.store_json(storage_json=armetadata['json_path'], ar_json=armetadata)
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
-
 
         return saved_model
 
@@ -1059,8 +1090,15 @@ class H2OHandler(object):
     # @param predict_frame pandas.DataFrame
     # @param base_ar ArMetadata
     # or compatible tuple (OrderedDict(), OrderedDict())
+    # @param **kwargs extra arguments
     # @return (String, [ArMetadata]) equivalent to (analysis_id, List[analysis_results])
-    def predict(self, predict_frame, base_ar):
+    def predict(self, predict_frame, base_ar, **kwargs):
+
+        user = 'guest'
+        for pname, pvalue in kwargs.items():
+            if pname == 'user':
+                user = str(pvalue)
+
         remove_model = False
         model_timestamp = str(time.time())
         self.analysis_id = base_ar['model_id']
@@ -1225,7 +1263,7 @@ class H2OHandler(object):
         base_ar['status'] = self._labels['success_op']
 
         # writing ar.json file
-        generate_json_path(base_ar)
+        generate_json_path(base_ar, user)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
         self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
