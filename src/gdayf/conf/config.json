@@ -2840,11 +2840,13 @@
         "hash_value": null, "hash_type":"MD5"
       },
     "mongoDB":
-      { "value": "http://localhost:0000",
+      { "value": "gdayf",
+        "url": "localhost",
+        "port": "33017",
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
-    "primary_path": "localfs",
+    "primary_path": "mongoDB",
     "grants": "0o644",
     "load_path": [
       {"value": "models" , "type":"hdfs",
@@ -2868,6 +2870,9 @@
       },
       {"value": "json" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"
+      },
+      {"value": "" , "type":"mongoDB",
+        "hash_value": null, "hash_type":"MD5"
       }
     ]
   },

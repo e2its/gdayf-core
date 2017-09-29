@@ -1054,8 +1054,6 @@ class H2OHandler(object):
         load_storage = StorageMetadata()
         for each_storage_type in load_storage.get_load_path():
             source_data = list()
-            if each_storage_type['type'] == 'hdfs':
-                source_data.append(self._config['storage'][each_storage_type['type']]['uri'])
             primary_path = self._config['storage'][each_storage_type['type']]['value']
             source_data.append(primary_path)
             source_data.append('/')
@@ -1073,6 +1071,9 @@ class H2OHandler(object):
             load_path = ''.join(source_data) + each_storage_type['value']+'/'
             self._persistence.mkdir(type=each_storage_type['type'], path=load_path,
                                     grants=int(self._config['storage']['grants'], 8))
+            if each_storage_type['type'] == 'hdfs':
+                load_path = self._config['storage'][each_storage_type['type']]['uri'] + load_path
+
             if self._get_ext() == '.pojo':
                 download_pojo(model=model_base, path=load_path, get_jar=True)
             elif self._get_ext() == '.mojo':
@@ -1082,10 +1083,11 @@ class H2OHandler(object):
             load_storage.append(value=load_path + model_id + self._get_ext(),
                                 fstype=each_storage_type['type'], hash_type=each_storage_type['hash_type'])
             saved_model = True
+
         armetadata['load_path'] = load_storage
+        print(armetadata['load_path'])
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["msaved"], model_id)
 
-        generate_json_path(armetadata, user=user)
         self._persistence.store_json(storage_json=armetadata['json_path'], ar_json=armetadata)
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
 

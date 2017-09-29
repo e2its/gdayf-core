@@ -20,14 +20,17 @@ import importlib
 from json import load
 from json.decoder import JSONDecodeError
 from time import time
-
+from pymongo import  MongoClient
+from pymongo.errors import *
+import bson
+from  bson.codec_options import CodecOptions
 
 ## Core class oriented to mange the comunication and execution messages pass for all components on system
 # orchestrating the execution of actions activities (train and prediction) on especific frameworks
 class Controller(object):
 
     ## Constructor
-    def __init__(self, user_id='PoC-gDayF'):
+    def __init__(self, user_id='PoC_gDayF'):
         self._config = LoadConfig().get_config()
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
@@ -53,74 +56,63 @@ class Controller(object):
         self._logging.log_exec('gDayF', "Controller", self._labels["primary_path"],
                                str(storage_conf['primary_path']))
 
-
         ''' Checking primary Json storage Paths'''
         primary = False
-        if storage_conf['primary_path'] in ['localfs', 'hdfs']:
-            for storage in StorageMetadata().get_json_path():
-                if storage_conf['primary_path'] == storage['type']:
-                    primary = True
-                if storage['type'] == 'mongoDB':
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_compatibility"],
-                                           str(storage['value']))
-                    return False
-                elif storage['type'] == 'localfs':
-                    if not localfs:
-                        self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
-                                               str(storage))
-                        return False
-                elif storage['type'] == 'hdfs':
-                    if not hdfs:
-                        self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
-                                               str(storage))
-                        return False
-            if not primary:
-                self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
-                                       str(storage_conf[storage_conf['primary_path']]))
-                return False
-        else:
-            for storage in StorageMetadata().get_json_path():
-                if storage['type'] == 'mongoDB':
-                    ''' Checking DB options'''
-                    if not mongoDB:
-                        return False
-                    else:
-                        if not self._coherence_db_checks(storage, user=self.user_id):
-                            return False
-                else:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_compatibility"],
-                                           str(storage))
-                    return False
-
-        ''' Checking Load storage Paths'''
-        primary = False
-        for storage in StorageMetadata().get_load_path():
+        #if storage_conf['primary_path'] in ['localfs', 'hdfs']:
+        for storage in StorageMetadata().get_json_path():
             if storage_conf['primary_path'] == storage['type']:
                 primary = True
             if storage['type'] == 'mongoDB':
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
-                                       str(storage))
-                return False
+                if not mongoDB:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                                           str(storage))
+                    return False
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
+
         if not primary:
             self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
                                    str(storage_conf[storage_conf['primary_path']]))
             return False
 
+        ''' Checking Load storage Paths'''
+        at_least_on = False
+        for storage in StorageMetadata().get_load_path():
+            if storage['type'] == 'mongoDB':
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
+                                       str(storage))
+                return False
+            elif storage['type'] == 'localfs':
+                if not localfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
+            elif storage['type'] == 'hdfs':
+                if not hdfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
+
+        if not at_least_on:
+            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+                                   str(storage_conf[storage_conf['primary_path']]))
+            return False
+
         ''' Checking log storage Paths'''
-        primary = False
+        at_least_on = False
         for storage in StorageMetadata().get_log_path():
-            if storage_conf['primary_path'] == storage['type']:
-                primary = True
             if storage['type'] == 'mongoDB':
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
                                        str(storage))
@@ -130,12 +122,16 @@ class Controller(object):
                     self._logging.log_exec('gDayF', "Controller", self._labels["failed_log"],
                                            str(storage))
                     return False
+                else:
+                    at_least_on = at_least_on or True
             elif storage['type'] == 'hdfs':
                 if not hdfs:
                     self._logging.log_exec('gDayF', "Controller", self._labels["failed_log"],
                                            str(storage))
                     return False
-        if not primary:
+                else:
+                    at_least_on = at_least_on or True
+        if not at_least_on:
             self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
                                    str(storage_conf[storage_conf['primary_path']]))
             return False
@@ -160,6 +156,24 @@ class Controller(object):
         return True
 
     def _coherence_db_checks(self, storage, user):
+        if storage['type'] == 'mongoDB':
+            try:
+                client = MongoClient(host=storage['url'],
+                                     port=int(storage['port']),
+                                     document_class=OrderedDict)
+            except ConnectionFailure as cexecution_error:
+                print(repr(cexecution_error))
+                return False
+            try:
+                db = client[storage['value']]
+                collection = db[user]
+                test_insert = collection.insert_one({'test': 'connection.check.dot.bson'}).inserted_id
+                collection.delete_one({"_id": test_insert})
+            except PyMongoError as wexecution_error:
+                print(repr(wexecution_error))
+                return False
+            finally:
+                client.close()
         return True
 
 
@@ -574,14 +588,18 @@ class Controller(object):
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
     # @param  store True/False
     # @return OrderedDict() with execution tree data Analysis
-    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True):
-        if arlist is None or len(arlist) == 0:
+    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None, user='guest'):
+        if (arlist is None or len(arlist) == 0) and experiment is None:
             self._logging.log_exec('gDayF', 'controller', self._labels["failed_model"])
             return None
+        elif experiment is not None and user != 'guest':
+            analysis_id = experiment
+            new_arlist = PersistenceHandler().recover_experiment_mongoDB(analysis_id=experiment, user=user)
         else:
             analysis_id = arlist[0]['model_id']
+            new_arlist = arlist
 
-        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=arlist, metric=metric)
+        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=new_arlist, metric=metric)
 
         root = OrderedDict()
         root['data'] = None
@@ -625,7 +643,7 @@ class Controller(object):
             level += 1
 
         #Store_json on primary path
-        if store:
+        if store and self._config['storage']['primary_path'] != 'mongoDB':
             primary_path = self._config['storage']['primary_path']
             fstype = self._config['storage'][primary_path]['type']
 
