@@ -7,7 +7,7 @@
       "conf": {
         "download_dir": "downloads",
         "url": "http://127.0.0.1:54321",
-        "nthreads": 4,
+        "nthreads": 3,
         "ice_root": "/Data/Data/logs",
         "max_mem_size": "8G",
         "start_h2o": true,
@@ -15,15 +15,17 @@
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : true,
-        "min_rows_enabled": true,
+        "min_rows_enabled": false,
+        "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
         "validation_frame_threshold" : 100000,
         "anomaly_threshold":
         {
           "columns" :0.15,
-          "global_mse":0.05
-        }
+          "global_mse":0.10
+        },
+        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"]
       },
       "models": [
         {
@@ -31,6 +33,7 @@
           "id": null,
           "module": "h2o.estimators.gbm",
           "min_rows_applicability": 0,
+          "max_cols_applicability": 50,
           "enabled": true,
           "types": [
             {
@@ -109,7 +112,7 @@
             },
             "effort":{
               "ntrees": {
-                "value": 50,
+                "value": 20,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -216,7 +219,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                  "value": 2.0,
+                  "value": 16.0,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -377,6 +380,7 @@
           "id": null,
           "module": "h2o.estimators.glm",
           "min_rows_applicability": 0,
+          "max_cols_applicability": null,
           "enabled": true,
           "types": [
             {
@@ -455,7 +459,7 @@
             },
             "effort":{
               "max_iterations": {
-                "value": 5000,
+                "value": 1000,
                 "seleccionable": true,
                 "type": "int"
               }
@@ -692,7 +696,8 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 100000,
+          "min_rows_applicability": 25000,
+          "max_cols_applicability": null,
           "enabled": true,
           "types": [
             {
@@ -771,17 +776,17 @@
             },
             "effort":{
               "epochs": {
-                "value": 20.0,
+                "value": 5.0,
                 "seleccionable": true,
                 "type": "float"
               },
               "mini_batch_size": {
-                "value": 128,
+                "value": 256,
                 "seleccionable": true,
                 "type": "int"
               },
               "hidden": {
-                "value": [112, 75],
+                "value": [75, 50],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -1229,6 +1234,7 @@
           "id": null,
           "module": "h2o.estimators.random_forest",
           "min_rows_applicability": 0,
+          "max_cols_applicability": 50,
           "enabled": true,
           "types": [
             {
@@ -1307,12 +1313,12 @@
             },
             "effort":{
               "ntrees": {
-                "value": 25,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               },
               "max_depth": {
-                "value": 10,
+                "value": 5,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -1419,7 +1425,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                  "value":2.0,
+                  "value":8.0,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -1533,6 +1539,7 @@
           "id": null,
           "module": "h2o.estimators.naive_bayes",
           "min_rows_applicability": 0,
+          "max_cols_applicability": null,
           "enabled": true,
           "types": [
             {
@@ -1719,6 +1726,7 @@
           "id": null,
           "module": "h2o.estimators.xgboost",
           "min_rows_applicability": 0,
+          "max_cols_applicability": 50,
           "enabled": false,
           "types": [
             {
@@ -1899,7 +1907,7 @@
             },
             "sampling":{
               "min_rows": {
-                  "value": 2.0,
+                  "value": 16.0,
                   "seleccionable": true,
                   "type": "float"
               },
@@ -2066,6 +2074,7 @@
           "id": null,
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 0,
+          "max_cols_applicability": null,
           "enabled": true,
           "types": [
             {
@@ -2149,7 +2158,7 @@
                 "type": "float"
               },
               "mini_batch_size": {
-                "value": 128,
+                "value": 256,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -2572,6 +2581,7 @@
           "id": null,
           "module": "h2o.estimators.kmeans",
           "min_rows_applicability": 0,
+          "max_cols_applicability": null,
           "enabled": true,
           "types": [
             {
@@ -2889,13 +2899,14 @@
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
+    "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.005
       },
       "h2o": {
         "nfold_limit": 8,
-        "min_rows_limit": 10,
+        "min_rows_limit": 4,
         "cols_breakdown": 200,
         "nfold_increment": 2,
         "min_rows_increment": 2,
@@ -2930,6 +2941,22 @@
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
         "clustering_increment": 2.0
+      }
+    },
+    "common": {
+      "base_increment": {
+        "small": {
+          "base": 20000,
+          "increment": 2.0
+        },
+        "medium": {
+          "base": 5000000,
+          "increment": 4.0
+        },
+        "large": {
+          "base": 50000000,
+          "increment": 8.0
+        }
       }
     }
   },

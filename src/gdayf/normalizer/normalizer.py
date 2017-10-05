@@ -71,6 +71,9 @@ class Normalizer (object):
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
+                        if int(description['cardinality']) == 1:
+                            normoption.set_ignore_column()
+                            norms.append({col: normoption.copy()})
                         if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
                             normoption.set_stdmean(description['mean'], description['std'])
                             norms.append({col: normoption.copy()})

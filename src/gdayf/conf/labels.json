@@ -86,6 +86,7 @@
         "ana_type": "Starting Recommendation Analysis Type (round):",
         "new_vector": "Generating new Model with Vector Params: ",
         "exc_vector": "Excluding Executed Model with Vector Params: ",
+        "inc_application": "Applying increment based on data size: ",
         "exc_applicability": "Excluding Model based on applicability limits: "
       },
       "persistence" : {},

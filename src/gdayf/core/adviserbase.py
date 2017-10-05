@@ -38,6 +38,7 @@ class Adviser(object):
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
         self._labels = LoadLabels().get_config()['messages']['adviser']
+        self._config = LoadConfig().get_config()['optimizer']
         self._logging = LogsHandler()
         self.timestamp = time()
         self.analysis_id = analysis_id
@@ -122,7 +123,7 @@ class Adviser(object):
                 try:
                     model = self.analysis_recommendation_order[indexer]
                     model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models and len(best_models) < 2:
+                    if model_type not in best_models and len(best_models) < self._config['adviser_normal_wide']:
                         fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
                         #print("Trace:%s-%s" % (model_type, best_models))
                         best_models.append(model_type)
@@ -378,7 +379,8 @@ class Adviser(object):
         if objective_column is None:
             supervised = False
 
-        fw_model_list = self.get_candidate_models(self.an_objective, amode)
+        increment = self.get_size_increment(dataframe_metadata)
+        fw_model_list = self.get_candidate_models(self.an_objective, amode, increment=increment)
 
         aux_model_list = list()
         norm = Normalizer()
@@ -391,7 +393,7 @@ class Adviser(object):
             aux_model_list.append((fw, model, deepcopy(minimal_nmd)))
         fw_model_list = aux_model_list
 
-        self.applicability(fw_model_list, nrows=dataframe_metadata['rowcount'])
+        self.applicability(fw_model_list, nrows=dataframe_metadata['rowcount'], ncols=dataframe_metadata['cols'])
 
         nmd = norm.define_normalizations(dataframe_metadata=dataframe_metadata,
                                          objective_column=objective_column,
@@ -455,12 +457,29 @@ class Adviser(object):
                     return ATypesMetadata(regression=True)
         return None
 
+    ## Method oriented to analyze get increments on effort based on DF_metadata structure
+    # @param self object pointer
+    # @param df_metadata DfMetada
+    # @return float increment
+    def get_size_increment(self, df_metadata):
+        base = LoadConfig().get_config()['optimizer']['common']['base_increment']
+        increment = 1.0
+        variabilizations = df_metadata['rowcount'] * df_metadata['cols']
+        for _ , pvalue in base.items():
+            if variabilizations > pvalue['base'] and increment < pvalue['increment']:
+                increment = pvalue['increment']
+        self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
+                               increment)
+        return increment
+
+
     ## Method oriented to analyze choose models candidate and select analysis objective
     # @param self object pointer
     # @param atype ATypesMetadata
     # @param amode Analysismode
+    # @param increment increment x size
     # @return FrameworkMetadata()
-    def get_candidate_models(self, atype, amode):
+    def get_candidate_models(self, atype, amode, increment=1.0):
         defaultframeworks = self.load_frameworks()
         model_list = list()
         for fw, fw_value in defaultframeworks.items():
@@ -471,7 +490,7 @@ class Adviser(object):
                         for each_type in each_base_model['types']:
                             if each_type['active'] and each_type['type'] == atype[0]['type']:
                                 modelbase = H2OModelMetadata()
-                                model = modelbase.generate_models(each_base_model['model'], atype, amode)
+                                model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
                                 wfw.models.append(model)
                                 model_list.append((fw, model, None))
         return model_list
@@ -480,8 +499,9 @@ class Adviser(object):
     # @param self object pointer
     # @param model_list List[ArMetadata]
     # @param nrows number of rows of dataframe
+    # @param ncols number of cols of dataframe
     # @return implicit List[ArMetadata]
-    def applicability(self, model_list, nrows):
+    def applicability(self, model_list, nrows, ncols):
         fw_config = LoadConfig().get_config()['frameworks']
         exclude_model = list()
         for iterator in range(0, len(model_list)):
@@ -489,8 +509,14 @@ class Adviser(object):
             model = model_list[iterator][1]
             if fw_config[fw]['conf']['min_rows_enabled'] and (nrows < model['min_rows_applicability']):
                 self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
-                                       model['model'] + ' - ' +
+                                       model['model'] + ' - ' + 'rows < ' +
                                        str(model['min_rows_applicability']))
+                exclude_model.append(model_list[iterator])
+            if fw_config[fw]['conf']['max_cols_enabled'] and model['max_cols_applicability'] is not None \
+                    and(ncols > model['max_cols_applicability']):
+                self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                                       model['model'] + ' - ' + 'cols > ' +
+                                       str(model['max_cols_applicability']))
                 exclude_model.append(model_list[iterator])
         for model in exclude_model:
            model_list.remove(model)

@@ -30,14 +30,28 @@ class MultinomialMetricMetadata(MetricMetadata):
     def set_h2ometrics(self, perf_metrics):
         for parameter, _ in self.items():
             if parameter in ['hit_ratio_table']:
-                self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                try:
+                    self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                except KeyError as kexecution_error:
+                    print(repr(kexecution_error))
+                except AttributeError as aexecution_error:
+                    print(repr(aexecution_error))
+                except TypeError as texecution_error:
+                    print(repr(texecution_error))
             elif parameter in ['cm']:
-                self[parameter] = \
-                    perf_metrics._metric_json[parameter]['table'].as_data_frame().to_json(orient='split')
+                try:
+                    self[parameter] = \
+                        perf_metrics._metric_json[parameter]['table'].as_data_frame().to_json(orient='split')
+                except KeyError as kexecution_error:
+                    print(repr(kexecution_error))
+                except AttributeError as aexecution_error:
+                    print(repr(aexecution_error))
+                except TypeError as texecution_error:
+                    print(repr(texecution_error))
             else:
                 try:
                     self[parameter] = perf_metrics._metric_json[parameter]
-                except KeyError:
-                    pass
-                except AttributeError:
-                    pass
+                except KeyError as kexecution_error:
+                    print(repr(kexecution_error))
+                except AttributeError as aexecution_error:
+                    print(repr(aexecution_error))

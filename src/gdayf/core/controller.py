@@ -10,7 +10,6 @@ from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data, hash_key
 from gdayf.common.armetadata import ArMetadata
 from gdayf.common.armetadata import deep_ordered_copy
-from gdayf.persistence.persistencehandler import get_ar_from_file
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.storagemetadata import StorageMetadata
 from collections import OrderedDict
@@ -24,6 +23,7 @@ from pymongo import  MongoClient
 from pymongo.errors import *
 import bson
 from  bson.codec_options import CodecOptions
+from hashlib import md5
 
 ## Core class oriented to mange the comunication and execution messages pass for all components on system
 # orchestrating the execution of actions activities (train and prediction) on especific frameworks
@@ -198,13 +198,21 @@ class Controller(object):
         elif model_file is not None:
             try:
                 #json_file = open(model_file)
-                _, base_ar = get_ar_from_file(model_file)
+                persistence = PersistenceHandler()
+                _, base_ar = persistence.get_ar_from_file(model_file)
+                del persistence
                 base_ar = deep_ordered_copy(base_ar)
                 '''base_ar = deep_ordered_copy(load(json_file))
                 json_file.close()'''
-            except [IOError, OSError]:
+            except IOError as iexecution_error:
+                print(repr(iexecution_error))
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
+            except OSError as oexecution_error:
+                print(repr(oexecution_error))
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                return self._labels["failed_model"]
+
 
         if isinstance(datapath, str):
             try:
@@ -280,6 +288,7 @@ class Controller(object):
         # Clustering variables
         k = None
         estimate_k = False
+        hash_dataframe = ''
 
         for pname, pvalue in kwargs.items():
             if pname == 'k':
@@ -322,6 +331,7 @@ class Controller(object):
                           '_' + str(pd_dataset.size) + \
                           '_' + str(pd_dataset.shape[0]) + \
                           '_' + str(pd_dataset.shape[1])
+            hash_dataframe = md5(datapath.to_msgpack()).hexdigest()
         else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input'], None

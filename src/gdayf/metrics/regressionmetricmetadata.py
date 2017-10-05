@@ -28,19 +28,19 @@ class RegressionMetricMetadata(MetricMetadata):
         for parameter, _ in self.items():
             try:
                 self[parameter] = perf_metrics._metric_json[parameter]
-            except KeyError:
-                pass
-            except AttributeError:
-                pass
+            except KeyError as kexecution_error:
+                print(repr(kexecution_error))
+            except AttributeError as aexecution_error:
+                print(repr(aexecution_error))
 
-    ## Method to load Regression metrics from H2ORegressionModelMetrics class
+    ''''## Method to load Regression metrics from H2ORegressionModelMetrics class
     # @param self objetct pointer
     # @param perf_metrics H2ORegressionModelMetrics
     def set_h2ometrics(self, perf_metrics):
         for parameter, _ in self.items():
             try:
                 self[parameter] = perf_metrics._metric_json[parameter]
-            except KeyError:
-                pass
-            except AttributeError:
-                pass
+            except KeyError as kexecution_error:
+                print(repr(kexecution_error))
+            except AttributeError as aexecution_error:
+                print(repr(aexecution_error))'''

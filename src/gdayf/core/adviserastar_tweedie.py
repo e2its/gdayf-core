@@ -98,10 +98,11 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['nfolds']['value'] += nfold_increment
                     self.safe_append(model_list, new_armetadata)
-                if model['parameters']['min_rows']['value'] < min_rows_limit:
+                if model['parameters']['min_rows']['value'] > min_rows_limit:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['min_rows']['value'] += min_rows_increment
+                    model_aux['parameters']['min_rows']['value'] = round(model_aux['parameters']['min_rows']['value']
+                                                                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2OGeneralizedLinearEstimator':
@@ -295,10 +296,11 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['mtries']['value'] = round(armetadata['data_initial']['cols']*3/4)
                     self.safe_append(model_list, new_armetadata)
-                if model['parameters']['min_rows']['value'] < min_rows_limit:
+                if model['parameters']['min_rows']['value'] > (min_rows_limit/2):
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['min_rows']['value'] += min_rows_increment
+                    model_aux['parameters']['min_rows']['value'] = round(model_aux['parameters']['min_rows']['value']
+                                                                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ONaiveBayesEstimator':

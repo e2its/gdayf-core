@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     source_data = list()
     source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
-    source_data.append("DM-Metric-missing.csv")
+    source_data.append("DM-Metric-missing-2.csv")
 
     #Generating missing values
 
@@ -16,7 +16,7 @@ if __name__ == "__main__":
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
                                                           objective_column='Weather_Temperature',
-                                                          amode=FAST, metric='rmse', deep_impact=3)
+                                                          amode=FAST, metric='rmse', deep_impact=5)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined', accuracy=True)
 
@@ -32,14 +32,14 @@ if __name__ == "__main__":
     
         execution_tree = controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=False,
                                                                user=controller.user_id,
-                                                               experiment=recomendations[0]['model_id'])
+                                                               experiment=recomendations[0]['model_id'])'''
     
-        controller.remove_models(recomendations, mode=ALL)'''
+        controller.remove_models(recomendations, mode=ALL)
 
         #Prediction
         source_data = list()
         source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
-        source_data.append("DM-Metric-missing-test.csv")
+        source_data.append("DM-Metric-missing-test-2.csv")
         #source_data.append("DM-Metric-missing-test-weather.csv")
 
         #Prediccion

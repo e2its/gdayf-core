@@ -266,7 +266,6 @@ class PersistenceHandler(object):
                 client.close()
 
     ## Method used to recover an experiment as [ar_metadata]
-    # Not implemented yet!
     # oriented to store full Analysis_results json but useful on whole json
     # @param self object pointer
     # @param user user_id
@@ -361,7 +360,7 @@ class PersistenceHandler(object):
 
     ## Static protected method used to check and make directory
     # on ['mongoDB']
-    # Not implemented yet!
+    # Not necessary throught pymongo!
     # @param self object pointer
     # @param path directory or persistence structure to be created
     # @param grants on a 0o#### format (octalpython format)
@@ -373,21 +372,57 @@ class PersistenceHandler(object):
         except IOError:
             return 1
 
-## Function base to get an ArMetadata Structure from file
-# @param path FilePath
-# @return operation status (0 success /1 error, ArMetadata/None)
-def get_ar_from_file(path):
-    if ospath.exists(path):
-        _, type = mimetypes.guess_type(path)
-        if type == 'gzip':
-            file = gzip.GzipFile(path, 'r')
-            json_bytes = file.read()
-            json_str = json_bytes.decode('utf-8')
-            ar_metadata = loads(json_str, object_hook=OrderedDict)
-        else:
-            file = open(path, 'r')
-            ar_metadata = load(file, object_hook=OrderedDict)
-        file.close()
-        return 0, ar_metadata
-    else:
-        return 1, None
+    ## Method base to get an ArMetadata Structure from file
+    # @param self object pointer
+    # @param path FilePath
+    # @param fstype [localfs, hdfs]
+    # @return operation status (0 success /1 error, ArMetadata/None)
+    def get_ar_from_file(self, path):
+        found = False
+        for storage in  ['localfs', 'hdfs']:
+            if storage == 'localfs' and not found:
+                if ospath.exists(path):
+                    _, type = mimetypes.guess_type(path)
+                    if type == 'gzip':
+                        file = gzip.GzipFile(filename=path, mode='r')
+                        json_bytes = file.read()
+                        json_str = json_bytes.decode('utf-8')
+                        ar_metadata = loads(json_str, object_hook=OrderedDict)
+                    else:
+                        file = open(path, 'r')
+                        ar_metadata = load(file, object_hook=OrderedDict)
+                    file.close()
+                    return 0, ar_metadata
+            elif storage == 'hdfs' and not found:
+                url = self._config[storage]['url']
+                client = Client(url=url)
+                remove_client = True
+                try:
+                    print(path)
+                    if client.status(hdfs_path=path, strict=False) is not None:
+                        _, type = mimetypes.guess_type(path)
+                        if type == 'gzip':
+                            with client.read(path) as file_hdfs:
+                                file = gzip.GzipFile(fileobj=file_hdfs)
+                                json_bytes = file.read()
+                                json_str = json_bytes.decode('utf-8')
+                                ar_metadata = loads(json_str, object_hook=OrderedDict)
+                                file.close()
+                        else:
+                            with client.read(path) as file_hdfs:
+                                json_bytes = file_hdfs.read()
+                                json_str = json_bytes.decode('utf-8')
+                                ar_metadata = loads(json_str, object_hook=OrderedDict)
+                        return 0, ar_metadata
+                except HdfsError as hexecution_error:
+                    print(repr(hexecution_error))
+                    return 1
+                except IOError as iexecution_error:
+                    print(repr(iexecution_error))
+                    return 1
+                except OSError as oexecution_error:
+                    print(repr(oexecution_error))
+                    return 1
+                finally:
+                    if remove_client:
+                        del client

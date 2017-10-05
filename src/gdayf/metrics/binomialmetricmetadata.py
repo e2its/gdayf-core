@@ -46,19 +46,30 @@ class BinomialMetricMetadata(MetricMetadata):
             if parameter in ['gains_lift_table', 'max_criteria_and_metric_scores']:
                 try:
                     self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
-                except KeyError:
-                    pass
+                except KeyError as kexecution_error:
+                    print(repr(kexecution_error))
+                except AttributeError as aexecution_error:
+                    print(repr(aexecution_error))
+                except TypeError as texecution_error:
+                    print(repr(texecution_error))
             elif parameter in ['cm']:
                 for each_parameter, __ in self['cm'].items():
-                    self['cm'][each_parameter] = \
-                        perf_metrics.confusion_matrix(
-                            metrics=each_parameter).table.as_data_frame().to_json(orient='split')
+                    try:
+                        self['cm'][each_parameter] = \
+                            perf_metrics.confusion_matrix(
+                                metrics=each_parameter).table.as_data_frame().to_json(orient='split')
+                    except KeyError as kexecution_error:
+                        print(repr(kexecution_error))
+                    except AttributeError as aexecution_error:
+                        print(repr(aexecution_error))
+                    except TypeError as texecution_error:
+                        print(repr(texecution_error))
             elif parameter in ['thresholds_and_metric_scores']:
                 pass
             else:
                 try:
                     self[parameter] = perf_metrics._metric_json[parameter]
-                except KeyError:
-                    pass
-                except AttributeError:
-                    pass
+                except KeyError as kexecution_error:
+                    print(repr(kexecution_error))
+                except AttributeError as aexecution_error:
+                    print(repr(aexecution_error))
