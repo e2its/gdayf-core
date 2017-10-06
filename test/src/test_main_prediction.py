@@ -32,5 +32,15 @@ if __name__ == "__main__":
                                                       model_file="/Data/gdayf/experiments/PoC_gDayF/PoC_gDayF_DM-Metric-missing-2.csv_1507211446.5940318/h2o/train/1507211446.600468/json/H2ODeepLearningEstimator_1507211469.8011096.json.gz")
         pprint(prediction_frame[['Weather_Temperature', 'predict']])
 
+        source_data = list()
+        source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
+        source_data.append("DM-Metric-missing-test-2.csv")
+
+        # Prediccion
+        prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
+                                                      model_file="/PoC_gDayF/PoC_gDayF_DM-Metric-missing-2.csv_1507211446.5940318/H2ODeepLearningEstimator_1507211469.8011096")
+        pprint(prediction_frame[['Weather_Temperature', 'predict']])
+
+
 
     del controller

@@ -97,7 +97,6 @@ class H2OHandler(object):
             H2Oapi("POST /3/GarbageCollect")
             self._h2o_session.close()
 
-
     ## Class Method for cluster shutdown
     # @param cls class pointer
     @classmethod
@@ -220,7 +219,6 @@ class H2OHandler(object):
                                    self._model_base.model_id)
 
         return load_fails
-
 
     ## Generate list of models_id for internal crossvalidation objects_
     # @param self object pointer

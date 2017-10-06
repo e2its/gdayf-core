@@ -176,7 +176,6 @@ class Controller(object):
                 client.close()
         return True
 
-
     ## Method leading and controlling prediction's executions on all frameworks
     # @param self object pointer
     # @param datapath String Path indicating file to be analyzed or Dataframe
@@ -199,11 +198,13 @@ class Controller(object):
             try:
                 #json_file = open(model_file)
                 persistence = PersistenceHandler()
-                _, base_ar = persistence.get_ar_from_file(model_file)
+                _, base_ar = persistence.get_ar_from_engine(model_file)
                 del persistence
-                base_ar = deep_ordered_copy(base_ar)
                 '''base_ar = deep_ordered_copy(load(json_file))
                 json_file.close()'''
+                if base_ar is None:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                    return self._labels["failed_model"]
             except IOError as iexecution_error:
                 print(repr(iexecution_error))
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
@@ -212,7 +213,6 @@ class Controller(object):
                 print(repr(oexecution_error))
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
-
 
         if isinstance(datapath, str):
             try:
@@ -562,11 +562,10 @@ class Controller(object):
             model_list = list()
             for model in arlist:
                 if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
-                    model['normalizations_set']) not in exclusion:
-                    model_list.append(model)
-                    exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
-                                      model['normalizations_set'])
-                                     )
+                        model['normalizations_set']) not in exclusion:
+                        model_list.append(model)
+                        exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
+                                          model['normalizations_set']))
         elif mode == ALL:
             model_list = arlist
         for fw in self._config['frameworks'].keys():

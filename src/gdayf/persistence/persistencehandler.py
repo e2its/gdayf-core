@@ -181,7 +181,6 @@ class PersistenceHandler(object):
             print(repr(iexecution_error))
             return 1
 
-
     ## Method used to store a json on ['hdfs'] persistence system
     # oriented to store full Analysis_results json but useful on whole json
     # @param self object pointer
@@ -375,11 +374,11 @@ class PersistenceHandler(object):
     ## Method base to get an ArMetadata Structure from file
     # @param self object pointer
     # @param path FilePath
-    # @param fstype [localfs, hdfs]
+    # @param fstype [localfs, hdfs, mongoDB]
     # @return operation status (0 success /1 error, ArMetadata/None)
-    def get_ar_from_file(self, path):
+    def get_ar_from_engine(self, path):
         found = False
-        for storage in  ['localfs', 'hdfs']:
+        for storage in ['localfs', 'hdfs', 'mongoDB']:
             if storage == 'localfs' and not found:
                 if ospath.exists(path):
                     _, type = mimetypes.guess_type(path)
@@ -416,13 +415,52 @@ class PersistenceHandler(object):
                         return 0, ar_metadata
                 except HdfsError as hexecution_error:
                     print(repr(hexecution_error))
-                    return 1
+                    return 1, repr(hexecution_error)
                 except IOError as iexecution_error:
                     print(repr(iexecution_error))
-                    return 1
+                    return 1, repr(iexecution_error)
                 except OSError as oexecution_error:
                     print(repr(oexecution_error))
-                    return 1
+                    return 1, repr(oexecution_error)
                 finally:
                     if remove_client:
                         del client
+            elif storage == 'mongoDB' and not found:
+                try:
+                    client = MongoClient(host=self._config['mongoDB']['url'],
+                                         port=int(self._config['mongoDB']['port']),
+                                         document_class=OrderedDict)
+                    remove_client = True
+                except ConnectionFailure as cexecution_error:
+                    print(repr(cexecution_error))
+                    return 1, repr(cexecution_error)
+                try:
+                    db = client[self._config['mongoDB']['value']]
+                    description = Path(path).parts
+                    if description[1] is not None  \
+                            and description[2] is not None \
+                            and description[3] is not None \
+                            and description[1] in db.collection_names():
+
+                        collection = db[description[1]]
+                        query1 = {"$and": [{"model_id": description[2]},
+                                           {'type': 'train'}]
+                                  }
+                        for element in collection.find(query1):
+                            if element['model_parameters'][get_model_fw(element)]['parameters']['model_id']['value'] \
+                                    == description[3]:
+                                element.pop('_id')
+                                print(element)
+                                return 0, element
+                        return 1, None
+
+                    else:
+                        return 1, None
+                except PyMongoError as pexecution_error:
+                    print(repr(pexecution_error))
+                    return 1, repr(pexecution_error)
+                finally:
+                    if remove_client:
+                        client.close()
+
+        return 1, None
