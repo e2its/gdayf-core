@@ -190,7 +190,7 @@ class H2OHandler(object):
                                        self._labels["down_path"], download_path)
                 persistence = PersistenceHandler()
                 persistence.mkdir(type=each_storage_type['type'], path=str(download_path),
-                                  grants=int(self._config['storage']['grants'], 8))
+                                  grants=int(self._config['storage']['grants']))
 
                 if type.upper() == 'MOJO':
                     try:
@@ -883,7 +883,8 @@ class H2OHandler(object):
                 log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
                 final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
                                                   hash_type=each_storage_type['hash_type'])
-            self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'], grants=0o0777,
+            self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'],
+                                    grants=int(self._config['storage']['grants']),
                                     path=dirname(final_ar_model['log_path'][0]['value']))
             connection().start_logging(final_ar_model['log_path'][0]['value'])
 
@@ -1068,7 +1069,7 @@ class H2OHandler(object):
 
             load_path = ''.join(source_data) + each_storage_type['value']+'/'
             self._persistence.mkdir(type=each_storage_type['type'], path=load_path,
-                                    grants=int(self._config['storage']['grants'], 8))
+                                    grants=int(self._config['storage']['grants']))
             if each_storage_type['type'] == 'hdfs':
                 load_path = self._config['storage'][each_storage_type['type']]['uri'] + load_path
 
@@ -1203,7 +1204,7 @@ class H2OHandler(object):
                 each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
                     .replace('.log', '_' + model_timestamp + '.log')
 
-            self._persistence.mkdir(type=base_ar['log_path'][0]['type'], grants=0o0777,
+            self._persistence.mkdir(type=base_ar['log_path'][0]['type'], grants=int(self._config['storage']['grants']),
                                     path=dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
 

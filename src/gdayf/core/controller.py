@@ -139,22 +139,31 @@ class Controller(object):
         ''' If all things OK'''
         return True
 
+    ## Method leading configurations coherence checks on fs engines
+    # @param self object pointer
+    # @param storage StorageMetadata
+    # @param grants Octal grants format
+    # @return True if OK / False if wrong
     def _coherence_fs_checks(self, storage, grants):
-        if not Path(storage['value']).is_dir():
-            persistence = PersistenceHandler()
-            try:
-                if persistence.mkdir(type=storage['type'], path=str(storage['value']), grants=grants):
-                    return False
-            except OSError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_json_path"],
-                                       str(storage['value']))
+        persistence = PersistenceHandler()
+        try:
+            if persistence.mkdir(type=storage['type'], path=str(storage['value']), grants=grants):
                 return False
+        except OSError:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_json_path"],
+                                   str(storage['value']))
+            return False
         if storage['hash_type'] not in ['MD5', 'SHA256']:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_hash_method"],
                                    str(storage))
             return False
         return True
 
+    ## Method leading configurations coherence checks on fs engines
+    # @param self object pointer
+    # @param storage StorageMetadata
+    # @param user user_id
+    # @return True if OK / False if wrong
     def _coherence_db_checks(self, storage, user):
         if storage['type'] == 'mongoDB':
             try:

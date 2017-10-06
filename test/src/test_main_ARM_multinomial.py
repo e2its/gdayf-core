@@ -14,7 +14,7 @@ if __name__ == "__main__":
     # Analysis
     controller = Controller()
     if controller.config_checks():
-        '''status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
+        status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
                                                           objective_column='ATYPE',
                                                           amode=FAST, metric='combined', deep_impact=4)
 
@@ -23,18 +23,17 @@ if __name__ == "__main__":
         controller.save_models(recomendations, mode=EACH_BEST)
 
         # Analisis especifico
-        status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
+        '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
                                                             list_ar_metadata=recomendations[-3:-2],
                                                             metric='rmse', deep_impact=3)
 
-        recomendations.extend(recomendations2)
-
+        recomendations.extend(recomendations2)'''
 
         execution_tree = controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=False,
                                                                user=controller.user_id,
-                                                               experiment=recomendations[0]['model_id'])'''
+                                                               experiment=recomendations[0]['model_id'])
 
-        '''controller.remove_models(recomendations, mode=ALL)'''
+        controller.remove_models(recomendations, mode=ALL)
 
         # Prediction
         source_data = list()
@@ -44,7 +43,7 @@ if __name__ == "__main__":
 
         # Prediccion
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
-                                                      model_file="/Data/gdayf/experiments/PoC_gDayF/PoC_gDayF_ARM-Metric-train.csv_1507189780.8088667/h2o/train/1507189780.8147936/json/H2OGradientBoostingEstimator_1507192215.0619168.json.gz")
+                                                      model_file=recomendations[0]['json_path'][0]['value'])
         pprint(prediction_frame[['ATYPE', 'predict']])
         # pprint(prediction_frame)
 

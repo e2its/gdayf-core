@@ -103,7 +103,7 @@ class Adviser(object):
                 try:
                     model = self.analysis_recommendation_order[indexer]
                     model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models:
+                    if model_type not in best_models and len(best_models) < self._config['adviser_L2_wide']:
                         fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
                         best_models.append(model_type)
                 except TypeError:
@@ -471,7 +471,6 @@ class Adviser(object):
         self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
                                increment)
         return increment
-
 
     ## Method oriented to analyze choose models candidate and select analysis objective
     # @param self object pointer

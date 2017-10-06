@@ -76,7 +76,7 @@ class PersistenceHandler(object):
             return 1, None
         try:
             self._mkdir_hdfs(path=dirname(storage_json['value']),
-                             grants=int(self._config['grants'], 8),
+                             grants=int(self._config['grants']),
                              client=client)
             with client.write(storage_json['value'], encoding='utf-8', overwrite=True) as wfile:
                 mmap_.seek(0)
@@ -110,7 +110,7 @@ class PersistenceHandler(object):
     def _store_file_to_localfs(self, storage_json, mmap_):
         if not ospath.exists(path=storage_json['value']):
             try:
-                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
+                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants']))
                 with open(storage_json['value'], 'wb') as wfile:
                     mmap_.seek(0)
                     iterator = 0
@@ -119,7 +119,7 @@ class PersistenceHandler(object):
                         wfile.flush()
                         iterator += 1
                     wfile.close()
-                    chmod(storage_json['value'], int(self._config['grants'], 8))
+                    chmod(storage_json['value'], int(self._config['grants']))
             except IOError:
                 return 1, None
 
@@ -164,7 +164,7 @@ class PersistenceHandler(object):
         compress = LoadConfig().get_config()['persistence']['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
-            self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
+            self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants']))
             if compress:
                 file = gzip.GzipFile(storage_json['value'], 'w')
                 print(ar_json)
@@ -175,7 +175,7 @@ class PersistenceHandler(object):
                 file = open(storage_json['value'], 'w')
                 dump(ar_json, file, indent=4)
             file.close()
-            chmod(storage_json['value'], int(self._config['grants'], 8))
+            chmod(storage_json['value'], int(self._config['grants']))
             return 0
         except IOError as iexecution_error:
             print(repr(iexecution_error))
@@ -197,7 +197,7 @@ class PersistenceHandler(object):
         #if not ospath.exists(storage_json['value']):
         try:
             self._mkdir_hdfs(path=dirname(storage_json['value']),
-                             grants=int(self._config['grants'], 8),
+                             grants=int(self._config['grants']),
                              client=client)
             if compress:
                 json_str = dumps(ar_json, indent=4)
