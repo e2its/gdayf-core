@@ -15,11 +15,6 @@ if __name__ == "__main__":
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
 
         controller.save_models(recomendations, mode=BEST_3)
-        '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                            list_ar_metadata=recomendations[-3:-2],
-                                                            metric='test_accuracy', deep_impact=3)
-    
-        recomendations.extend(recomendations2)'''
         controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
         controller.remove_models(recomendations, mode=ALL)
 

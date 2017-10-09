@@ -13,12 +13,14 @@ if __name__ == "__main__":
                                                           amode=CLUSTERING, metric='cdistance', deep_impact=10,
                                                           k=6, estimate_k=True)
 
-        controller.save_models(recomendations)
+        controller.save_models(recomendations, mode=EACH_BEST)
+
+        '''controller.save_models(recomendations)
         status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
                                                             list_ar_metadata=recomendations[-4:-2],
                                                             metric='cdistance', deep_impact=1)
 
-        recomendations.extend(recomendations2)
+        recomendations.extend(recomendations2)'''
         controller.reconstruct_execution_tree(recomendations, metric='cdistance')
         controller.remove_models(recomendations, mode=ALL)
 
@@ -42,6 +44,5 @@ if __name__ == "__main__":
         result = controller.get_java_model(recomendations[0], 'mojo')
         print(result)
 
-        controller.remove_models(recomendations, mode=ALL)
         controller.clean_handlers()
     del controller

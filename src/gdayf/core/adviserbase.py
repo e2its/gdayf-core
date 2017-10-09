@@ -36,7 +36,9 @@ class Adviser(object):
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
-    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
+    # @param dataframe_name dataframe_name or id
+    # @param hash_dataframe MD5 hash value
+    def __init__(self, analysis_id, deep_impact=5, metric='accuracy', dataframe_name='', hash_dataframe=''):
         self._labels = LoadLabels().get_config()['messages']['adviser']
         self._config = LoadConfig().get_config()['optimizer']
         self._logging = LogsHandler()
@@ -176,9 +178,8 @@ class Adviser(object):
 
     ## Method oriented to execute new analysis
     # @param self object pointer
-    # @param dataframe_metadata DFMetadata()
-    # @param objective_column string indicating objective column
-    # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
+    # @param dataframe_metadata DFMetadata()j
+    # @param list_ar_metadata List of ar json compatible model's descriptors
     # @return analysis_id, Ordered[(algorithm_metadata.json, normalizations_sets.json)]
     def analysis_specific(self, dataframe_metadata, list_ar_metadata):
         self.next_analysis_list.clear()
@@ -221,7 +222,6 @@ class Adviser(object):
     # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @param objective_column string indicating objective column
     # @return analysis_id,(framework, Ordered[(algorithm_metadata.json, normalizations_sets.json)])
-
     def analysisparanoiac(self, dataframe_metadata, objective_column, amode):
         self.next_analysis_list.clear()
         if self.deepness == 1:

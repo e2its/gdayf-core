@@ -92,7 +92,7 @@
       "persistence" : {},
       "normalizer" : {
         "norm_set_establish" : ":Establishing dataframe normalization recommendations:",
-        "ignored_list": ":Establishing column's exclusion over missing values threshold:",
+        "ignored_list": ":Establishing column's exclusion over missing values threshold or const_columns:",
         "start_data_norm": ":Starting Dataframe Normalizations:",
         "applying": ":Applying Normalization:",
         "excluding": ":Excluding Normalization on model (Not convenient):",

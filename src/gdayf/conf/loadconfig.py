@@ -1,4 +1,4 @@
-## @package gdayf.conf.loadconfig 
+## @package gdayf.conf.loadconfig
 # Define all objects, functions and structs related to load on system all configuration parameter from config.json
 
 from collections import OrderedDict
@@ -74,6 +74,3 @@ class LoadLabels(object):
     def get_configfile(self):
         return self._configfile
 
-if __name__ == "__main__":
-    m = LoadConfig()
-    print(m.get_config()['optimizer'])

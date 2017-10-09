@@ -14,11 +14,6 @@ if __name__ == "__main__":
                                                           amode=ANOMALIES, metric='rmse', deep_impact=5)
 
         controller.save_models(recomendations, mode=BEST)
-        '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                            list_ar_metadata=recomendations[-3:-2],
-                                                            metric='rmse', deep_impact=2)
-
-        recomendations.extend(recomendations2)'''
         controller.reconstruct_execution_tree(recomendations, metric='rmse')
         controller.remove_models(recomendations, mode=ALL)
 
@@ -42,6 +37,5 @@ if __name__ == "__main__":
         result = controller.get_java_model(recomendations[0], 'mojo')
         print(result)
 
-        controller.remove_models(recomendations, mode=ALL)
         controller.clean_handlers()
     del controller

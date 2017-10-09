@@ -23,6 +23,8 @@ class AdviserAStar(Adviser):
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
+    # @param dataframe_name dataframe_name or id
+    # @param hash_dataframe MD5 hash value
     def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
         super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
                                            dataframe_name=dataframe_name, hash_dataframe=hash_dataframe)
@@ -458,28 +460,5 @@ class AdviserAStar(Adviser):
         else:
             return model_list
 
-
-if __name__ == '__main__':
-    from gdayf.handlers.inputhandler import inputHandlerCSV
-    from pandas import concat
-    source_data = list()
-    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
-    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
-    source_data.append("CODE/h2o-bk/datasets/")
-
-    pd_train_dataset = concat([inputHandlerCSV().inputCSV(''.join(source_data) + "football.train2.csv"),
-                               inputHandlerCSV().inputCSV(''.join(source_data) + "football.valid2.csv")],
-                              axis=0)
-
-    m = DFMetada()
-    adv = AdviserAStar('football_csv', metric='accuracy')
-
-    df = m.getDataFrameMetadata(pd_train_dataset, 'pandas')
-    ana, lista = adv.set_recommendations(dataframe_metadata=df,
-                                         objective_column='HomeWin',
-                                         atype=adv.POC
-                                         )
-    for each_model in adv.next_analysis_list:
-        print(dumps(each_model, indent=4))
 
 

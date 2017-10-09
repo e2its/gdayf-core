@@ -1,3 +1,5 @@
+## @package gdayf.common.normalizationset
+
 from collections import OrderedDict
 
 class NormalizationSet (OrderedDict):

@@ -43,21 +43,19 @@ class StorageMetadata (list):
         except:
             super(StorageMetadata, self).append(value)
 
-    ## method used to get realtive path from config.json
-    # @param self object pointer location (optional)
+    ## method used to get relative load path from config.json
     # @return relative path string
     @staticmethod
     def get_load_path():
         return LoadConfig().get_config()['storage']['load_path']
 
-    ## method used to get realtive path from config.json
-    # @param self object pointer location (optional)
+    ## method used to get relative log path from config.json
     # @return relative path string
     @staticmethod
     def get_log_path():
         return LoadConfig().get_config()['storage']['log_path']
 
-    ## method used to get realtive path from config.json
+    ## method used to get relative json path from config.json
     # @param self object pointer location (optional)
     # @return relative path string
     @staticmethod

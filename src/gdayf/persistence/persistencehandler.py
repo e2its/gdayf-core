@@ -16,8 +16,6 @@ from copy import deepcopy
 import bson
 from bson.codec_options import CodecOptions
 
-
-
 ## @package gdayf.persistence.persistencehandler
 # Define all objects, functions and structures related to physically store information on persistence system
 #  on an unified way
@@ -110,7 +108,7 @@ class PersistenceHandler(object):
     def _store_file_to_localfs(self, storage_json, mmap_):
         if not ospath.exists(path=storage_json['value']):
             try:
-                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants']))
+                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'],8))
                 with open(storage_json['value'], 'wb') as wfile:
                     mmap_.seek(0)
                     iterator = 0
@@ -119,7 +117,7 @@ class PersistenceHandler(object):
                         wfile.flush()
                         iterator += 1
                     wfile.close()
-                    chmod(storage_json['value'], int(self._config['grants']))
+                    chmod(storage_json['value'], int(self._config['grants'],8))
             except IOError:
                 return 1, None
 
@@ -130,9 +128,9 @@ class PersistenceHandler(object):
     # using mmap structure to manage multi-persistence features
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
-    # @param mmap mmap structure containing the file to store
+    # @param mmap_struct mmap structure containing the file to store
     # @returns status (0,1) (hash_key)
-    def store_file_to_mongoDB(self, storage_json, mmap_):
+    def store_file_to_mongoDB(self, storage_json, mmap_struct):
         # Not implemented not necessary
         return 1, None
 
@@ -164,7 +162,7 @@ class PersistenceHandler(object):
         compress = LoadConfig().get_config()['persistence']['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
-            self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants']))
+            self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
             if compress:
                 file = gzip.GzipFile(storage_json['value'], 'w')
                 print(ar_json)
@@ -175,7 +173,7 @@ class PersistenceHandler(object):
                 file = open(storage_json['value'], 'w')
                 dump(ar_json, file, indent=4)
             file.close()
-            chmod(storage_json['value'], int(self._config['grants']))
+            chmod(storage_json['value'], int(self._config['grants'], 8))
             return 0
         except IOError as iexecution_error:
             print(repr(iexecution_error))
@@ -197,7 +195,7 @@ class PersistenceHandler(object):
         #if not ospath.exists(storage_json['value']):
         try:
             self._mkdir_hdfs(path=dirname(storage_json['value']),
-                             grants=int(self._config['grants']),
+                             grants=int(self._config['grants'],8),
                              client=client)
             if compress:
                 json_str = dumps(ar_json, indent=4)
@@ -267,6 +265,7 @@ class PersistenceHandler(object):
     ## Method used to recover an experiment as [ar_metadata]
     # oriented to store full Analysis_results json but useful on whole json
     # @param self object pointer
+    # @param analysis_id experiment identificator
     # @param user user_id
     # @param client Cliente MongoClient()
     # @return [ArMetadata]
@@ -374,7 +373,6 @@ class PersistenceHandler(object):
     ## Method base to get an ArMetadata Structure from file
     # @param self object pointer
     # @param path FilePath
-    # @param fstype [localfs, hdfs, mongoDB]
     # @return operation status (0 success /1 error, ArMetadata/None)
     def get_ar_from_engine(self, path):
         found = False

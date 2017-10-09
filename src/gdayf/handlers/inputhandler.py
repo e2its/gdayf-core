@@ -1,8 +1,7 @@
-#!/usr/bin/python3
+## @package gdayf.handlers.inputhandler
 
 import pandas as pd
 from gdayf.common.dfmetada import DFMetada
-
 
 class inputHandler:
     def __init__(self):

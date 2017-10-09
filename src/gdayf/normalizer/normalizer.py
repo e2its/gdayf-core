@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+## @package gdayf.normalizer.normalizer
 import numpy as np
 import pandas as pd
 from collections import OrderedDict
@@ -10,9 +10,10 @@ from gdayf.common.normalizationset import NormalizationSet
 from copy import deepcopy
 
 
-
 ## Class oriented to manage normalizations on dataframes for improvements on accuracy
 class Normalizer (object):
+
+    ## Constructor
     def __init__(self):
         self._config = LoadConfig().get_config()['normalizer']
         self._labels = LoadLabels().get_config()['messages']['normalizer']
@@ -154,7 +155,6 @@ class Normalizer (object):
     ## Method oriented to filter drop_missing operations on non standardize algorithms
     # @param normalizemd OrderedDict() compatible structure
     # @return normalizemd OrderedDict() compatible structure
-
     def filter_drop_missing(self, normalizemd):
         filter_normalized = list()
         for norm_set in normalizemd:
@@ -172,7 +172,6 @@ class Normalizer (object):
     ## Method oriented to filter filling_missing operations dependent of objective_column
     # @param normalizemd OrderedDict() compatible structure
     # @return normalizemd OrderedDict() compatible structure
-
     def filter_objective_base(self, normalizemd):
         filter_normalized = list()
         for norm_set in normalizemd:
@@ -192,7 +191,6 @@ class Normalizer (object):
     # @param self object pointer
     # @param df dataframe
     # @param normalizemd OrderedDict() compatible structure
-    # @param model_id Algoritmh identificator
     # @return dataframe
     def normalizeDataFrame(self, df, normalizemd):
         self._logging.log_exec('gDayF', "Normalizer", self._labels["start_data_norm"])
@@ -284,10 +282,11 @@ class Normalizer (object):
     def ignored_columns(self, normalizemd):
         ignored_list = list()
         if normalizemd is not None:
-            for col, norms in normalizemd['columns'].items():
-                if norms['class'] == 'ignore_column':
-                    ignored_list.append(col)
-        self._logging.log_exec('gDayF', "Normalizer", self._labels["ignore_list"], ignored_list)
+            for elements in normalizemd:
+                for col, value in elements.items():
+                    if value['class'] == 'ignore_column':
+                        ignored_list.append(col)
+        self._logging.log_exec('gDayF', "Normalizer", self._labels["ignored_list"], ignored_list)
         return ignored_list.copy()
 
     ## Internal method oriented to manage drop NaN values from dataset
@@ -352,6 +351,8 @@ class Normalizer (object):
     ## Internal method oriented to manage mean and std normalizations. Default mean=0 std=1
     # @param self object pointer
     # @param dataframe single column dataframe
+    # @param mean mean value to center
+    # @param std standard deviation value to be normalized
     # @return dataframe
     def normalizeStdMean(self, dataframe, mean, std):
         if dataframe.dtype != np.object:

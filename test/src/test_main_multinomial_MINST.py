@@ -42,8 +42,8 @@ if __name__ == "__main__":
         test_labels = save['test_labels']
         del save  # hint to help gc free up memory
 
-    train_dataset = train_dataset[-20001:-1]
-    train_labels = train_labels[-20001:-1]
+    train_dataset = train_dataset[-10001:-1]
+    train_labels = train_labels[-10001:-1]
 
     print('Training set', train_dataset.shape, train_labels.shape)
     print('Validation set', valid_dataset.shape, valid_labels.shape)
@@ -70,26 +70,15 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=pd_train_dataset, objective_column='objective0',
-                                                          amode=FAST, metric='test_accuracy', deep_impact=4)
+                                                          amode=FAST, metric='test_accuracy', deep_impact=3)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined', accuracy=True)
 
         controller.save_models(recomendations, mode=EACH_BEST)
-        '''status, recomendations2 = controller.exec_sanalysis(datapath=''.join(source_data),
-                                                            list_ar_metadata=recomendations[-3:-2],
-                                                            metric='test_accuracy', deep_impact=2)
-
-        recomendations.extend(recomendations2)'''
         controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
         controller.remove_models(recomendations, mode=ALL)
 
         # Prediction
-        source_data = list()
-        source_data.append("/Data/Data/datasheets/binary/FODSET/")
-        source_data.append("football.test2-r.csv")
-        model_source = list()
-
-        # controller = Controller()
         print(recomendations[0]['load_path'][0]['value'])
         prediction_frame = controller.exec_prediction(datapath=pd_test_dataset,
                                                       model_file=recomendations[0]['json_path'][0]['value'])
@@ -105,6 +94,5 @@ if __name__ == "__main__":
         result = controller.get_java_model(recomendations[0], 'mojo')
         print(result)
 
-        controller.remove_models(recomendations, mode=ALL)
         controller.clean_handlers()
     del controller

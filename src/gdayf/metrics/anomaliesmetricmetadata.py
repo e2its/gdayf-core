@@ -1,5 +1,5 @@
 ## @package gdayf.metrics.anomaliesmetricmetadata
-# Define Regression Metric object as OrderedDict() of common measures for all frameworks
+# Define Regression Anomalies Metric object as OrderedDict() of common measures for all frameworks
 #  on an unified way
 
 from gdayf.metrics.regressionmetricmetadata import RegressionMetricMetadata

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                                                          amode=FAST_PARANOIAC, metric='rmse', deep_impact=5)
+                                                          amode=NORMAL, metric='rmse', deep_impact=7)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined', accuracy=True)
 

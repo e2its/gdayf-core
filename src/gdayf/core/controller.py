@@ -1,3 +1,7 @@
+## @package gdayf.core.controller
+# Define all objects, functions and structured related to manage and execute actions over DayF core
+# and expose API to users
+
 from gdayf.handlers.h2ohandler import H2OHandler
 from gdayf.handlers.inputhandler import inputHandlerCSV
 from gdayf.common.dfmetada import DFMetada
@@ -26,7 +30,7 @@ from  bson.codec_options import CodecOptions
 from hashlib import md5
 
 ## Core class oriented to mange the comunication and execution messages pass for all components on system
-# orchestrating the execution of actions activities (train and prediction) on especific frameworks
+# orchestrating the execution of actions activities (train and prediction) on specific frameworks
 class Controller(object):
 
     ## Constructor
@@ -288,7 +292,6 @@ class Controller(object):
     # @param self object pointer
     # @param datapath String Path indicating file to be analyzed or DataFrame
     # @param objective_column string indicating objective column
-    # @param analysis_id main id code to be referenced on future predictions
     # @param amode Analysis mode of execution [0,1,2,3,4,5,6]
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
     # @param deep_impact  deep analysis
@@ -410,7 +413,7 @@ class Controller(object):
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
 
-    # Method oriented to log leaderboard against selected metrics
+    ## Method oriented to log leaderboard against selected metrics
     # @param analysis_id
     # @param ar_list List of AR models Execution Data
     # @param metric to execute order ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
@@ -584,16 +587,41 @@ class Controller(object):
                         self.model_handler[fw]['handler'].store_model(each_model, user=self.user_id)
                 self.clean_handler(fw)
 
+    ## Method leading and controlling model loads
+    # @param self object pointer
+    # @param  arlist List of armetadata
+    # @return  list of ar_descriptors of models correctly loaded
+    def load_models(self, arlist):
+        model_loaded = list()
+        for fw in self._config['frameworks'].keys():
+                self.init_handler(fw)
+                for each_model in arlist:
+                    if fw in each_model['model_parameters'].keys():
+                        model_load = self.model_handler[fw]['handler'].load_model(each_model)
+                        if model_load is not None:
+                            model_loaded.append(model_load)
+                self.clean_handler(fw)
+        return model_loaded
+
     ## Method leading and controlling model removing from server
     # @param self object pointer
-    # @param mode [BEST, BEST_3, EACH_BEST, ALL]
+    # @param mode to be keeped in memory [BEST, BEST_3, EACH_BEST, ALL]
     # @param  arlist List of armetadata
-
     def remove_models(self, arlist, mode=ALL):
         if mode == BEST:
             model_list = arlist[1:]
         elif mode == BEST_3:
             model_list = arlist[3:]
+        elif mode == EACH_BEST:
+            exclusion = list()
+            model_list = list()
+            for model in arlist:
+                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
+                        model['normalizations_set']) not in exclusion:
+                        exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
+                                          model['normalizations_set']))
+                else:
+                    model_list.append(model)
         elif mode == ALL:
             model_list = arlist
         for fw in self._config['frameworks'].keys():
@@ -605,6 +633,8 @@ class Controller(object):
     # @param arlist Priorized ArMetadata list
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
     # @param  store True/False
+    # @param experiment analysys_id for mongoDB recovery
+    # @param user user_id for mongoDB recovery
     # @return OrderedDict() with execution tree data Analysis
     def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None, user='guest'):
         if (arlist is None or len(arlist) == 0) and experiment is None:
@@ -697,6 +727,15 @@ class Controller(object):
         del adviser
         return ordered_list
 
+    ## Method base to get an ArMetadata Structure from file
+    # @param self object pointer
+    # @param path FilePath
+    # @return operation status (0 success /1 error, ArMetadata/None)
+    def get_ar_from_engine(self, path):
+        persistence = PersistenceHandler()
+        failed, armetadata = persistence.get_ar_from_engine(path=path)
+        del persistence
+        return failed, armetadata
 
 if __name__ == '__main__':
     source_data = list()

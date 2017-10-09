@@ -25,6 +25,7 @@ from h2o import save_model as save_model
 from h2o.exceptions import H2OError
 from h2o.exceptions import H2OConnectionError
 from h2o import ls as H2Olist
+from h2o import frames as H2Oframes
 from h2o import get_model
 from h2o import remove as H2Oremove
 from h2o import api as H2Oapi
@@ -143,13 +144,20 @@ class H2OHandler(object):
     # @param model_id base id_model
     # @param nfols number of cv buckets
     # @return models_ids lst of models_ids
-    def _get_cv_ids(self, model_id, nfolds):
+    def _get_temporal_objects_ids(self, model_id, nfolds):
         models_ids = list()
-        for iter in range(0, nfolds):
-            models_ids.append(model_id + '_cv_' + str(iter+1))
+        if nfolds is not None:
+            for iter in range(0, nfolds):
+                models_ids.append(model_id + '_cv_' + str(iter+1))
+        for element in H2Oframes()['frames']:
+            name = element['frame_id']['name']
+            if name.find('reconstruction_error_') != -1 and name.find(model_id) != -1:
+                models_ids.append(name)
+            elif name.find('predictions_') != -1 and name.find(model_id) != -1:
+                models_ids.append(name)
         return models_ids
 
-    ## Generate list of models_id for internal crossvalidation objects_
+    ## Generate java model class_
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @param type ['pojo', 'mojo']
@@ -190,7 +198,7 @@ class H2OHandler(object):
                                        self._labels["down_path"], download_path)
                 persistence = PersistenceHandler()
                 persistence.mkdir(type=each_storage_type['type'], path=str(download_path),
-                                  grants=int(self._config['storage']['grants']))
+                                  grants=int(self._config['storage']['grants'], 8))
 
                 if type.upper() == 'MOJO':
                     try:
@@ -220,11 +228,11 @@ class H2OHandler(object):
 
         return load_fails
 
-    ## Generate list of models_id for internal crossvalidation objects_
+    ## Load a model in H2OCluster from disk
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @return implicit self._model_base / None on Error
-    def get_model_from_load_path(self, ar_metadata):
+    def _get_model_from_load_path(self, ar_metadata):
         load_fails = True
         counter_storage = 0
         # Checking file source versus hash_value
@@ -360,6 +368,7 @@ class H2OHandler(object):
                 anomalies_threshold['columns'][col]['max'] = difference[col].max()
                 anomalies_threshold['columns'][col]['min'] = difference[col].min()
 
+            H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
             return anomalies_threshold
 
         elif dataframe is not None:
@@ -373,7 +382,7 @@ class H2OHandler(object):
                 perf_metrics = self._model_base.model_performance(train=True)
 
         model_metrics.set_h2ometrics(perf_metrics)
-        #H2Oremove(perf_metrics)
+        H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
         return model_metrics
 
     ## Generate model summary metrics
@@ -549,6 +558,8 @@ class H2OHandler(object):
         if temp_anomalies.nrows > 0:
             anomalies['global_mse'] = temp_anomalies.as_data_frame(use_pandas=True)
 
+        H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
+
         return anomalies
 
     ## Generate detected anomalies on dataframe
@@ -653,6 +664,7 @@ class H2OHandler(object):
     # @param self object pointer
     # @param dataframe  pandas dataframe
     # @param base_ns NormalizationMetadata orderedDict() compatible
+    # @param model_id base model identificator
     # @param filtering STANDARDIZE if standardize filtering rules need to be applied
     # or DROP drop_columns filtering rules need to be applied
     # @param exist_objective True if exist False if not
@@ -840,15 +852,6 @@ class H2OHandler(object):
         x = training_frame.col_names
         if supervised:
             x.remove(objective_column)
-        try:
-            #for ignore_col in base_ar['model_parameters']['h2o']['parameters']['ignored_columns']['value']:
-            norm = Normalizer()
-            for ignore_col in norm.ignored_columns(base_ns):
-                x.remove(ignore_col)
-        except KeyError:
-            pass
-        except TypeError:
-            pass
 
         '''Generate commands: model and model.train()'''
         model_command = list()
@@ -858,15 +861,20 @@ class H2OHandler(object):
         train_command = list()
         # 06/06/2017: Use ignore_columns instead X on train
         if supervised:
-            train_command.append("self._model_base.train(x=%s, y=\'%s\', " % (x, objective_column))
+            train_command.append("self._model_base.train(y=\'%s\', " % objective_column)
         else:
-            train_command.append("self._model_base.train(x=%s, " % x)
+            train_command.append("self._model_base.train(")
 
         train_command.append("training_frame=training_frame")
         if valid_frame is not None:
             model_command.append(", validation_frame=valid_frame")
             train_command.append(", validation_frame=valid_frame")
         model_command.append(", model_id=\'%s%s\'" % (model_id, self._get_ext()))
+
+        norm = Normalizer()
+        train_command.append(", ignored_columns=%s" % str(norm.ignored_columns(base_ns)))
+        del norm
+
         generate_commands_parameters(base_ar['model_parameters']['h2o'], model_command, train_command,
                                      train_parameters_list)
         model_command.append(")")
@@ -884,7 +892,7 @@ class H2OHandler(object):
                 final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
                                                   hash_type=each_storage_type['hash_type'])
             self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'],
-                                    grants=int(self._config['storage']['grants']),
+                                    grants=int(self._config['storage']['grants'], 8),
                                     path=dirname(final_ar_model['log_path'][0]['value']))
             connection().start_logging(final_ar_model['log_path'][0]['value'])
 
@@ -902,6 +910,12 @@ class H2OHandler(object):
         except OSError as execution_error:
             self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["abort"],
                                    repr(execution_error))
+            try:
+                H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id,
+                                                         final_ar_model['model_parameters']['h2o']['parameters']['nfolds']
+                                                                       ['value']))
+            except KeyError:
+                H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id, None))
             return analysis_id, None
 
         final_ar_model['execution_seconds'] = time.time() - start
@@ -1019,10 +1033,10 @@ class H2OHandler(object):
         try:
             if self._model_base is not None:
                 try:
-                    H2Oremove(self._get_cv_ids(self._model_base.model_id,
-                                           final_ar_model['model_parameters']['h2o']['parameters']['nfolds']['value']))
+                    H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id,
+                                                             final_ar_model['model_parameters']['h2o']['parameters']['nfolds']['value']))
                 except KeyError:
-                    pass
+                    H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id, None))
                 #H2Oremove(self._model_base.model_id)
         except H2OError:
             self._logging.log_exec(analysis_id,
@@ -1069,7 +1083,7 @@ class H2OHandler(object):
 
             load_path = ''.join(source_data) + each_storage_type['value']+'/'
             self._persistence.mkdir(type=each_storage_type['type'], path=load_path,
-                                    grants=int(self._config['storage']['grants']))
+                                    grants=int(self._config['storage']['grants'], 8))
             if each_storage_type['type'] == 'hdfs':
                 load_path = self._config['storage'][each_storage_type['type']]['uri'] + load_path
 
@@ -1091,6 +1105,22 @@ class H2OHandler(object):
         self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
 
         return saved_model
+
+    ## Method to load  model from persistence layer by armetadata
+    # @param armetadata structure to be stored
+    # return armetadata if model loaded successfully or None if not loaded
+    def load_model(self, armetadata):
+        from_disk = False
+
+        fw = get_model_fw(armetadata)
+        model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
+        analysis_id = armetadata['model_id']
+
+        load_fail, from_disk = self._get_model(base_ar=armetadata, base_model_id=model_id, remove_model=from_disk)
+        if load_fail:
+            return None
+        else:
+            return armetadata
 
     ## Main method to execute predictions over traning models
     # Take the ar.json for and execute predictions including its metrics a storage paths
@@ -1204,7 +1234,8 @@ class H2OHandler(object):
                 each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
                     .replace('.log', '_' + model_timestamp + '.log')
 
-            self._persistence.mkdir(type=base_ar['log_path'][0]['type'], grants=int(self._config['storage']['grants']),
+            self._persistence.mkdir(type=base_ar['log_path'][0]['type'],
+                                    grants=int(self._config['storage']['grants'], 8),
                                     path=dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
 
@@ -1303,10 +1334,10 @@ class H2OHandler(object):
 
         return prediction, base_ar
 
-    ## Internal method to get an H2Omodel from server or file trapasparent to user
+    ## Internal method to get an H2Omodel from server or file transparent to user
     # @param self Object pointer
     # @param base_ar armetadata to load from fs
-    # @param base_model_id fro searching on server memory objects
+    # @param base_model_id from searching on server memory objects
     # @param remove_model to indicate if has been load from memory o need to remove at last
     # @return load_fails, remove_model operation status True/False, needs to remove True/False
     def _get_model(self, base_ar, base_model_id, remove_model):
@@ -1317,7 +1348,7 @@ class H2OHandler(object):
             else:
                 load_fails = False
         else:
-            load_fails = self.get_model_from_load_path(base_ar)
+            load_fails = self._get_model_from_load_path(base_ar)
             remove_model = True
         return load_fails, remove_model
 
@@ -1335,6 +1366,8 @@ class H2OHandler(object):
             model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']+'.model'
             if model_id in H2Olist()['key'].tolist():
                 H2Oremove(model_id)
+            H2Oremove(self._get_temporal_objects_ids(model_id=model_id, nfolds=None))
+
         return False
 
 ## auxiliary function (procedure) to generate model and train chain paramters to execute models

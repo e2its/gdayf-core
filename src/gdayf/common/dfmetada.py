@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+## @package gdayf.common.dfmetada
 
 from json import dumps, loads
 from collections import OrderedDict
@@ -74,7 +74,6 @@ class DFMetada(OrderedDict):
             for subkey, subvalue in value.items():
                 if (0.7 >= subvalue >= -0.7) or (key == subkey):
                     self['correlation'][key].pop(subkey)
-        #return dumps(self, indent=4)
         return self
 
     def pop(self, key, default=None):
@@ -87,20 +86,6 @@ class DFMetada(OrderedDict):
 # @param dict1
 # @param dict2
 # @return True if equals false in other case
-'''def compare_dict(dict1, dict2):
-    if dict1 is None or dict2 is None:
-        return dict1 is None and dict2 is None
-    else:
-        if isinstance(dict1, DFMetada) or :
-            ddict1 = dumps(dict1)
-        else:
-            ddict1 = dumps(dict1.encode('utf8')).hexdigest()
-        if isinstance(dict1, DFMetada):
-            ddict2 = dumps(dict2)
-        else:
-            ddict2 = dumps(dict2.encode('utf8')).hexdigest()
-
-        return md5(ddict1) == md5(ddict2)'''
 def compare_dict(dict1, dict2):
     if dict1 is None or dict2 is None:
         return dict1 is None and dict2 is None
