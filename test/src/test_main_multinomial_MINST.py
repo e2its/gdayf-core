@@ -82,7 +82,7 @@ if __name__ == "__main__":
         print(recomendations[0]['load_path'][0]['value'])
         prediction_frame = controller.exec_prediction(datapath=pd_test_dataset,
                                                       model_file=recomendations[0]['json_path'][0]['value'])
-        print(prediction_frame[['objective0', 'predict', 'p0', 'p1','p2', 'p3','p4', 'p5','p6', 'p7','p8', 'p9']])
+        print(prediction_frame[['objective0', 'predict', 'p0', 'p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8', 'p9']])
 
         # Save Pojo
         # controller = Controller()

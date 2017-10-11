@@ -585,8 +585,8 @@
                 "type": "float"
               },
               "solver": {
-                "value": "auto",
-                "seleccionable": false,
+                "value": "irlsm",
+                "seleccionable": true,
                 "type": [
                   "auto",
                   "irlsm",
@@ -2856,7 +2856,7 @@
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
-    "primary_path": "mongoDB",
+    "primary_path": "localfs",
     "grants": "0o644",
     "load_path": [
       {"value": "models" , "type":"hdfs",

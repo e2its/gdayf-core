@@ -21,7 +21,7 @@ if __name__ == "__main__":
                                                             metric='rmse', deep_impact=1)
     
         recomendations.extend(recomendations2)'''
-        controller.reconstruct_execution_tree(recomendations, metric='rmse')
+        controller.reconstruct_execution_tree(recomendations, metric='rmse', store=True)
         controller.remove_models(recomendations, mode=ALL)
 
 

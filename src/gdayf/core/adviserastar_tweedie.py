@@ -140,7 +140,7 @@ class AdviserAStar(Adviser):
                     if armetadata['data_initial']['cols'] > cols_breakdown:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        model_aux['parameters']['solver']['value'] = 'L_BGFS'
+                        model_aux['parameters']['solver']['value'] = 'L_BFGS'
                         model_aux['parameters']['max_iterations']['value'] = max_iterations
                         self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2:

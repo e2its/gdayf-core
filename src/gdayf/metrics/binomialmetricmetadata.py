@@ -65,6 +65,8 @@ class BinomialMetricMetadata(MetricMetadata):
                             print(repr(aexecution_error))
                         except TypeError as texecution_error:
                             print(repr(texecution_error))
+                        except ValueError as vexecution_error:
+                            print(repr(vexecution_error))
                 elif parameter in ['thresholds_and_metric_scores']:
                     pass
                 else:
