@@ -23,6 +23,8 @@ class AdviserAStar(Adviser):
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
+    # @param dataframe_name dataframe_name or id
+    # @param hash_dataframe MD5 hash value
     def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
         super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
                                            dataframe_name=dataframe_name, hash_dataframe=hash_dataframe)
@@ -98,10 +100,11 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['nfolds']['value'] += nfold_increment
                     self.safe_append(model_list, new_armetadata)
-                if model['parameters']['min_rows']['value'] < min_rows_limit:
+                if model['parameters']['min_rows']['value'] > min_rows_limit:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['min_rows']['value'] += min_rows_increment
+                    model_aux['parameters']['min_rows']['value'] = round(model_aux['parameters']['min_rows']['value']
+                                                                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2OGeneralizedLinearEstimator':
@@ -137,7 +140,7 @@ class AdviserAStar(Adviser):
                     if armetadata['data_initial']['cols'] > cols_breakdown:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        model_aux['parameters']['solver']['value'] = 'L_BGFS'
+                        model_aux['parameters']['solver']['value'] = 'L_BFGS'
                         model_aux['parameters']['max_iterations']['value'] = max_iterations
                         self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2:
@@ -295,10 +298,11 @@ class AdviserAStar(Adviser):
                     model_aux = new_armetadata['model_parameters']['h2o']
                     model_aux['parameters']['mtries']['value'] = round(armetadata['data_initial']['cols']*3/4)
                     self.safe_append(model_list, new_armetadata)
-                if model['parameters']['min_rows']['value'] < min_rows_limit:
+                if model['parameters']['min_rows']['value'] > (min_rows_limit/2):
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['h2o']
-                    model_aux['parameters']['min_rows']['value'] += min_rows_increment
+                    model_aux['parameters']['min_rows']['value'] = round(model_aux['parameters']['min_rows']['value']
+                                                                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'H2ONaiveBayesEstimator':
@@ -393,10 +397,11 @@ class AdviserAStar(Adviser):
                 if self.deepness <= self.deep_impact:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['h2o']
-                        next_hidden = int(round(model_aux['parameters']['hidden']['value'][0] * wider_increment, 0))
-                        model_aux['parameters']['hidden']['value'] = [next_hidden,
-                                                                      model_aux['parameters']['hidden']['value'][1],
-                                                                      next_hidden]
+
+                        for iterador in range(0, len(model_aux['parameters']['hidden']['value'])):
+                            if iterador != int((float(len(model_aux['parameters']['hidden']['value'])) / 2) - 0.5):
+                                model_aux['parameters']['hidden']['value'][iterador] = \
+                                    int(round(model_aux['parameters']['hidden']['value'][iterador] * wider_increment, 0))
                         model_aux['parameters']['epochs']['value'] = epochs
                         self.safe_append(model_list, new_armetadata)
                         if len(model_aux['parameters']['hidden']['value']) < 5:
@@ -455,28 +460,5 @@ class AdviserAStar(Adviser):
         else:
             return model_list
 
-
-if __name__ == '__main__':
-    from gdayf.handlers.inputhandler import inputHandlerCSV
-    from pandas import concat
-    source_data = list()
-    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
-    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
-    source_data.append("CODE/h2o-bk/datasets/")
-
-    pd_train_dataset = concat([inputHandlerCSV().inputCSV(''.join(source_data) + "football.train2.csv"),
-                               inputHandlerCSV().inputCSV(''.join(source_data) + "football.valid2.csv")],
-                              axis=0)
-
-    m = DFMetada()
-    adv = AdviserAStar('football_csv', metric='accuracy')
-
-    df = m.getDataFrameMetadata(pd_train_dataset, 'pandas')
-    ana, lista = adv.set_recommendations(dataframe_metadata=df,
-                                         objective_column='HomeWin',
-                                         atype=adv.POC
-                                         )
-    for each_model in adv.next_analysis_list:
-        print(dumps(each_model, indent=4))
 
 

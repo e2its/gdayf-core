@@ -9,7 +9,7 @@ from collections import OrderedDict
 class ATypesMetadata (list):
 
     @classmethod
-    # Classmethod Define analysis types allowed
+    ## Classmethod Define analysis types allowed
     # @param cls class pointer
     # @return analysis types allowed
     def get_artypes(cls):
@@ -17,7 +17,7 @@ class ATypesMetadata (list):
 
     ## Constructor
     #
-    # **Kargs [binomial=boolean, multinomial=boolean, regression=boolean, topology=boolean]
+    # @param **kwargs [binomial=boolean, multinomial=boolean, regression=boolean, topology=boolean]
     def __init__(self, **kwargs):
         list().__init__(self)
         for pname, pvalue in kwargs.items():

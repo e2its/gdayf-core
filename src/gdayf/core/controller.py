@@ -1,3 +1,7 @@
+## @package gdayf.core.controller
+# Define all objects, functions and structured related to manage and execute actions over DayF core
+# and expose API to users
+
 from gdayf.handlers.h2ohandler import H2OHandler
 from gdayf.handlers.inputhandler import inputHandlerCSV
 from gdayf.common.dfmetada import DFMetada
@@ -10,7 +14,6 @@ from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data, hash_key
 from gdayf.common.armetadata import ArMetadata
 from gdayf.common.armetadata import deep_ordered_copy
-from gdayf.persistence.persistencehandler import get_ar_from_file
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.storagemetadata import StorageMetadata
 from collections import OrderedDict
@@ -20,14 +23,18 @@ import importlib
 from json import load
 from json.decoder import JSONDecodeError
 from time import time
-
+from pymongo import  MongoClient
+from pymongo.errors import *
+import bson
+from  bson.codec_options import CodecOptions
+from hashlib import md5
 
 ## Core class oriented to mange the comunication and execution messages pass for all components on system
-# orchestrating the execution of actions activities (train and prediction) on especific frameworks
+# orchestrating the execution of actions activities (train and prediction) on specific frameworks
 class Controller(object):
 
     ## Constructor
-    def __init__(self, user_id='PoC-gDayF'):
+    def __init__(self, user_id='PoC_gDayF'):
         self._config = LoadConfig().get_config()
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
@@ -38,6 +45,149 @@ class Controller(object):
         self._logging.log_exec('gDayF', "Controller", self._labels["loading_adviser"],
                                self._config['optimizer']['adviser_classpath'])
 
+    ## Method leading configurations coherence checks
+    # @param self object pointer
+    # @return True if OK / False if wrong
+    def config_checks(self):
+        storage_conf = self._config['storage']
+        grants = int(storage_conf['grants'], 8)
+        localfs = (storage_conf['localfs'] is not None) \
+                  and self._coherence_fs_checks(storage_conf['localfs'], grants=grants)
+        hdfs = (storage_conf['hdfs'] is not None) \
+                  and self._coherence_fs_checks(storage_conf['hdfs'], grants=grants)
+        mongoDB = (storage_conf['mongoDB'] is not None) \
+                  and self._coherence_db_checks(storage_conf['mongoDB'], user=self.user_id)
+        self._logging.log_exec('gDayF', "Controller", self._labels["primary_path"],
+                               str(storage_conf['primary_path']))
+
+        ''' Checking primary Json storage Paths'''
+        primary = False
+        #if storage_conf['primary_path'] in ['localfs', 'hdfs']:
+        for storage in StorageMetadata().get_json_path():
+            if storage_conf['primary_path'] == storage['type']:
+                primary = True
+            if storage['type'] == 'mongoDB':
+                if not mongoDB:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                                           str(storage))
+                    return False
+            elif storage['type'] == 'localfs':
+                if not localfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                                           str(storage))
+                    return False
+            elif storage['type'] == 'hdfs':
+                if not hdfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                                           str(storage))
+                    return False
+
+        if not primary:
+            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+                                   str(storage_conf[storage_conf['primary_path']]))
+            return False
+
+        ''' Checking Load storage Paths'''
+        at_least_on = False
+        for storage in StorageMetadata().get_load_path():
+            if storage['type'] == 'mongoDB':
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
+                                       str(storage))
+                return False
+            elif storage['type'] == 'localfs':
+                if not localfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
+            elif storage['type'] == 'hdfs':
+                if not hdfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
+
+        if not at_least_on:
+            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+                                   str(storage_conf[storage_conf['primary_path']]))
+            return False
+
+        ''' Checking log storage Paths'''
+        at_least_on = False
+        for storage in StorageMetadata().get_log_path():
+            if storage['type'] == 'mongoDB':
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
+                                       str(storage))
+                return False
+            elif storage['type'] == 'localfs':
+                if not localfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_log"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
+            elif storage['type'] == 'hdfs':
+                if not hdfs:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_log"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
+        if not at_least_on:
+            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+                                   str(storage_conf[storage_conf['primary_path']]))
+            return False
+
+        ''' If all things OK'''
+        return True
+
+    ## Method leading configurations coherence checks on fs engines
+    # @param self object pointer
+    # @param storage StorageMetadata
+    # @param grants Octal grants format
+    # @return True if OK / False if wrong
+    def _coherence_fs_checks(self, storage, grants):
+        persistence = PersistenceHandler()
+        try:
+            if persistence.mkdir(type=storage['type'], path=str(storage['value']), grants=grants):
+                return False
+        except OSError:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_json_path"],
+                                   str(storage['value']))
+            return False
+        if storage['hash_type'] not in ['MD5', 'SHA256']:
+            self._logging.log_exec('gDayF', "Controller", self._labels["failed_hash_method"],
+                                   str(storage))
+            return False
+        return True
+
+    ## Method leading configurations coherence checks on fs engines
+    # @param self object pointer
+    # @param storage StorageMetadata
+    # @param user user_id
+    # @return True if OK / False if wrong
+    def _coherence_db_checks(self, storage, user):
+        if storage['type'] == 'mongoDB':
+            try:
+                client = MongoClient(host=storage['url'],
+                                     port=int(storage['port']),
+                                     document_class=OrderedDict)
+            except ConnectionFailure as cexecution_error:
+                print(repr(cexecution_error))
+                return False
+            try:
+                db = client[storage['value']]
+                collection = db[user]
+                test_insert = collection.insert_one({'test': 'connection.check.dot.bson'}).inserted_id
+                collection.delete_one({"_id": test_insert})
+            except PyMongoError as wexecution_error:
+                print(repr(wexecution_error))
+                return False
+            finally:
+                client.close()
+        return True
 
     ## Method leading and controlling prediction's executions on all frameworks
     # @param self object pointer
@@ -60,11 +210,20 @@ class Controller(object):
         elif model_file is not None:
             try:
                 #json_file = open(model_file)
-                _, base_ar = get_ar_from_file(model_file)
-                base_ar = deep_ordered_copy(base_ar)
+                persistence = PersistenceHandler()
+                _, base_ar = persistence.get_ar_from_engine(model_file)
+                del persistence
                 '''base_ar = deep_ordered_copy(load(json_file))
                 json_file.close()'''
-            except [IOError, OSError]:
+                if base_ar is None:
+                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                    return self._labels["failed_model"]
+            except IOError as iexecution_error:
+                print(repr(iexecution_error))
+                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                return self._labels["failed_model"]
+            except OSError as oexecution_error:
+                print(repr(oexecution_error))
                 self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
 
@@ -85,7 +244,9 @@ class Controller(object):
         fw = get_model_fw(base_ar)
         if fw == 'h2o':
             self.init_handler(fw)
-            prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset, base_ar=base_ar)
+            prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
+                                                                            base_ar=base_ar,
+                                                                            user=self.user_id)
             self.clean_handler(fw)
         else:
             prediction_frame = None
@@ -131,7 +292,6 @@ class Controller(object):
     # @param self object pointer
     # @param datapath String Path indicating file to be analyzed or DataFrame
     # @param objective_column string indicating objective column
-    # @param analysis_id main id code to be referenced on future predictions
     # @param amode Analysis mode of execution [0,1,2,3,4,5,6]
     # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
     # @param deep_impact  deep analysis
@@ -140,6 +300,7 @@ class Controller(object):
         # Clustering variables
         k = None
         estimate_k = False
+        hash_dataframe = ''
 
         for pname, pvalue in kwargs.items():
             if pname == 'k':
@@ -182,6 +343,7 @@ class Controller(object):
                           '_' + str(pd_dataset.size) + \
                           '_' + str(pd_dataset.shape[0]) + \
                           '_' + str(pd_dataset.shape[1])
+            hash_dataframe = md5(datapath.to_msgpack()).hexdigest()
         else:
             self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input'], None
@@ -221,12 +383,14 @@ class Controller(object):
                                                                                          training_pframe=pd_dataset,
                                                                                          base_ar=each_model,
                                                                                          test_frame=pd_test_dataset,
-                                                                                         filtering='STANDARDIZE')
+                                                                                         filtering='STANDARDIZE',
+                                                                                         user=self.user_id)
                 else:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
                                                                                          training_frame=pd_dataset,
                                                                                          base_ar=each_model,
-                                                                                         filtering='STANDARDIZE')
+                                                                                         filtering='STANDARDIZE',
+                                                                                         user=self.user_id)
 
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
@@ -249,7 +413,7 @@ class Controller(object):
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
 
-    # Method oriented to log leaderboard against selected metrics
+    ## Method oriented to log leaderboard against selected metrics
     # @param analysis_id
     # @param ar_list List of AR models Execution Data
     # @param metric to execute order ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
@@ -351,12 +515,14 @@ class Controller(object):
                         analysis_id=adviser.analysis_id,
                         training_pframe=pd_dataset,
                         base_ar=each_model,
-                        test_frame=pd_test_dataset, filtering='NONE')
+                        test_frame=pd_test_dataset, filtering='NONE',
+                        user=self.user_id)
                 else:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(
                         analysis_id=adviser.analysis_id,
                         training_frame=pd_dataset,
-                        base_ar=each_model , filtering='NONE')
+                        base_ar=each_model, filtering='NONE',
+                        user=self.user_id)
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
 
@@ -389,7 +555,7 @@ class Controller(object):
         fw = get_model_fw(armetadata)
         if fw == 'h2o':
             self.init_handler(fw)
-            results = self.model_handler[fw]['handler'].get_java_model(armetadata, type)
+            results = self.model_handler[fw]['handler'].get_java_model(armetadata, type, user=self.user_id)
             self.clean_handler(fw)
         return results
 
@@ -398,7 +564,6 @@ class Controller(object):
     # @param mode [BEST, BEST_3, EACH_BEST, ALL]
     # @param  arlist List of armetadata
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
-
     def save_models(self, arlist, mode=BEST, metric='accuracy'):
         if mode == BEST:
             model_list = [arlist[0]]
@@ -409,30 +574,54 @@ class Controller(object):
             model_list = list()
             for model in arlist:
                 if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
-                    model['normalizations_set']) not in exclusion:
-                    model_list.append(model)
-                    exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
-                                      model['normalizations_set'])
-                                     )
+                        model['normalizations_set']) not in exclusion:
+                        model_list.append(model)
+                        exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
+                                          model['normalizations_set']))
         elif mode == ALL:
             model_list = arlist
         for fw in self._config['frameworks'].keys():
                 self.init_handler(fw)
                 for each_model in model_list:
                     if fw in each_model['model_parameters'].keys():
-                        results = self.model_handler[fw]['handler'].store_model(each_model)
+                        self.model_handler[fw]['handler'].store_model(each_model, user=self.user_id)
                 self.clean_handler(fw)
+
+    ## Method leading and controlling model loads
+    # @param self object pointer
+    # @param  arlist List of armetadata
+    # @return  list of ar_descriptors of models correctly loaded
+    def load_models(self, arlist):
+        model_loaded = list()
+        for fw in self._config['frameworks'].keys():
+                self.init_handler(fw)
+                for each_model in arlist:
+                    if fw in each_model['model_parameters'].keys():
+                        model_load = self.model_handler[fw]['handler'].load_model(each_model)
+                        if model_load is not None:
+                            model_loaded.append(model_load)
+                self.clean_handler(fw)
+        return model_loaded
 
     ## Method leading and controlling model removing from server
     # @param self object pointer
-    # @param mode [BEST, BEST_3, EACH_BEST, ALL]
+    # @param mode to be keeped in memory [BEST, BEST_3, EACH_BEST, ALL]
     # @param  arlist List of armetadata
-
     def remove_models(self, arlist, mode=ALL):
         if mode == BEST:
             model_list = arlist[1:]
         elif mode == BEST_3:
             model_list = arlist[3:]
+        elif mode == EACH_BEST:
+            exclusion = list()
+            model_list = list()
+            for model in arlist:
+                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
+                        model['normalizations_set']) not in exclusion:
+                        exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
+                                          model['normalizations_set']))
+                else:
+                    model_list.append(model)
         elif mode == ALL:
             model_list = arlist
         for fw in self._config['frameworks'].keys():
@@ -443,15 +632,22 @@ class Controller(object):
     ##Method oriented to generate execution tree for visualizations and analysis issues
     # @param arlist Priorized ArMetadata list
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
+    # @param  store True/False
+    # @param experiment analysys_id for mongoDB recovery
+    # @param user user_id for mongoDB recovery
     # @return OrderedDict() with execution tree data Analysis
-    def reconstruct_execution_tree(self, arlist=None, metric='combined'):
-        if arlist is None or len(arlist) == 0:
+    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None, user='guest'):
+        if (arlist is None or len(arlist) == 0) and experiment is None:
             self._logging.log_exec('gDayF', 'controller', self._labels["failed_model"])
             return None
+        elif experiment is not None and user != 'guest':
+            analysis_id = experiment
+            new_arlist = PersistenceHandler().recover_experiment_mongoDB(analysis_id=experiment, user=user)
         else:
             analysis_id = arlist[0]['model_id']
+            new_arlist = arlist
 
-        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=arlist, metric=metric)
+        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=new_arlist, metric=metric)
 
         root = OrderedDict()
         root['data'] = None
@@ -494,26 +690,29 @@ class Controller(object):
                                             model_id)
             level += 1
 
-        #Store_json o primary path
-        primary_path = self._config['storage']['primary_path']
-        fstype = self._config['storage'][primary_path]['type']
+        #Store_json on primary path
+        if store and self._config['storage']['primary_path'] != 'mongoDB':
+            primary_path = self._config['storage']['primary_path']
+            fstype = self._config['storage'][primary_path]['type']
 
-        datafile = list()
-        datafile.append(self._config['storage'][primary_path]['value'])
-        datafile.append('/')
-        datafile.append(analysis_id)
-        datafile.append('/')
-        datafile.append('Execution_tree_')
-        datafile.append(analysis_id)
-        datafile.append('.json')
+            datafile = list()
+            datafile.append(self._config['storage'][primary_path]['value'])
+            datafile.append('/')
+            datafile.append(self.user_id)
+            datafile.append('/')
+            datafile.append(analysis_id)
+            datafile.append('/')
+            datafile.append('Execution_tree_')
+            datafile.append(analysis_id)
+            datafile.append('.json')
 
-        if self._config['persistence']['compress_json']:
-            datafile.append('.gz')
+            if self._config['persistence']['compress_json']:
+                datafile.append('.gz')
 
-        storage = StorageMetadata()
-        storage.append(value=''.join(datafile), fstype=fstype)
-        print(storage)
-        PersistenceHandler().store_json(storage, root)
+            storage = StorageMetadata()
+            storage.append(value=''.join(datafile), fstype=fstype)
+            print(storage)
+            PersistenceHandler().store_json(storage, root)
         return root
 
     ##Method oriented to priorize ARlist
@@ -528,6 +727,15 @@ class Controller(object):
         del adviser
         return ordered_list
 
+    ## Method base to get an ArMetadata Structure from file
+    # @param self object pointer
+    # @param path FilePath
+    # @return operation status (0 success /1 error, ArMetadata/None)
+    def get_ar_from_engine(self, path):
+        persistence = PersistenceHandler()
+        failed, armetadata = persistence.get_ar_from_engine(path=path)
+        del persistence
+        return failed, armetadata
 
 if __name__ == '__main__':
     source_data = list()

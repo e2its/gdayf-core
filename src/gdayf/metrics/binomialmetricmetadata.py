@@ -33,7 +33,7 @@ class BinomialMetricMetadata(MetricMetadata):
         self['cm']['f2'] = None
         self['cm']['f1'] = None
 
-    # Me#thod to set precision measure
+    ## Method to set precision measure
     # Not implemented yet
     def set_precision(self, tolerance):
         pass
@@ -42,23 +42,37 @@ class BinomialMetricMetadata(MetricMetadata):
     # @param self objetct pointer
     # @param perf_metrics H2OBinomialModelMetrics
     def set_h2ometrics(self, perf_metrics):
-        for parameter, _ in self.items():
-            if parameter in ['gains_lift_table', 'max_criteria_and_metric_scores']:
-                try:
-                    self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
-                except KeyError:
+        if perf_metrics is not None:
+            for parameter, _ in self.items():
+                if parameter in ['gains_lift_table', 'max_criteria_and_metric_scores']:
+                    try:
+                        self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                    except KeyError as kexecution_error:
+                        print(repr(kexecution_error))
+                    except AttributeError as aexecution_error:
+                        print(repr(aexecution_error))
+                    except TypeError as texecution_error:
+                        print(repr(texecution_error))
+                elif parameter in ['cm']:
+                    for each_parameter, __ in self['cm'].items():
+                        try:
+                            self['cm'][each_parameter] = \
+                                perf_metrics.confusion_matrix(
+                                    metrics=each_parameter).table.as_data_frame().to_json(orient='split')
+                        except KeyError as kexecution_error:
+                            print(repr(kexecution_error))
+                        except AttributeError as aexecution_error:
+                            print(repr(aexecution_error))
+                        except TypeError as texecution_error:
+                            print(repr(texecution_error))
+                        except ValueError as vexecution_error:
+                            print(repr(vexecution_error))
+                elif parameter in ['thresholds_and_metric_scores']:
                     pass
-            elif parameter in ['cm']:
-                for each_parameter, __ in self['cm'].items():
-                    self['cm'][each_parameter] = \
-                        perf_metrics.confusion_matrix(
-                            metrics=each_parameter).table.as_data_frame().to_json(orient='split')
-            elif parameter in ['thresholds_and_metric_scores']:
-                pass
-            else:
-                try:
-                    self[parameter] = perf_metrics._metric_json[parameter]
-                except KeyError:
-                    pass
-                except AttributeError:
-                    pass
+                else:
+                    try:
+                        self[parameter] = perf_metrics._metric_json[parameter]
+                    except KeyError as kexecution_error:
+                        print(repr(kexecution_error))
+                    except AttributeError as aexecution_error:
+                        print(repr(aexecution_error))

@@ -15,15 +15,16 @@ class H2OModelMetadata(ModelMetadata):
         ModelMetadata.__init__(self)
         # @var _config
         # Initialized _config to h2o all models default values
-        self._config = self._config['h2o']['models']
-
+        self._optimizable_scale_params = self._config['h2o']['conf']['optimizable_scale_params']
+        self._models = self._config['h2o']['models']
     ## Generate H2O models
     # This method is used to load config parameters adapting its to specific analysis requirements
     # @param model_type catalogued H2O model
     # @param atype AtypeMetadata
     # @param amode Analysis mode. Define early_stopping parameters inclusion
+    # @param increment increment x size
     # @return H2O model json compatible (OrderedDict())
-    def generate_models(self, model_type, atype, amode=POC):
+    def generate_models(self, model_type, atype, amode=POC, increment=1):
         if atype[0]['type'] == 'binomial':
             distribution = 'binomial'
         elif atype[0]['type'] == 'multinomial':
@@ -31,13 +32,13 @@ class H2OModelMetadata(ModelMetadata):
         else:
             distribution = 'default'
         ts = round(time(), 0)
-        for each_model in self._config:
+        for each_model in self._models:
             if each_model['model'] == model_type:
                 for key, value in each_model.items():
                     if key == 'parameters':
                         self.model[key] = OrderedDict()
                         for subkey, subvalue in value.items():
-                            if subkey not in ['stopping', 'distribution']:
+                            if subkey not in ['stopping', 'distribution', 'effort']:
                                 for parm, parm_value in subvalue.items():
                                     if parm_value['seleccionable']:
                                         self.model[key][parm] = parm_value
@@ -47,6 +48,24 @@ class H2OModelMetadata(ModelMetadata):
                                     for parm, parm_value in subvalue.items():
                                         if parm_value['seleccionable']:
                                             self.model[key][parm] = parm_value
+
+                            elif subkey == 'effort':
+                                    for parm, parm_value in subvalue.items():
+                                        if parm_value['seleccionable']:
+                                            self.model[key][parm] = parm_value
+                                            if isinstance(self.model[key][parm]['value'], list)\
+                                                    and parm in self._optimizable_scale_params:
+                                                for counter in range(0, len(self.model[key][parm]['value'])):
+                                                    if model_type != 'H2OAutoEncoderEstimator':
+                                                        self.model[key][parm]['value'][counter] = \
+                                                            int(self.model[key][parm]['value'][counter] * increment)
+                                            elif self.model[key][parm]['type'] in DTYPES \
+                                                    and parm in self._optimizable_scale_params:
+                                                if self.model[key][parm]['type'] in ITYPES:
+                                                    self.model[key][parm]['value'] = \
+                                                        int(self.model[key][parm]['value'] * increment)
+                                                else:
+                                                    self.model[key][parm]['value'] *= increment
 
                             elif subkey == 'distribution':
                                 for parm, parm_value in subvalue.items():

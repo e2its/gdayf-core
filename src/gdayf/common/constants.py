@@ -1,3 +1,5 @@
+## @package gdayf.common.constats
+
 POC = 0
 FAST = 1
 NORMAL = 2

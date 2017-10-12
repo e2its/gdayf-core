@@ -1,4 +1,4 @@
-## @package gdayf.conf.loadconfig 
+## @package gdayf.conf.loadconfig
 # Define all objects, functions and structs related to load on system all configuration parameter from config.json
 
 from collections import OrderedDict
@@ -13,7 +13,7 @@ class LoadConfig(object):
     _configfile = None
 
     ## Constructor
-    def __init__(self, configfile=r'/Data/e2its-dayf.svn/gdayf/branches/0.1.3-mrazul/src/gdayf/conf/config.json'):
+    def __init__(self, configfile=r'/Data/e2its-dayf.svn/gdayf/branches/0.9.2-mrazul/src/gdayf/conf/config.json'):
         # @var _config protected member variable to store config parameters
         self._config = None
         # @var _configfile protected member variable to store configfile path
@@ -48,7 +48,7 @@ class LoadLabels(object):
     _configfile = None
 
     ## Constructor
-    def __init__(self, lang='en', configfile=r'/Data/e2its-dayf.svn/gdayf/branches/0.1.3-mrazul/src/gdayf/conf/labels.json'):
+    def __init__(self, lang='en', configfile=r'/Data/e2its-dayf.svn/gdayf/branches/0.9.2-mrazul/src/gdayf/conf/labels.json'):
         # @var _config protected member variable to store config parameters
         self._config = None
         # @var _configfile protected member variable to store configfile path
@@ -74,6 +74,3 @@ class LoadLabels(object):
     def get_configfile(self):
         return self._configfile
 
-if __name__ == "__main__":
-    m = LoadConfig()
-    print(m.get_config()['optimizer'])

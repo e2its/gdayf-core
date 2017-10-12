@@ -52,7 +52,7 @@ class ArMetadata (OrderedDict):
     ## Get ArMetadata and make a base copy of main parameters to get an ArMetadata structure to be analyzed
     # @param self object pointer
     # @return OrderedDict() structure associated to json file with indent 4 and encoding utf-8
-    def copy_template(self, deepness=0):
+    def copy_template(self):
         new_model = ArMetadata()
         new_model['model_id'] = deepcopy(self['model_id'])
         new_model['version'] = deepcopy(self['version'])

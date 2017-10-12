@@ -5,8 +5,7 @@
 from gdayf.metrics.metricmetadata import MetricMetadata
 
 
-# Class Base for Regression metricts as OrderedDict
-#
+## Class Base for Regression metricts as OrderedDict
 # Base Metrics for Regression
 # [No expanded metrics]
 class RegressionMetricMetadata(MetricMetadata):
@@ -16,7 +15,7 @@ class RegressionMetricMetadata(MetricMetadata):
     def __init__(self):
         MetricMetadata.__init__(self)
 
-    # Me#thod to set precision measure
+    ## Method to set precision measure
     # Not implemented yet
     def set_precision(self, threshold):
         pass
@@ -25,22 +24,13 @@ class RegressionMetricMetadata(MetricMetadata):
     # @param self objetct pointer
     # @param perf_metrics H2ORegressionModelMetrics
     def set_h2ometrics(self, perf_metrics):
-        for parameter, _ in self.items():
-            try:
-                self[parameter] = perf_metrics._metric_json[parameter]
-            except KeyError:
-                pass
-            except AttributeError:
-                pass
+        if perf_metrics is not None:
+            for parameter, _ in self.items():
+                try:
+                    self[parameter] = perf_metrics._metric_json[parameter]
+                except KeyError as kexecution_error:
+                    print(repr(kexecution_error))
+                except AttributeError as aexecution_error:
+                    print(repr(aexecution_error))
 
-    ## Method to load Regression metrics from H2ORegressionModelMetrics class
-    # @param self objetct pointer
-    # @param perf_metrics H2ORegressionModelMetrics
-    def set_h2ometrics(self, perf_metrics):
-        for parameter, _ in self.items():
-            try:
-                self[parameter] = perf_metrics._metric_json[parameter]
-            except KeyError:
-                pass
-            except AttributeError:
-                pass
+

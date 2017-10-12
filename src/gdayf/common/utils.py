@@ -9,6 +9,7 @@ from json import dumps
 from copy import deepcopy
 from numpy.random import rand
 from gdayf.common.dfmetada import compare_dict
+from hdfs import InsecureClient as Client, HdfsError
 
 ## Function oriented to get the hash_key for a file
 # @param hash_type in ['MD5', 'SHS256']
