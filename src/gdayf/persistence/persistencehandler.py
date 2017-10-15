@@ -165,7 +165,6 @@ class PersistenceHandler(object):
             self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
             if compress:
                 file = gzip.GzipFile(storage_json['value'], 'w')
-                print(ar_json)
                 json_str = dumps(ar_json, indent=4)
                 json_bytes = json_str.encode('utf-8')
                 file.write(json_bytes)
@@ -395,7 +394,6 @@ class PersistenceHandler(object):
                 client = Client(url=url)
                 remove_client = True
                 try:
-                    print(path)
                     if client.status(hdfs_path=path, strict=False) is not None:
                         _, type = mimetypes.guess_type(path)
                         if type == 'gzip':

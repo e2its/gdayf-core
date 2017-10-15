@@ -29,8 +29,10 @@ class RegressionMetricMetadata(MetricMetadata):
                 try:
                     self[parameter] = perf_metrics._metric_json[parameter]
                 except KeyError as kexecution_error:
-                    print(repr(kexecution_error))
+                    #print('Trace: ' + repr(kexecution_error))
+                    pass
                 except AttributeError as aexecution_error:
-                    print(repr(aexecution_error))
+                    #print('Trace: ' + repr(aexecution_error))
+                    pass
 
 

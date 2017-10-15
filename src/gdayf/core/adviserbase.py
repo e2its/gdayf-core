@@ -468,7 +468,7 @@ class Adviser(object):
         for _ , pvalue in base.items():
             if variabilizations > pvalue['base'] and increment < pvalue['increment']:
                 increment = pvalue['increment']
-        self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
+        self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
                                increment)
         return increment
 
@@ -507,13 +507,13 @@ class Adviser(object):
             fw = model_list[iterator][0]
             model = model_list[iterator][1]
             if fw_config[fw]['conf']['min_rows_enabled'] and (nrows < model['min_rows_applicability']):
-                self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'rows < ' +
                                        str(model['min_rows_applicability']))
                 exclude_model.append(model_list[iterator])
             if fw_config[fw]['conf']['max_cols_enabled'] and model['max_cols_applicability'] is not None \
                     and(ncols > model['max_cols_applicability']):
-                self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'cols > ' +
                                        str(model['max_cols_applicability']))
                 exclude_model.append(model_list[iterator])
@@ -672,8 +672,8 @@ class Adviser(object):
         if not self.is_executed(vector):
             model_list.append(model)
             self.analyzed_models.append(vector)
-            self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["new_vector"], str(vector))
+            self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["new_vector"], str(vector))
         else:
             self.excluded_models.append(vector)
-            self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_vector"], str(vector))
+            self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_vector"], str(vector))
 

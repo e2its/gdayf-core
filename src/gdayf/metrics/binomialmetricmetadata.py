@@ -4,6 +4,7 @@
 
 from collections import OrderedDict
 from gdayf.metrics.metricmetadata import MetricMetadata
+from gdayf.conf.loadconfig import LoadLabels
 
 
 ##Class Base for Binomial metricts as OrderedDict
@@ -48,11 +49,12 @@ class BinomialMetricMetadata(MetricMetadata):
                     try:
                         self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))
                     except TypeError as texecution_error:
-                        print(repr(texecution_error))
+                        print('Trace: ' + repr(texecution_error))
                 elif parameter in ['cm']:
                     for each_parameter, __ in self['cm'].items():
                         try:
@@ -60,11 +62,12 @@ class BinomialMetricMetadata(MetricMetadata):
                                 perf_metrics.confusion_matrix(
                                     metrics=each_parameter).table.as_data_frame().to_json(orient='split')
                         except KeyError as kexecution_error:
-                            print(repr(kexecution_error))
+                            pass
+                            #print('Trace: ' + repr(kexecution_error))
                         except AttributeError as aexecution_error:
-                            print(repr(aexecution_error))
+                            print('Trace: ' + repr(aexecution_error))
                         except TypeError as texecution_error:
-                            print(repr(texecution_error))
+                            print('Trace: ' + repr(texecution_error))
                         except ValueError as vexecution_error:
                             print(repr(vexecution_error))
                 elif parameter in ['thresholds_and_metric_scores']:
@@ -73,6 +76,7 @@ class BinomialMetricMetadata(MetricMetadata):
                     try:
                         self[parameter] = perf_metrics._metric_json[parameter]
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))

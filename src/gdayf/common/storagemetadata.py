@@ -103,7 +103,6 @@ def generate_json_path(armetadata, user='guest'):
             json_storage.append(value=json_path, fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
         else:
-            print(user)
             json_storage.append(value=user, fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
 

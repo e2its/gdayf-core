@@ -33,25 +33,28 @@ class MultinomialMetricMetadata(MetricMetadata):
                     try:
                         self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))
                     except TypeError as texecution_error:
-                        print(repr(texecution_error))
+                        print('Trace: ' + repr(texecution_error))
                 elif parameter in ['cm']:
                     try:
                         self[parameter] = \
                             perf_metrics._metric_json[parameter]['table'].as_data_frame().to_json(orient='split')
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))
                     except TypeError as texecution_error:
-                        print(repr(texecution_error))
+                        print('Trace: ' + repr(texecution_error))
                 else:
                     try:
                         self[parameter] = perf_metrics._metric_json[parameter]
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))

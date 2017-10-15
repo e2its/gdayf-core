@@ -18,7 +18,7 @@ if __name__ == "__main__":
                                                           objective_column='Weather_Temperature',
                                                           amode=FAST, metric='rmse', deep_impact=5)
 
-        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined', accuracy=True)
+        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
         controller.save_models(recomendations, mode=EACH_BEST)
         controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=False,
                                               user=controller.user_id,
@@ -39,11 +39,9 @@ if __name__ == "__main__":
 
         # Save Pojo
         result = controller.get_java_model(recomendations[0], 'pojo')
-        print(result)
 
         # Save Mojo
         result = controller.get_java_model(recomendations[0], 'mojo')
-        print(result)
 
         controller.clean_handlers()
     del controller

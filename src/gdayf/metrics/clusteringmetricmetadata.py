@@ -39,8 +39,9 @@ class ClusteringMetricMetadata(MetricMetadata):
                     else:
                         self[parameter] = perf_metrics._metric_json[parameter]
             except KeyError as kexecution_error:
-                print(repr(kexecution_error))
+                pass
+                #print('Trace: ' + repr(kexecution_error))
             except AttributeError as aexecution_error:
-                print(repr(aexecution_error))
+                print('Trace: ' + repr(aexecution_error))
             except TypeError as texecution_error:
-                print(repr(texecution_error))
+                print('Trace: ' + repr(texecution_error))

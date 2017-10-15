@@ -42,7 +42,7 @@ class Controller(object):
         self.model_handler = OrderedDict()
         self.user_id = user_id
         self.adviser = importlib.import_module(self._config['optimizer']['adviser_classpath'])
-        self._logging.log_exec('gDayF', "Controller", self._labels["loading_adviser"],
+        self._logging.log_info('gDayF', "Controller", self._labels["loading_adviser"],
                                self._config['optimizer']['adviser_classpath'])
 
     ## Method leading configurations coherence checks
@@ -57,7 +57,7 @@ class Controller(object):
                   and self._coherence_fs_checks(storage_conf['hdfs'], grants=grants)
         mongoDB = (storage_conf['mongoDB'] is not None) \
                   and self._coherence_db_checks(storage_conf['mongoDB'], user=self.user_id)
-        self._logging.log_exec('gDayF', "Controller", self._labels["primary_path"],
+        self._logging.log_info('gDayF', "Controller", self._labels["primary_path"],
                                str(storage_conf['primary_path']))
 
         ''' Checking primary Json storage Paths'''
@@ -68,22 +68,22 @@ class Controller(object):
                 primary = True
             if storage['type'] == 'mongoDB':
                 if not mongoDB:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_json"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
 
         if not primary:
-            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+            self._logging.log_critical('gDayF', "Controller", self._labels["no_primary"],
                                    str(storage_conf[storage_conf['primary_path']]))
             return False
 
@@ -91,26 +91,26 @@ class Controller(object):
         at_least_on = False
         for storage in StorageMetadata().get_load_path():
             if storage['type'] == 'mongoDB':
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
                                        str(storage))
                 return False
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
                                            str(storage))
                     return False
                 else:
                     at_least_on = at_least_on or True
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
                                            str(storage))
                     return False
                 else:
                     at_least_on = at_least_on or True
 
         if not at_least_on:
-            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+            self._logging.log_critical('gDayF', "Controller", self._labels["no_primary"],
                                    str(storage_conf[storage_conf['primary_path']]))
             return False
 
@@ -118,25 +118,25 @@ class Controller(object):
         at_least_on = False
         for storage in StorageMetadata().get_log_path():
             if storage['type'] == 'mongoDB':
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_file_storage"],
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
                                        str(storage))
                 return False
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_log"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_log"],
                                            str(storage))
                     return False
                 else:
                     at_least_on = at_least_on or True
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_log"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_log"],
                                            str(storage))
                     return False
                 else:
                     at_least_on = at_least_on or True
         if not at_least_on:
-            self._logging.log_exec('gDayF', "Controller", self._labels["no_primary"],
+            self._logging.log_critical('gDayF', "Controller", self._labels["no_primary"],
                                    str(storage_conf[storage_conf['primary_path']]))
             return False
 
@@ -154,11 +154,11 @@ class Controller(object):
             if persistence.mkdir(type=storage['type'], path=str(storage['value']), grants=grants):
                 return False
         except OSError:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_json_path"],
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_json_path"],
                                    str(storage['value']))
             return False
         if storage['hash_type'] not in ['MD5', 'SHA256']:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_hash_method"],
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_hash_method"],
                                    str(storage))
             return False
         return True
@@ -196,16 +196,16 @@ class Controller(object):
     # @param model_file String Path indicating model_file ArMetadata.json structure
     def exec_prediction(self, datapath, armetadata=None, model_file=None):
 
-        self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], 'prediction')
+        self._logging.log_info('gDayF', "Controller", self._labels["ana_mode"], 'prediction')
         if armetadata is None and model_file is None:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], datapath)
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], datapath)
             return self._labels["failed_model"]
         elif armetadata is not None:
             try:
                 assert isinstance(armetadata, ArMetadata)
                 base_ar = deep_ordered_copy(armetadata)
             except AssertionError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], armetadata)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], armetadata)
                 return self._labels["failed_model"]
         elif model_file is not None:
             try:
@@ -216,29 +216,29 @@ class Controller(object):
                 '''base_ar = deep_ordered_copy(load(json_file))
                 json_file.close()'''
                 if base_ar is None:
-                    self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
                     return self._labels["failed_model"]
             except IOError as iexecution_error:
                 print(repr(iexecution_error))
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
             except OSError as oexecution_error:
                 print(repr(oexecution_error))
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_model"], model_file)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
                 return self._labels["failed_model"]
 
         if isinstance(datapath, str):
             try:
-                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
+                self._logging.log_info('gDayF', "Controller", self._labels["input_param"], datapath)
                 pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
             except [IOError, OSError, JSONDecodeError]:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
             pd_dataset = datapath
-            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
+            self._logging.log_info('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
         else:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input']
 
         fw = get_model_fw(base_ar)
@@ -251,7 +251,7 @@ class Controller(object):
         else:
             prediction_frame = None
                 
-        self._logging.log_exec('gDayF', 'controller', self._labels["pred_end"])
+        self._logging.log_info('gDayF', 'controller', self._labels["pred_end"])
 
         return prediction_frame
 
@@ -315,29 +315,29 @@ class Controller(object):
         if objective_column is None:
             supervised = False
 
-        self._logging.log_exec('gDayF', "Controller", self._labels["start"])
-        self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
-        self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
-        self._logging.log_exec('gDayF', "Controller", self._labels["ana_mode"], amode)
+        self._logging.log_info('gDayF', "Controller", self._labels["start"])
+        self._logging.log_info('gDayF', "Controller", self._labels["ana_param"], metric)
+        self._logging.log_info('gDayF', "Controller", self._labels["dep_param"], deep_impact)
+        self._logging.log_info('gDayF', "Controller", self._labels["ana_mode"], amode)
 
 
         if isinstance(datapath, str):
             try:
-                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
+                self._logging.log_info('gDayF', "Controller", self._labels["input_param"], datapath)
                 pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
                 id_datapath = Path(datapath).name
                 hash_dataframe = hash_key('MD5', datapath)
             except IOError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
             except OSError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
             except JSONDecodeError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
-            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
+            self._logging.log_info('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
             pd_dataset = datapath
             id_datapath = 'Dataframe' + \
                           '_' + str(pd_dataset.size) + \
@@ -345,7 +345,7 @@ class Controller(object):
                           '_' + str(pd_dataset.shape[1])
             hash_dataframe = md5(datapath.to_msgpack()).hexdigest()
         else:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input'], None
 
         pd_test_dataset = None
@@ -400,12 +400,12 @@ class Controller(object):
                                                                             adviser.analysis_recommendation_order)
             adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
 
-        self._logging.log_exec(adviser.analysis_id, 'controller',
+        self._logging.log_info(adviser.analysis_id, 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_exec(adviser.analysis_id, 'controller',
+        self._logging.log_info(adviser.analysis_id, 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
-        self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric, supervised)
+        #self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric, supervised)
 
         self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
 
@@ -423,31 +423,31 @@ class Controller(object):
         ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
         for model in ordered_list:
             if best_check:
-                self._logging.log_exec(analysis_id, 'controller', self._labels["best_model"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["best_model"],
                                        model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
                 best_check = False
             else:
-                self._logging.log_exec(analysis_id, 'controller', self._labels["res_model"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["res_model"],
                                        model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
-            self._logging.log_exec(analysis_id, 'controller', self._labels["round_reach"], model['round'])
+            self._logging.log_info(analysis_id, 'controller', self._labels["round_reach"], model['round'])
             if model["normalizations_set"] is None:
-                self._logging.log_exec(analysis_id, 'controller', self._labels["norm_app"], [])
+                self._logging.log_info(analysis_id, 'controller', self._labels["norm_app"], [])
             else:
-                self._logging.log_exec(analysis_id, 'controller', self._labels["norm_app"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["norm_app"],
                                        model["normalizations_set"])
 
             if metric in ACCURACY_METRICS or REGRESSION_METRICS:
-                self._logging.log_exec(analysis_id, 'controller', self._labels["ametric_order"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["ametric_order"],
                                        model['metrics']['accuracy'])
-                self._logging.log_exec(analysis_id, 'controller', self._labels["pmetric_order"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['train']['RMSE'])
             if metric in CLUSTERING_METRICS:
-                self._logging.log_exec(analysis_id, 'controller', self._labels["ckmetric_order"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
                                        model['metrics']['execution']['train']['k'])
-                self._logging.log_exec(analysis_id, 'controller', self._labels["ctmetric_order"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["ctmetric_order"],
                                        model['metrics']['execution']['train']['tot_withinss'])
-                self._logging.log_exec(analysis_id, 'controller', self._labels["cbmetric_order"],
+                self._logging.log_info(analysis_id, 'controller', self._labels["cbmetric_order"],
                                        model['metrics']['execution']['train']['betweenss'])
 
     ## Method leading and controlling analysis's executions on specific analysis
@@ -459,34 +459,34 @@ class Controller(object):
     # @return status, adviser.analysis_recommendation_order
     def exec_sanalysis(self, datapath, list_ar_metadata, metric='combined', deep_impact=1, **kwargs):
 
-        self._logging.log_exec('gDayF', "Controller", self._labels["start"])
-        self._logging.log_exec('gDayF', "Controller", self._labels["ana_param"], metric)
-        self._logging.log_exec('gDayF', "Controller", self._labels["dep_param"], deep_impact)
+        self._logging.log_info('gDayF', "Controller", self._labels["start"])
+        self._logging.log_info('gDayF', "Controller", self._labels["ana_param"], metric)
+        self._logging.log_info('gDayF', "Controller", self._labels["dep_param"], deep_impact)
 
         if isinstance(datapath, str):
             try:
-                self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], datapath)
+                self._logging.log_info('gDayF', "Controller", self._labels["input_param"], datapath)
                 pd_dataset = inputHandlerCSV().inputCSV(filename=datapath)
                 id_datapath = Path(datapath).name
                 hash_dataframe = hash_key('MD5', datapath)
             except IOError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
             except OSError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
             except JSONDecodeError:
-                self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
-            self._logging.log_exec('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
+            self._logging.log_critical('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
             pd_dataset = datapath
             id_datapath = 'Dataframe' + \
                           '_' + str(pd_dataset.size) + \
                           '_' + str(pd_dataset.shape[0]) + \
                           '_' + str(pd_dataset.shape[1])
         else:
-            self._logging.log_exec('gDayF', "Controller", self._labels["failed_input"], datapath)
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input'], None
 
         pd_test_dataset = None
@@ -533,14 +533,14 @@ class Controller(object):
             adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=adviser.analysis_recommendation_order)
 
 
-        self._logging.log_exec(adviser.analysis_id, 'controller',
+        self._logging.log_info(adviser.analysis_id, 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_exec(adviser.analysis_id, 'controller',
+        self._logging.log_info(adviser.analysis_id, 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
         self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric)
 
-        self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
+        self._logging.log_info(adviser.analysis_id, 'controller', self._labels["end"])
 
         self.clean_handlers()
 
@@ -638,7 +638,7 @@ class Controller(object):
     # @return OrderedDict() with execution tree data Analysis
     def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None, user='guest'):
         if (arlist is None or len(arlist) == 0) and experiment is None:
-            self._logging.log_exec('gDayF', 'controller', self._labels["failed_model"])
+            self._logging.log_critical('gDayF', 'controller', self._labels["failed_model"])
             return None
         elif experiment is not None and user != 'guest':
             analysis_id = experiment
@@ -711,7 +711,6 @@ class Controller(object):
 
             storage = StorageMetadata()
             storage.append(value=''.join(datafile), fstype=fstype)
-            print(storage)
             PersistenceHandler().store_json(storage, root)
         return root
 

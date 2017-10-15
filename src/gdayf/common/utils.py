@@ -75,9 +75,3 @@ def pandas_split_data(df, train_perc=0.9):
     train = df[df.train == 1].drop('train', axis=1)
     test = df[df.train == 0].drop('train', axis=1)
     return train, test
-
-## Function oriented to extract ArMetadata from json and generate ArMetadata List with all Analysis Data
-# @param path path pointed to analysis storage fs
-# @return ArMetadata List
-def get_arlist_from_path (path):
-    pass

@@ -2788,6 +2788,30 @@
       }
     },
     "loggers": {
+      "gdayf.handlers.h2ohandler": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.handlers": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "gdayf.normalizer.normalizer": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.normalizer": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
       "gdayf.logs.logshandler": {
         "handlers": [
           "error"
@@ -2800,7 +2824,7 @@
         ],
         "propagate": false
       },
-      "gdayf.core.adviserastar": {
+      "gdayf.core.adviserbase": {
         "handlers": [
           "error"
         ],
@@ -2813,18 +2837,6 @@
         "propagate": true
       },
       "gdayf.core": {
-        "handlers": [
-          "info"
-        ],
-        "propagate": false
-      },
-      "gdayf.handlers.h2ohandler": {
-        "handlers": [
-          "error"
-        ],
-        "propagate": true
-      },
-      "gdayf.handlers": {
         "handlers": [
           "info"
         ],
@@ -2869,9 +2881,6 @@
     "log_path" : [
       {"value": "log" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "log" , "type":"hdfs",
-        "hash_value": null, "hash_type":"SHA256"
       }
     ],
     "json_path" : [
@@ -2962,7 +2971,7 @@
     }
   },
   "common": {
-    "version" : "0.9.2",
+    "version" : "1.0.0",
     "test_frame_ratio" : 0.9
   }
 }
