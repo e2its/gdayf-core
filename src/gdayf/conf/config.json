@@ -2748,6 +2748,1747 @@
           }
         }
       ]
+    },
+    "spark": {
+      "conf": {
+        "download_dir": "downloads",
+        "master": "local",
+        "nthreads": 3,
+        "spark_warehouse_dir": "/Data/Data/spark_warehouse",
+        "spark.executor.memory": "1G",
+        "spark.driver.memory": "1G",
+        "start_spark": true,
+        "debug": false,
+        "save_model": "NATIVE",
+        "tolerance": 0.05,
+        "enabled" : false,
+        "min_rows_enabled": false,
+        "max_cols_enabled": true,
+        "train_balance_metric" : 0.2,
+        "validation_frame_ratio" : 0.85,
+        "validation_frame_threshold" : 100000,
+        "anomaly_threshold":
+        {
+          "columns" :0.15,
+          "global_mse":0.10
+        },
+        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"]
+      },
+      "models": [
+        {
+          "model": "LinearSVC",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "aggregationDepth": {
+                "value": 2,
+                "seleccionable": false,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardization": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "threshold": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "LogisticRegression",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "aggregationDepth": {
+                "value": 2,
+                "seleccionable": false,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+              "family": {
+                "value": "auto",
+                "seleccionable": false,
+                "type": "['auto','binomial','multinomial']"
+              }
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardization": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "threshold": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "elasticNetParam": {
+                "value": null,
+                "seleccionable": false,
+                "type": "[0.0:1.0]"
+              },
+              "probabilityCol": {
+                "value": "probability",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "thresholds": {
+                "value": null,
+                "seleccionable": false,
+                "type": "Int[0:cardinality]"
+              }
+
+            }
+          }
+        },
+        {
+          "model": "DecisionTreeClassifier",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxDepth": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "gini",
+                "seleccionable": true,
+                "type": "[ 'entropy', 'gini']"
+              }
+            }
+          }
+        },
+        {
+          "model": "GBTClassifier",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+              "stepSize": {
+                "value": 0.1,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "lossType": {
+                "value": "logistic",
+                "seleccionable": false,
+                "type": "['logistic']"
+              }
+            }
+          }
+        },
+        {
+          "model": "RandomForestClassifier",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "numTrees": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "featureSubsetStrategy": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": "['auto', 'all', 'onethird', 'sqrt', 'log2']"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "gini",
+                "seleccionable": true,
+                "type": "[ 'entropy', 'gini']"
+              }
+            }
+          }
+        },
+        {
+          "model": "NaiveBayes",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+              "modelType": {
+                "value": "multinomial",
+                "seleccionable": false,
+                "type": "['multinomial','bernoulli']"
+              }
+            },
+            "learn":{
+            },
+            "others":{
+              "smoothing": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "thresholds": {
+                "value": null,
+                "seleccionable": false,
+                "type": "float[0:cardinality]"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "DecisionTreeRegressor",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "variance",
+                "seleccionable": false,
+                "type": "['variance']"
+              },
+              "varianceCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "GBTRegressor",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+              "stepSize": {
+                "value": 0.1,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "lossType": {
+                "value": "logistic",
+                "seleccionable": false,
+                "type": "['logistic']"
+              },
+              "impurity": {
+                "value": "variance",
+                "seleccionable": false,
+                "type": "['variance']"
+              }
+            }
+          }
+        },
+        {
+          "model": "RandomForestRegressor",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "numTrees": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "featureSubsetStrategy": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": "['auto', 'all', 'onethird', 'sqrt', 'log2']"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "variance",
+                "seleccionable": true,
+                "type": "['variance']"
+              }
+            }
+          }
+        },
+        {
+          "model": "GeneralizedLinearRegression",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+              "family": {
+                "value": "gaussian",
+                "seleccionable": true,
+                "type": "['gaussian', 'binomial', 'poisson', 'gamma' ,'tweedie']"
+              },
+              "link": {
+                "value": null,
+                "seleccionable": false,
+                "type": "['identity', 'log', 'inverse', 'logit', 'probit', 'cloglog' , 'sqrt']"
+              },
+              "linkPower": {
+                "value": null,
+                "seleccionable": false,
+                "type": "float[0.1:1.9]"
+              },
+              "linkPredictionCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "variancePower": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float[0;[1:Inf)]"
+              },
+              "solver": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": "['auto', 'irls']"
+              }
+
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "LinearRegression",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "aggregationDepth": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardization": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "elasticNetParam": {
+                "value": null,
+                "seleccionable": false,
+                "type": "[0.0:1.0]"
+              },
+              "solver": {
+                "value": "normal",
+                "seleccionable": false,
+                "type": "['normal','auto']"
+              }
+
+            }
+          }
+        },
+        {
+          "model": "BisectingKMeans",
+          "id": null,
+          "module": "pyspark.ml.clustering",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "k": {
+                "value": 4,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minDivisibleClusterSize": {
+                "value": 0.10,
+                "seleccionable": true,
+                "type": "float"
+              }
+            }
+          }
+        },
+        {
+          "model": "KMeans",
+          "id": null,
+          "module": "pyspark.ml.clustering",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "enabled": false,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "k": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 1e-04,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "initMode": {
+                "value": "k-means||",
+                "seleccionable": true,
+                "type": "['random','k-means||']"
+              },
+              "initSteps": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            }
+          }
+        }
+      ]
     }
   },
   "logging": {
