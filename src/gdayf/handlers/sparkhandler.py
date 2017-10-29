@@ -1,7 +1,7 @@
 ## @package gdayf.handlers.sparkhandler
-# Define all objects, functions and structures related to executing actions or activities over h2o.ai framework
+# Define all objects, functions and structures related to executing actions or activities over spark.ai framework
 #
-# Main class H2OHandler. Lets us execute analysis, make prediction and execute multi-packet operations structures on
+# Main class sparkHandler. Lets us execute analysis, make prediction and execute multi-packet operations structures on
 # format [(Analysis_results.json, normalization_sets.json) ]
 # Analysis_results.json could contain executions models for various different model or parameters
 
@@ -9,36 +9,34 @@
 import copy
 import json
 import time
+import sys
 from collections import OrderedDict as OrderedDict
 from os.path import dirname
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
-from pathlib import Path
+from py4j.protocol import Py4JJavaError
 
-from h2o import H2OFrame as H2OFrame
-from h2o import cluster as cluster
-from h2o import connect as connect
-from h2o import connection as connection
-from h2o import init as init
-from h2o import load_model as load_model
-from h2o import save_model as save_model
-from h2o.exceptions import H2OError
-from h2o.exceptions import H2OConnectionError
-from h2o import ls as H2Olist
-from h2o import frames as H2Oframes
-from h2o import get_model
-from h2o import remove as H2Oremove
-from h2o import api as H2Oapi
-from h2o import get_frame
-from h2o import download_pojo
+try:
+    # Now we are ready to import Spark Modules
+    from pyspark.sql import SparkSession
+    from pyspark.ml import Pipeline
+    from pyspark.ml import PipelineModel
+    from pyspark.ml.feature import VectorAssembler
+    from pyspark.ml.feature import VectorIndexer
+    from pyspark.ml.classification import *
+    from pyspark.ml.regression import *
+    from pyspark.ml.clustering import *
+    from pyspark.ml.evaluation import *
+    from pyspark.ml.tuning import *
+    from pyspark.ml.feature import StringIndexer
+    from pyspark.ml.feature import IndexToString
+    from pyspark.ml.feature import OneHotEncoder
 
-from h2o.estimators.gbm import H2OGradientBoostingEstimator
-from h2o.estimators.glm import H2OGeneralizedLinearEstimator
-from h2o.estimators.deeplearning import H2ODeepLearningEstimator
-from h2o.estimators.random_forest import H2ORandomForestEstimator
-from h2o.estimators.naive_bayes import H2ONaiveBayesEstimator
-from h2o.estimators.deeplearning import H2OAutoEncoderEstimator
-from h2o.estimators.kmeans import H2OKMeansEstimator
+    print("Successfully imported all Spark modules")
+except ImportError as e:
+    print("Error importing Spark Modules", e)
+    sys.exit(1)
+
 
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.storagemetadata import StorageMetadata
@@ -66,7 +64,7 @@ from gdayf.common.utils import get_model_fw
 class sparkHandler(object):
 
     ## Constructor
-    # Initialize all framework variables and starts or connect to h2o cluster
+    # Initialize all framework variables and starts or connect to spark cluster
     # Aditionally starts PersistenceHandler and logsHandler
     def __init__(self):
         self._framework = 'spark'
@@ -76,36 +74,53 @@ class sparkHandler(object):
         self.hdfs =self._config['storage']['hdfs']['value']
         self.mongoDB = self._config['storage']['mongoDB']['value']
         self.primary_path = self._config['storage'][self._config['storage']['primary_path']]['value']
-        self.url = self._config['frameworks'][self._framework]['conf']['url']
+        self.url = self._config['frameworks'][self._framework]['conf']['master']
         self.nthreads = self._config['frameworks'][self._framework]['conf']['nthreads']
-        self.ice_root = self._config['frameworks'][self._framework]['conf']['ice_root']
-        self.max_mem_size = self._config['frameworks'][self._framework]['conf']['max_mem_size']
-        self.start_h2o = self._config['frameworks'][self._framework]['conf']['start_h2o']
+        self.spark_warehouse_dir = self._config['frameworks'][self._framework]['conf']['spark_warehouse_dir']
+        self.spark_executor_mem = self._config['frameworks'][self._framework]['conf']['spark.executor.memory']
+        self.spark_driver_mem = self._config['frameworks'][self._framework]['conf']['spark.driver.memory']
+        self.start_spark = self._config['frameworks'][self._framework]['conf']['start_spark']
         self._debug = self._config['frameworks'][self._framework]['conf']['debug']
         self._save_model = self._config['frameworks'][self._framework]['conf']['save_model']
         self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
         self._anomaly_threshold = self._config['frameworks'][self._framework]['conf']['anomaly_threshold']
         self._model_base = None
         self.analysis_id = None
-        self._h2o_session = None
+        self._spark_session = None
         self._persistence = PersistenceHandler()
         self._logging = LogsHandler(__name__)
         self._frame_list = list()
 
     ## Destructor
     def __del__(self):
-        if self._h2o_session is not None and self.is_alive():
-            H2Oapi("POST /3/GarbageCollect")
-            self._h2o_session.close()
+        if self._spark_session is not None and self.is_alive():
+            self._spark_session.close()
 
     ## Class Method for cluster shutdown
     # @param cls class pointer
+    # Not implemented
     @classmethod
     def shutdown_cluster(cls):
         try:
-            cluster().shutdown()
-        except:
-            print('H20-cluster not working')
+            pass
+        except Py4JJavaError:
+            print('Apache Spark Cluster not working')
+
+    ''''@staticmethod
+    def addColumnIndex(dataframe):
+        # Create new column names
+        oldColumns = dataframe.schema.names
+        newColumns = oldColumns + ["columnindex"]
+
+        # Add Column index
+        df_indexed = df.rdd.zipWithIndex().map(lambda row, columnindex: \
+                                                      row + (columnindex,)).toDF()
+
+        # Rename all the columns
+        new_df = reduce(lambda data, idx: data.withColumnRenamed(oldColumns[idx],
+                                                                 newColumns[idx]), range(len(oldColumns)),
+                        df_indexed)
+        return new_df'''
 
     ## Connexion_method to cluster
     #If cluster is up connect to cluster on another case start a cluster
@@ -113,31 +128,42 @@ class sparkHandler(object):
     def connect(self):
         initiated = False
         try:
-            self._h2o_session = connect(url=self.url)
-        except H2OError:
-            try:
-                init(url=self.url, nthreads=self.nthreads, ice_root=self.ice_root, max_mem_size=self.max_mem_size)
-                self._h2o_session = connection()
-                initiated = True
-            except H2OError:
-                self._logging.log_critical('gDayF', "H2OHandler", self._labels["failed_conn"])
-                raise Exception
+            spark = SparkSession.builder.master(self.url + '[' + self.nthreads + ']').appName(self.analysis_id) \
+                .config("spark.executor.memory", self.spark_executor_mem) \
+                .config("spark.driver.memory", self.spark_driver_mem) \
+                .config("spark_warehouse_dir", self.spark_warehouse_dir)
+            self._spark_session = spark.getOrCreate()
+
+        except Py4JJavaError:
+            self._logging.log_critical('gDayF', "sparkHandler", self._labels["failed_conn"])
+            raise Exception
         finally:
-            self._logging.log_info('gDayF', "H2OHandler", self._labels["start"])
-            self._logging.log_info('gDayF', "H2OHandler", self._labels["framework"], self._framework)
-            self._logging.log_info('gDayF', "H2OHandler", self._labels["sess"], self._h2o_session.session_id())
+            self._logging.log_info('gDayF', "sparkHandler", self._labels["start"])
+            self._logging.log_info('gDayF', "sparkHandler", self._labels["framework"], self._framework)
+            self._logging.log_info('gDayF', "sparkHandler", self._labels["sess"],
+                                   self._spark_session.sparkContext.applicationId())
             return initiated
+
+    ## Get Spark dtype for column
+    # @param list_dtypes Spark Dataframe.dtypes structure
+    # @param column string
+    # @return dtype or None if not exist
+    @ staticmethod
+    def _get_dtype(list_dtypes, column):
+        for element in list_dtypes:
+            if element[0] == column:
+                return element[1]
+        return None
 
     ## Is alive_connection method
     def is_alive(self):
-        if self._h2o_session is None:
+        if self._spark_session is None:
+            return False
+        elif self._spark_session._instantiatedSession is None:
             return False
         else:
-            try:
-                self._h2o_session.session_id()
-            except H2OConnectionError:
-                return False
-            return self._h2o_session.cluster.is_running()
+            return True
+
 
     ## Generate list of models_id for internal crossvalidation objects_
     # @param self object pointer
@@ -145,17 +171,7 @@ class sparkHandler(object):
     # @param nfols number of cv buckets
     # @return models_ids lst of models_ids
     def _get_temporal_objects_ids(self, model_id, nfolds):
-        models_ids = list()
-        if nfolds is not None:
-            for iter in range(0, nfolds):
-                models_ids.append(model_id + '_cv_' + str(iter+1))
-        for element in H2Oframes()['frames']:
-            name = element['frame_id']['name']
-            if name.find('reconstruction_error_') != -1 and name.find(model_id) != -1:
-                models_ids.append(name)
-            elif name.find('predictions_') != -1 and name.find(model_id) != -1:
-                models_ids.append(name)
-        return models_ids
+        pass
 
     ## Generate java model class_
     # @param self object pointer
@@ -163,72 +179,11 @@ class sparkHandler(object):
     # @param type ['pojo', 'mojo']
     # @param user user_id
     # @return download_path, MD5 hash_key
+    # Not implemented
     def get_java_model(self, ar_metadata, type, user):
-        remove_model = False
-        fw = get_model_fw(ar_metadata)
-        model_id = ar_metadata['model_parameters'][fw]['parameters']['model_id']['value']
-        self.analysis_id = ar_metadata['model_id']
-        analysis_id = self.analysis_id
-        config = LoadConfig().get_config()['frameworks'][fw]['conf']
-        base_model_id = model_id + '.model'
-        load_fails, remove_model = self._get_model(ar_metadata, base_model_id, remove_model)
+        pass
 
-        if load_fails:
-            self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
-                                       self._labels["no_models"], ar_metadata)
-            return None
-        load_storage = StorageMetadata()
-        for each_storage_type in load_storage.get_load_path():
-            if each_storage_type['type'] == 'localfs':
-                source_data = list()
-                primary_path = self._config['storage'][each_storage_type['type']]['value']
-                source_data.append(primary_path)
-                source_data.append('/')
-                source_data.append(user)
-                source_data.append('/')
-                source_data.append(ar_metadata['model_id'])
-                source_data.append('/')
-                source_data.append(config['download_dir'])
-                source_data.append('/')
-                source_data.append(model_id)
-
-                download_path = ''.join(source_data)
-
-                self._logging.log_info(self.analysis_id, self._h2o_session.session_id,
-                                       self._labels["down_path"], download_path)
-                persistence = PersistenceHandler()
-                persistence.mkdir(type=each_storage_type['type'], path=str(download_path),
-                                  grants=int(self._config['storage']['grants'], 8))
-
-                if type.upper() == 'MOJO':
-                    try:
-                        file_path = self._model_base.download_mojo(path=str(download_path), get_genmodel_jar=True)
-                        self._logging.log_info(self.analysis_id, self._h2o_session.session_id,
-                                               self._labels["success_op"], file_path)
-                    except H2OError:
-                        load_fails = True
-                        self._logging.log_error(self.analysis_id, self._h2o_session.session_id,
-                                                self._labels["failed_op"], download_path)
-                else:
-                    try:
-                        file_path = download_pojo(self._model_base, path=str(download_path), get_jar=True)
-                        self._logging.log_info(self.analysis_id, self._h2o_session.session_id,
-                                               self._labels["success_op"], file_path)
-                    except H2OError:
-                        load_fails = True
-                        self._logging.log_error(self.analysis_id, self._h2o_session.session_id,
-                                               self._labels["failed_op"], download_path)
-        try:
-            if self._model_base is not None and remove_model:
-                H2Oremove(self._model_base.model_id)
-        except H2OError:
-            self._logging.log_exec(analysis_id,
-                                   self._h2o_session.session_id, self._labels["delete_objects"],
-                                   self._model_base.model_id)
-
-        return load_fails
-
-    ## Load a model in H2OCluster from disk
+    ## Load a model in sparkCluster from disk
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @return implicit self._model_base / None on Error
@@ -249,32 +204,29 @@ class sparkHandler(object):
                             ar_metadata['load_path'][counter_storage]['value']) == \
                             ar_metadata['load_path'][counter_storage]['hash_value']:
                 try:
-                    self._model_base = load_model(ar_metadata['load_path'][counter_storage]['value'])
+                    self._model_base = PipelineModel.load(ar_metadata['load_path'][counter_storage]['value'])
                     if self._model_base is not None:
                         load_fails = False
-                except H2OError:
-                    self._logging.log_error(self.analysis_id, self._h2o_session.session_id,
+
+                        if ar_metadata['load_path'][counter_storage]['hash_value'] is not None:
+                            self._logging.log_info(self.analysis_id, self._spark_session.sparkContext.applicationId,
+                                                   self._labels["hk_check"],
+                                                   ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
+                                                   hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
+                                                            ar_metadata['load_path'][counter_storage]['value'])
+                                                   )
+                except Py4JJavaError:
+                    self._logging.log_error(self.analysis_id, self._spark_session.sparkContext.applicationId,
                                             self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
 
-                if ar_metadata['load_path'][counter_storage]['hash_value'] is not None:
-                    self._logging.log_info(self.analysis_id, self._h2o_session.session_id, self._labels["hk_check"],
-                                           ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
-                                           hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
-                                           ar_metadata['load_path'][counter_storage]['value'])
-                                           )
             counter_storage += 1
         return load_fails
 
     ## Remove used dataframes during analysis execution_
     # @param self object pointer
-    def delete_h2oframes (self):
-        for frame_id in self._frame_list:
-            try:
-                H2Oremove(frame_id)
-            except H2OError:
-                self._logging.log_exec(self.analysis_id,
-                                       self._h2o_session.session_id, self._labels["delete_frames"],
-                                       frame_id)
+    # Not implemented
+    def delete_sparkframes (self):
+        pass
 
     ## Generate base path to store all files [models, logs, json] relative to it
     # @param self object pointer
@@ -316,22 +268,35 @@ class sparkHandler(object):
 
     ## Generate extension for diferente saving modes
     # @param self object pointer
-    # @return ['.pojo', '.mojo', '.model']
+    # @return ['.spark']
     def _get_ext(self):
-        if self._save_model == 'POJO':
-            return '.pojo'
-        elif self._save_model == 'MOJO':
-            return '.mojo'
+        return '.spark'
+
+    ## Get Evaluator for model
+    # @param analysis_type ['binomial', 'multinomial', regression, ..]
+    # @param objective_column
+    # @return pyspark.ml.evaluation.Evaluator children or None if not exist
+    @ staticmethod
+    def _get_evaluator(analysis_type, objective_column=None):
+        if objective_column is None:
+            if analysis_type == 'clustering':
+                return None
         else:
-            return '.model'
+            if analysis_type == 'binomial':
+                return BinaryClassificationEvaluator(labelCol=objective_column)
+            elif analysis_type == 'multinomial':
+                return MulticlassClassificationEvaluator(labelCol=objective_column)
+            elif analysis_type == 'regression':
+                return RegressionEvaluator(labelCol=objective_column)
+        return None
 
     ## Generate execution metrics for the correct model
     # @param self object pointer
-    # @param dataframe H2OFrame for prediction metrics
+    # @param dataframe sparkFrame for prediction metrics
     # @param source [train, val, xval]
     # @param  antype Atypemetadata().get_artypes() values allowed
     # @return model_metrics Subclass Metrics Metadata
-    def _generate_execution_metrics(self, dataframe, source, antype):
+    def _generate_execution_metrics(self, dataframe, antype, objective_column):
         if antype == 'binomial':
             model_metrics = BinomialMetricMetadata()
         elif antype == 'multinomial':
@@ -345,106 +310,149 @@ class sparkHandler(object):
         else:
             model_metrics = MetricMetadata()
 
-        if dataframe is not None and antype == 'anomalies':
-            result1 = self._model_base.predict(dataframe)
-            columns = list()
-            for item in self._model_base.varimp():
-                columns.append(item[0])
-            x = list()
-            for items in dataframe.columns:
-                if items in columns:
-                    x.append(items)
+        evaluator = self._get_evaluator(analysis_type=antype, objective_column=objective_column)
 
-            difference = dataframe[x] - result1
-            anomalies_threshold = OrderedDict()
-            anomalies_threshold['global_mse'] = OrderedDict()
-            reconstruction = self._model_base.anomaly(dataframe)
-            anomalies_threshold['global_mse']['max'] = reconstruction.max()
-            anomalies_threshold['global_mse']['min'] = reconstruction.min()
-
-            anomalies_threshold['columns'] = OrderedDict()
-            for col in difference.columns:
-                anomalies_threshold['columns'][col] = OrderedDict()
-                anomalies_threshold['columns'][col]['max'] = difference[col].max()
-                anomalies_threshold['columns'][col]['min'] = difference[col].min()
-
-            H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
-            return anomalies_threshold
-
-        elif dataframe is not None:
-            perf_metrics = self._model_base.model_performance(dataframe)
-        else:
-            if source == 'valid':
-                perf_metrics = self._model_base.model_performance(valid=True)
-            elif source == 'xval':
-                perf_metrics = self._model_base.model_performance(xval=True)
-            else:
-                perf_metrics = self._model_base.model_performance(train=True)
-
-        model_metrics.set_h2ometrics(perf_metrics)
-        H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
+        model_metrics.set_sparkmetrics(evaluator=evaluator, data=dataframe)
         return model_metrics
-
-    ## Generate model summary metrics
-    # @param self object pointer
-    # @return json_pandas_dataframe structure orient=split
-    def _generate_model_metrics(self):
-        return self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split')
-
-    ## Generate variable importance metrics
-    # @param self object pointer
-    # @return OrderedDict() for variable importance Key=column name
-    def _generate_importance_variables(self):
-        aux = OrderedDict()
-        try:
-            for each_value in self._model_base.varimp():
-                aux[each_value[0]] = each_value[2]
-        except TypeError:
-            pass
-        return aux
 
     ## Generate model scoring_history metrics
     # @param self object pointer
     # @return json_pandas_dataframe structure orient=split
     def _generate_scoring_history(self):
-        model_scoring = self._model_base.scoring_history()
-        if model_scoring is None:
-            return None
-        else:
-            return model_scoring.drop("", axis=1).to_json(orient='split')
+        if isinstance(self._model_base.stages[-1], GBTRegressionModel) or \
+                isinstance(self._model_base.stages[-1], RandomForestRegressor) or \
+                isinstance(self._model_base.stages[-1], GBTClassifier):
+            maximo = 0
+            for itera in range(0, len(self._model_base.stages[-1].trees)):
+                maximo = max(maximo, self._model_base.stages[-1].trees[itera].depth)
+
+            return DataFrame(data={'trees': self._model_base.stages[-1].getNumTrees,
+                                   'max_depth': maximo,
+                                   'total_nodes': self._model_base.stages[-1].totalNumNodes,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], RandomForestClassifier):
+            maximo = 0
+            for itera in range(0, len(self._model_base.stages[-1].trees)):
+                maximo = max(maximo, self._model_base.stages[-1].trees[itera].depth)
+
+            return DataFrame(data={'trees': self._model_base.stages[-1].getNumTrees,
+                                   'max_depth': maximo,
+                                   'total_nodes': self._model_base.stages[-1].totalNumNodes,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures,
+                                   'numClasses': self._model_base.stages[-1].numClasses},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], DecisionTreeRegressor):
+            return DataFrame(data={'trees': 1,
+                                   'max_depth': self._model_base.stages[-1].depth,
+                                   'total_nodes': self._model_base.stages[-1].numNodes,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], NaiveBayes):
+            return DataFrame(data={'pi': self._model_base.stages[-1].pi,
+                                   'theta': self._model_base.stages[-1].theta,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures,
+                                   'numClasses': self._model_base.stages[-1].numClasses},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], DecisionTreeClassifier):
+            return DataFrame(data={'trees': 1,
+                                   'max_depth': self._model_base.stages[-1].depth,
+                                   'total_nodes': self._model_base.stages[-1].numNodes,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures,
+                                   'numClasses': self._model_base.stages[-1].numClasses},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], GeneralizedLinearRegression):
+            summary = self._model_base.stages[-1].summary
+            return DataFrame(data={'aic': summary.aic,
+                                   'intercept': str(self._model_base.stages[-1].intercept),
+                                   'degreesOfFreedom': summary.degreesOfFreedom,
+                                   'numInstances': summary.numInstances,
+                                   'rank': summary.rank,
+                                   'dispersion': summary.dispersion,
+                                   'nullDeviance': summary.nullDeviance,
+                                   'residuals': summary.residuals,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], LinearRegression):
+            summary = self._model_base.stages[-1].summary
+            return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+                                   'degreesOfFreedom': summary.degreesOfFreedom,
+                                   'numInstances': summary.numInstances,
+                                   'totalIterations': summary.totalIterations,
+                                   'devianceResiduals': str(summary.devianceResiduals),
+                                   'explainedVariance': summary.explainedVariance,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], LinearSVC):
+            return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+                                   'intercept': self._model_base.stages[-1].intercept,
+                                   'numClasses': self._model_base.stages[-1].numClasses,
+                                   'numFeatures': self._model_base.stages[-1].numFeatures},
+                             index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], LogisticRegressionModel):
+            summary = self._model_base.stages[-1].summary
+            if isinstance(summary, BinaryLogisticRegressionTrainingSummary):
+                return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+                                       'coefifientsMatrix': str(self._model_base.stages[-1].coefficientsMatrix),
+                                       'intercept': self._model_base.stages[-1].intercept,
+                                       'interceptVector': str(self._model_base.stages[-1].interceptVector),
+                                       'totalIterations': summary.totalIterations,
+                                       'roc': summary.roc.toPandas().to_json(orient='split'),
+                                       'pr': summary.pr.toPandas().to_json(orient='split')},
+                                 index=[0]).to_json(orient='split')
+            else:
+                return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+                                       'coefifientsMatrix': str(self._model_base.stages[-1].coefficientsMatrix),
+                                       'intercept': self._model_base.stages[-1].intercept,
+                                       'interceptVector': str(self._model_base.stages[-1].interceptVector)},
+                                 index=[0]).to_json(orient='split')
+        elif isinstance(self._model_base.stages[-1], BisectingKMeans) or \
+                isinstance(self._model_base.stages[-1], KMeans):
+            summary = self._model_base.stages[-1].summary
+            return DataFrame(data={'clusterCenters': str(self._model_base.stages[-1].clusterCenters()),
+                                   'clusterSizes': str(summary.clusterSizes),
+                                   'k': summary.k},
+                             index=[0]).to_json(orient='split')
+
+    ## Generate variable importance metrics
+    # @param self object pointer
+    # @param column_chain list of columns mapping features col
+    # @return OrderedDict() for variable importance Key=column name
+    def _generate_importance_variables(self, column_chain):
+        var_importance = OrderedDict()
+        for columns in column_chain:
+            var_importance[columns] = self._model_base.stages[-1].featureImportances[column_chain.index(columns)]
+        return var_importance
+
+    ## Generate model summary metrics
+    # @param self object pointer
+    # @return json_pandas_dataframe structure orient=split
+    def _generate_model_metrics(self):
+        if isinstance(self._model_base.stages[-1], LogisticRegression) or \
+                isinstance(self._model_base.stages[-1], LinearRegression):
+            summary = self._model_base.stages[-1].summary
+            return DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split')
+        return None
 
     ## Generate accuracy metrics for model
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
     # on dataframe objective's column
     # @param self object pointer
-    # @param dataframe H2OFrame
-    # @param  antype Atypemetadata().get_artypes() values allowed
-    # @param  base type BugFix on regression with range mixing int and float
+    # @param dataframe prediction sparkFrame
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model
-    def _accuracy(self, objective, dataframe, antype, base_type, tolerance=0.0):
-        accuracy = -1.0
-        prediccion = self._model_base.predict(dataframe)
+    def _accuracy(self, objective, dataframe, tolerance=0.0):
 
-        if antype == 'regression' and prediccion.type('predict') == base_type:
-            fmin = eval("lambda x: x - " + str(tolerance/2))
-            fmax = eval("lambda x: x + " + str(tolerance/2))
-            success = dataframe[objective].apply(fmin) <= \
-                       prediccion['predict'] <= \
-                       dataframe[objective].apply(fmax)
-            accuracy = "Valid"
-        elif antype == 'regression':
-            accuracy = 0.0
-        else:
-            tolerance = 0.0
-            success = prediccion[0] == dataframe[objective]
-            accuracy = "Valid"
-        if accuracy not in [0.0, -1.0]:
-            accuracy = success.sum() / dataframe.nrows
+        fmin = eval("lambda x: x - " + str(tolerance / 2))
+        fmax = eval("lambda x: x + " + str(tolerance / 2))
 
-        self._frame_list.append(prediccion.frame_id)
+        resultado_train = dataframe.select("prediction", objective)
 
-        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["tolerance"],
+        accuracy = resultado_train.filter(resultado_train.prediction >= fmin(resultado_train[objective])) \
+                                  .filter(resultado_train.prediction <= fmax(resultado_train[objective])).count() \
+                                  / float(resultado_train.count())
+
+        self._logging.log_exec(self.analysis_id, self._spark_session.sparkContext.applicationId, self._labels["tolerance"],
                                str(tolerance))
         return accuracy
 
@@ -453,157 +461,42 @@ class sparkHandler(object):
     # on dataframe objective's column
     # @param self object pointer
     # @param objective objective column if apply
-    # @param odataframe original H2OFrame
-    # @param dataframe normalized H2OFrame
-    # @param  antype Atypemetadata().get_artypes() values allowed
-    # @param  base type BugFix on regression with range mixing int and float
+    # @param odataframe original sparkFrame
+    # @param dataframe normalized sparkFrame
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model, prediction_dataframe
-    def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
+    def _predict_accuracy(self, objective, odataframe, dataframe, tolerance=0.0):
         accuracy = -1.0
-        dataframe_cols = dataframe.columns
-        prediction_dataframe = self._model_base.predict(dataframe)
-        self._frame_list.append(prediction_dataframe.frame_id)
-        prediccion = odataframe.cbind(prediction_dataframe)
-        self._frame_list.append(prediction_dataframe.frame_id)
-        prediction_columns = prediccion.columns
-        for element in dataframe_cols:
-            prediction_columns.remove(element)
-        predictor_col = prediction_columns[0]
+        dataframe_cols = odataframe.columns
+        #bug SPARK-14948
+        prediccion = odataframe.withColumn('prediction', self._model_base.tranform(dataframe).prediction)
 
         if objective in dataframe.columns:
-            if antype == 'regression' and prediccion.type(predictor_col) == base_type:
-                fmin = eval("lambda x: x - " + str(tolerance/2))
-                fmax = eval("lambda x: x + " + str(tolerance/2))
-                success = prediccion[objective].apply(fmin).asnumeric() <= \
-                          prediccion[predictor_col] <= \
-                          prediccion[objective].apply(fmax).asnumeric()
-                accuracy = "Valid"
-            elif antype == 'regression':
-                accuracy = 0.0
-            else:
-                tolerance = 0.0
-                success = prediccion[predictor_col] == prediccion[objective]
-                accuracy = "Valid"
-        if accuracy not in [0.0, -1.0]:
-            accuracy = success.sum() / dataframe.nrows
-
-        self._logging.log_info(self.analysis_id, self._h2o_session.session_id, self._labels["tolerance"],
-                               str(tolerance))
-
+            accuracy = self._accuracy(objective=objective, dataframe=prediccion, tolerance=tolerance)
         return accuracy, prediccion
 
     ## Generate detected anomalies on dataframe
     # @param self object pointer
-    # @param odataframe original H2OFrame
-    # @param dataframe normalized H2OFrame
-    # @param anomalies_thresholds OrderedDict
-    # @return OrderedDict with anomalies
-    def _predict_anomalies(self, odataframe, dataframe, anomalies_thresholds):
-
-        result1 = self._model_base.predict(dataframe)
-        self._frame_list.append(result1.frame_id)
-
-        columns = list()
-        for item in self._model_base.varimp():
-            columns.append(item[0])
-        x = list()
-        for items in dataframe.columns:
-            if items in columns:
-                x.append(items)
-
-        difference = dataframe[x] - result1
-        self._frame_list.append(difference.frame_id)
-
-        anomalies = OrderedDict()
-        anomalies['columns'] = OrderedDict()
-        for col in x:
-            if anomalies_thresholds['columns'][col]['max'] < 0:
-                max = (1 - self._anomaly_threshold['columns'])
-            else:
-                max = (1 + self._anomaly_threshold['columns'])
-            if anomalies_thresholds['columns'][col]['min'] < 0:
-                min = (1 + self._anomaly_threshold['columns'])
-            else:
-                min = (1 - self._anomaly_threshold['columns'])
-
-            temp_anomalies = odataframe[difference[col] > (anomalies_thresholds['columns'][col]['max'] * max)
-                                       or
-                                       difference[col] < (anomalies_thresholds['columns'][col]['min'] * min)]
-            self._frame_list.append(temp_anomalies.frame_id)
-            if temp_anomalies.nrows > 0:
-                anomalies['columns'][col] = temp_anomalies.as_data_frame(use_pandas=True)
-
-        anomalies['global_mse'] = OrderedDict()
-        if anomalies_thresholds['global_mse']['max'] < 0:
-            max = (1 - self._anomaly_threshold['global_mse'])
-        else:
-            max = (1 + self._anomaly_threshold['global_mse'])
-        if anomalies_thresholds['global_mse']['min'] < 0:
-            min = (1 + self._anomaly_threshold['global_mse'])
-        else:
-            min = (1 - self._anomaly_threshold['global_mse'])
-
-        anomalyframe = self._model_base.anomaly(dataframe)
-        self._frame_list.append(anomalyframe.frame_id)
-
-        anomalyframe = dataframe.cbind(anomalyframe)
-        self._frame_list.append(anomalyframe.frame_id)
-
-
-        temp_anomalies = odataframe[anomalyframe['Reconstruction.MSE'] > (anomalies_thresholds['global_mse']['max'] * max)
-                                   or
-                                   anomalyframe['Reconstruction.MSE'] < (anomalies_thresholds['global_mse']['min'] *min)]
-        self._frame_list.append(temp_anomalies.frame_id)
-        if temp_anomalies.nrows > 0:
-            anomalies['global_mse'] = temp_anomalies.as_data_frame(use_pandas=True)
-
-        H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
-
-        return anomalies
-
-    ## Generate detected anomalies on dataframe
-    # @param self object pointer
-    # @param odataframe original H2OFrame
-    # @param dataframe normalized H2OFrame
+    # @param odataframe original sparkFrame
+    # @param dataframe normalized sparkFrame
     # @param objective objective column if apply
     # @return OrderedDict with anomalies
     def _predict_clustering(self, odataframe, dataframe, objective=None):
-
-        accuracy = -1.0
-        dataframe_cols = dataframe.columns
-        prediction_dataframe = self._model_base.predict(dataframe)
-        self._frame_list.append(prediction_dataframe.frame_id)
-        prediccion = odataframe.cbind(prediction_dataframe)
-        self._frame_list.append(prediction_dataframe.frame_id)
-
-        prediction_columns = prediccion.columns
-        for element in dataframe_cols:
-            prediction_columns.remove(element)
-        predictor_col = prediction_columns[0]
-
-        if objective in dataframe.columns:
-            success = prediccion[predictor_col] == prediccion[objective]
-            accuracy = "Valid"
-        if accuracy not in [0.0, -1.0]:
-            accuracy = success.sum() / dataframe.nrows
-
-        return accuracy, prediccion
+        return self._predict_accuracy(objective=objective, odataframe=odataframe, dataframe=dataframe)
 
     ## Generate model full values parameters for execution analysis
     # @param self object pointer
+    # @para, modeldef modeldef instance
     # @return (status (success 0, error 1) ,OrderedDict())
-    def _generate_params(self):
+    def _generate_params(self, modeldef):
         """
         Generate model params for this model.
         :return (status (success 0, error 1) , OrderedDict(full_stack_parameters))
         """
-        params = self._model_base.get_params()
         full_stack_params = OrderedDict()
-        for key, values in params.items():
-            if key not in ['model_id', 'training_frame', 'validation_frame', 'response_column']:
-                full_stack_params[key] = values['actual_value']
-        return (0, full_stack_params)
+        for key, item in modeldef.extractParamMap().items():
+            full_stack_params[str(key)[str(key).find('__') + 2:]] = item
+        return 0, full_stack_params
 
     ## Get one especific metric for execution metrics
     # Not tested yet
@@ -615,50 +508,12 @@ class sparkHandler(object):
         try:
             struct_ar = OrderedDict(json.load(algorithm_description))
         except:
-            self._logging.log_error('gDayF', self._h2o_session.session_id(), self._labels["ar_error"])
+            self._logging.log_error('gDayF', self._spark_session.sparkContext.applicationId(), self._labels["ar_error"])
             return ('Necesario cargar un modelo valid o ar.json valido')
         try:
             return struct_ar['metrics'][source][metric]
         except KeyError:
             return 'Not Found'
-
-    ## Auxiliary Method to convert numerical and string columns on H2OFrame to enum (factor)
-    # for classification analysis
-    # Returns H2OFrames modified if apply for classification objectives
-    # @param atype String in ATypeMetadata().get_artypes(cls)
-    # @param objective_column String Column Objective
-    # @param training_frame H2OFrame for training (optional)
-    # @param valid_frame H2OFrame for validation (optional)
-    # @param predict_frame H2OFrame for prediction (optional)
-    def need_factor(self, atype, objective_column, training_frame=None, valid_frame=None, predict_frame=None):
-        if atype in ['binomial', 'multinomial']:
-            if training_frame is not None:
-                if isinstance(training_frame[objective_column], (int, float)):
-                    training_frame[objective_column] = training_frame[objective_column].asfactor()
-                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
-                                           ' train : ' + objective_column)
-                else:
-                    training_frame[objective_column] = training_frame[objective_column].ascharacter().asfactor()
-                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
-                                           ' train : ' + objective_column)
-            if valid_frame is not None:
-                if isinstance(valid_frame[objective_column], (int, float)):
-                    valid_frame[objective_column] = valid_frame[objective_column].asfactor()
-                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
-                                           ' validation : ' + objective_column)
-                else:
-                    valid_frame[objective_column] = valid_frame[objective_column].ascharacter().asfactor()
-                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
-                                           ' validation : ' + objective_column)
-            if predict_frame is not None and objective_column in predict_frame.columns:
-                if isinstance(predict_frame[objective_column], (int, float)):
-                    predict_frame[objective_column] = predict_frame[objective_column].asfactor()
-                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
-                                           ' predict : ' + objective_column)
-                else:
-                    predict_frame[objective_column] = predict_frame[objective_column].ascharacter().asfactor()
-                    self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["factoring"],
-                                           ' predict : ' + objective_column)
 
     ## Method to execute normalizations base on params
     # @param self object pointer
@@ -673,7 +528,7 @@ class sparkHandler(object):
         if base_ns is not None:
             data_norm = dataframe.copy(deep=True)
             self._logging.log_exec(self.analysis_id,
-                                   self._h2o_session.session_id, self._labels["exec_norm"], str(base_ns))
+                                   self._spark_session.sparkContext.applicationId, self._labels["exec_norm"], str(base_ns))
             normalizer = Normalizer()
             if not exist_objective:
                 base_ns = normalizer.filter_objective_base(normalizemd=base_ns)
@@ -737,9 +592,10 @@ class sparkHandler(object):
             test_frame = None
 
         base_ns = get_model_ns(base_ar)
-        modelid = base_ar['model_parameters']['h2o']['model']
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["st_analysis"], modelid)
-
+        modelid = base_ar['model_parameters']['spark']['model']
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["st_analysis"], modelid)
 
         assert isinstance(base_ns, list) or base_ns is None
         # Applying Normalizations
@@ -753,299 +609,253 @@ class sparkHandler(object):
         if not norm_executed:
             data_normalized = None
             try:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
-                                          str(data_initial['correlation'][objective_column]))
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["cor_struct"],
+                                       str(data_initial['correlation'][objective_column]))
             except KeyError:
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_exec(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["cor_struct"],
                                        str(data_initial['correlation']))
-
         else:
             df_metadata = data_normalized
             base_ar['normalizations_set'] = base_ns
             try:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["cor_struct"],
                                        str(data_normalized['correlation'][objective_column]))
             except KeyError:
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_exec(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["cor_struct"],
                                        str(data_initial['correlation']))
             if test_frame is not None:
                 test_frame, _, _, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns,
                                                                     model_id=modelid, filtering=filtering,
                                                                     exist_objective=True)
 
-        h2o_elements = H2Olist()
-        if len(h2o_elements[h2o_elements['key'] == 'train_' + analysis_id + '_' + str(train_hash_value)]):
-            if training_pframe.count(axis=0).all() > \
-                    self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
-                training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
-                valid_frame = get_frame('valid_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
-                                       'training_frame(' + str(training_frame.nrows) +
-                                       ') validating_frame(' + str(valid_frame.nrows) + ')')
-            else:
-                training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
-                                       'training_frame(' + str(training_frame.nrows) + ')')
-            if "test_frame" in kwargs.keys():
-                test_frame = get_frame('test_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
-                                       'test_frame (' + str(test_frame.nrows) + ')')
-        else:
-            if training_pframe.count(axis=0).all() >  \
-                    self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
-                training_frame, valid_frame = \
-                    H2OFrame(python_obj=training_pframe).\
-                        split_frame(ratios=[self._config['frameworks']['h2o']['conf']['validation_frame_ratio']],
-                                    destination_frames=['train_' + analysis_id + '_' + str(train_hash_value),
-                                                        'valid_' + analysis_id + '_' + str(train_hash_value)])
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
-                                       'training_frame(' + str(training_frame.nrows) +
-                                       ') validating_frame(' + str(valid_frame.nrows) + ')')
-                self._frame_list.append(training_frame.frame_id)
-                self._frame_list.append(valid_frame.frame_id)
-            else:
-                training_frame = \
-                    H2OFrame(python_obj=training_pframe,
-                             destination_frame='train_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
-                                       'training_frame(' + str(training_frame.nrows) + ')')
-                self._frame_list.append(training_frame.frame_id)
+        training_frame = self._spark_session.createDataframe(training_pframe)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["parsing_to_spark"],
+                               'training_frame(' + str(training_frame.count()) + ')')
 
-            if "test_frame" in kwargs.keys():
-                test_frame = H2OFrame(python_obj=test_frame,
-                                      destination_frame='test_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
-                                       'test_frame (' + str(test_frame.nrows) + ')')
-                self._frame_list.append(test_frame.frame_id)
+        if "test_frame" in kwargs.keys():
+            test_frame = self._spark_session.createDataframe(test_frame)
+            self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
+                                   self._labels["parsing_to_spark"],
+                                   'test_frame (' + str(test_frame.count()) + ')')
 
         if supervised:
-            self.need_factor(atype=base_ar['model_parameters']['h2o']['types'][0]['type'],
-                             training_frame=training_frame,
-                             valid_frame=valid_frame,
-                             predict_frame=test_frame,
-                             objective_column=objective_column)
-
             # Initializing base structures
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["objective"],
-                                   objective_column + ' - ' + training_frame.type(objective_column))
+            self._logging.log_info(analysis_id,
+                                   self._spark_session.sparkContext.applicationId, self._labels["objective"],
+                                   objective_column + ' - ' + self._get_dtype(training_frame.dtypes, objective_column))
 
             tolerance = get_tolerance(df_metadata['columns'], objective_column, self._tolerance)
 
         # Generating base_path
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["action_type"], base_ar['type'])
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["action_type"], base_ar['type'])
         base_path = self.generate_base_path(base_ar, base_ar['type'])
 
         final_ar_model = copy.deepcopy(base_ar)
         final_ar_model['status'] = self._labels['failed_op']
-        final_ar_model['model_parameters']['h2o']['id'] = cluster().version
+        final_ar_model['model_parameters']['spark']['id'] = self._spark_session.version
         model_timestamp = str(time.time())
         final_ar_model['data_initial'] = data_initial
         final_ar_model['data_normalized'] = data_normalized
 
-
         model_id = modelid + '_' + model_timestamp
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_id"], model_id)
+        self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
+                               self._labels["model_id"],
+                               model_id)
 
-        analysis_type = base_ar['model_parameters']['h2o']['types'][0]['type']
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["amode"],
-                               base_ar['model_parameters']['h2o']['types'][0]['type'])
+        analysis_type = base_ar['model_parameters']['spark']['types'][0]['type']
+        self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["amode"],
+                               base_ar['model_parameters']['spark']['types'][0]['type'])
 
-        ''' Generating and executing Models '''
-        # 06/06/2017: Use X less ignored_columns on train
-        x = training_frame.col_names
-        if supervised:
-            x.remove(objective_column)
+        '''Generate commands pipeline : model and model.train()'''
+        invalid_types = ['string']
+        transformation_chain = list()
+        column_chain = list()
+        norm = Normalizer()
+        ignored_columns = norm.ignored_columns(base_ns)
+        converter = OrderedDict()
+        for element in training_frame.dtypes:
+            column_rename = None
+            if element[0] not in ignored_columns:
+                if element[1] in invalid_types:
+                    transformation_chain.append(StringIndexer() \
+                                                .setInputCol(element[0]) \
+                                                .setOutputCol(element[0] + '_to_index')
+                                                .setHandleInvalid("keep"))
+                    column_rename = element[0] + '_to_index'
+                    if element[0] != objective_column:
+                        transformation_chain.append(OneHotEncoder() \
+                                                    .setInputCol(element[0] + '_to_index') \
+                                                    .setOutputCol(element[0] + '_to_onehot'))
+                        column_rename = element[0] + '_to_onehot'
+                    else:
+                        objective_column = column_rename
+                    column_chain.append(column_rename)
+                    converter[column_rename] = element[0]
+                else:
+                    column_chain.append(element[0])
+        del norm
+        ''' Packaging Features '''
+        column_chain.remove(objective_column)
+        transformation_chain.append(VectorAssembler().setInputCols(column_chain).setOutputCol('features'))
 
-        '''Generate commands: model and model.train()'''
+        ''' Compose Model'''
         model_command = list()
         model_command.append(modelid)
         model_command.append("(")
-        model_command.append("training_frame=training_frame")
-        train_command = list()
-        # 06/06/2017: Use ignore_columns instead X on train
+        model_command.append("featuresCol=\'features\'")
+
         if supervised:
-            train_command.append("self._model_base.train(y=\'%s\', " % objective_column)
-        else:
-            train_command.append("self._model_base.train(")
+            model_command.append(", labelCol=objective_column=\'%s\'" % objective_column)
 
-        train_command.append("training_frame=training_frame")
-        if valid_frame is not None:
-            model_command.append(", validation_frame=valid_frame")
-            train_command.append(", validation_frame=valid_frame")
-        model_command.append(", model_id=\'%s%s\'" % (model_id, self._get_ext()))
+        generate_commands_parameters(base_ar['model_parameters']['spark'], model_command)
 
-        norm = Normalizer()
-        train_command.append(", ignored_columns=%s" % str(norm.ignored_columns(base_ns)))
-        del norm
-
-        generate_commands_parameters(base_ar['model_parameters']['h2o'], model_command, train_command,
-                                     train_parameters_list)
         model_command.append(")")
         model_command = ''.join(model_command)
-        train_command.append(")")
-        train_command = ''.join(train_command)
+        modeldef = eval(model_command)
+        transformation_chain.append(modeldef)
+        pipeline = Pipeline(stages=transformation_chain)
+        grid = ParamGridBuilder().build()
+        antype = base_ar['model_parameters']['spark']['types'][0]['type']
+        if training_pframe.count(axis=0).all() <=  \
+                self._config['frameworks']['spark']['conf']['validation_frame_threshold']:
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gmodel"], model_command)
-
-        # Generating model
-        if self._debug:
-            final_ar_model['log_path'] = StorageMetadata()
-            for each_storage_type in final_ar_model['log_path'].get_log_path():
-                log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
-                final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
-                                                  hash_type=each_storage_type['hash_type'])
-            self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'],
-                                    grants=int(self._config['storage']['grants'], 8),
-                                    path=dirname(final_ar_model['log_path'][0]['value']))
-            connection().start_logging(final_ar_model['log_path'][0]['value'])
-
-        self._model_base = eval(model_command)
+            model = CrossValidator(estimator=pipeline,
+                                   estimatorParamMaps=grid,
+                                   evaluator=self._get_evaluator(analysis_type=antype,
+                                                                 objective_column=objective_column),
+                                   numFolds=self._config['frameworks']['spark']['conf']['nfolds'],
+                                   seed=base_ar['timestamp'])
+        else:
+            model = TrainValidationSplit(estimator=pipeline,
+                                         estimatorParamMaps=grid,
+                                         evaluator=self._get_evaluator(analysis_type=antype,
+                                                                       objective_column=objective_column),
+                                         tranRation=self._config['frameworks']['spark']['conf']['validation_frame_ratio'],
+                                         seed=base_ar['timestamp'])
         start = time.time()
         try:
-            eval(train_command)
+            self._model_base = model.fit(training_frame).bestModel
             final_ar_model['status'] = 'Executed'
             # Generating aditional model parameters Model_ID
-            final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = ParameterMetadata()
-            final_ar_model['model_parameters']['h2o']['parameters']['model_id'].set_value(value=model_id,
-                                                                                          seleccionable=False,
-                                                                                          type="String")
+            final_ar_model['model_parameters']['spark']['parameters']['model_id'] = ParameterMetadata()
+            final_ar_model['model_parameters']['spark']['parameters']['model_id'].set_value(value=model_id,
+                                                                                            seleccionable=False,
+                                                                                            type="str")
 
-        except OSError as execution_error:
-            self._logging.log_error(analysis_id, self._h2o_session.session_id, self._labels["abort"],
-                                   repr(execution_error))
-            try:
-                H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id,
-                                                         final_ar_model['model_parameters']['h2o']['parameters']['nfolds']
-                                                                       ['value']))
-            except KeyError:
-                H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id, None))
-            return analysis_id, None
+        except Py4JJavaError as execution_error:
+            self._logging.log_error(analysis_id,
+                                    self._spark_session.sparkContext.applicationId,
+                                    self._labels["abort"],
+                                    repr(execution_error))
 
         final_ar_model['execution_seconds'] = time.time() - start
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["tmodel"], model_id)
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["exec_time"],
+        self._logging.log_exec(analysis_id,
+                               self._spark_session.sparkContext.applicationId, self._labels["tmodel"],
+                               model_id)
+        self._logging.log_exec(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["exec_time"],
                                str(final_ar_model['execution_seconds']))
-
-        if self._debug:
-            connection().stop_logging()
-            self._persistence.store_file(filename=final_ar_model['log_path'][0]['value'],
-                                         storage_json=final_ar_model['log_path'])
 
         # Filling whole json ar.json
         final_ar_model['ignored_parameters'], \
-        final_ar_model['full_parameters_stack'] = self._generate_params()
+        final_ar_model['full_parameters_stack'] = self._generate_params(modeldef=modeldef)
 
 
         # Generating execution metrics
         final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
 
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId, self._labels["gexec_metric"],
+                               model_id)
 
+        prediction_train = self._model_base.transform(training_frame)
 
-        final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
-                                                                                           source='train',
-                                                                                           antype=analysis_type)
+        final_ar_model['metrics']['execution']['train'] = \
+            self._generate_execution_metrics(dataframe=prediction_train,
+                                             antype=analysis_type,
+                                             objective_column=objective_column)
         final_ar_model['metrics']['accuracy'] = OrderedDict()
 
         if supervised:
-
             final_ar_model['metrics']['accuracy']['train'] = \
-            self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance,
-                               base_type=training_frame.type(objective_column))
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
+            self._accuracy(objective=objective_column, dataframe=prediction_train, tolerance=tolerance)
+            self._logging.log_exec(analysis_id,
+                                   self._spark_session.sparkContext.applicationId, self._labels["model_tacc"],
                                    model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
             final_ar_model['tolerance'] = tolerance
         else:
-
             final_ar_model['metrics']['accuracy']['train'] = 0.0
 
-        final_ar_model['metrics']['execution']['xval'] = \
-            self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
-
-        if valid_frame is not None:
-
-            final_ar_model['metrics']['execution']['valid'] = \
-                self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
-
-            if supervised:
-
-                final_ar_model['metrics']['accuracy']['valid'] = \
-                    self._accuracy(objective_column, valid_frame,
-                                   antype=analysis_type, tolerance=tolerance,
-                                   base_type=valid_frame.type(objective_column))
-            else:
-
-                final_ar_model['metrics']['accuracy']['valid'] = 0.0
-
         if test_frame is not None:
-
             if supervised:
-
                 final_ar_model['metrics']['accuracy']['test'] = \
-                    self._accuracy(objective_column, test_frame, antype=analysis_type, tolerance=tolerance,
-                                   base_type=test_frame.type(objective_column))
+                    self._accuracy(objective=objective_column, dataframe=test_frame,  tolerance=tolerance)
 
-                train_balance = self._config['frameworks']['h2o']['conf']['train_balance_metric']
+                train_balance = self._config['frameworks']['spark']['conf']['train_balance_metric']
                 test_balance = 1 - train_balance
                 final_ar_model['metrics']['accuracy']['combined'] = \
                     (final_ar_model['metrics']['accuracy']['train']*train_balance +
                      final_ar_model['metrics']['accuracy']['test']*test_balance)
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+
+                self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
+                                       self._labels["model_pacc"],
                                        model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['test']))
 
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_cacc"],
+                self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
+                                       self._labels["model_cacc"],
                                        model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
             else:
 
                 final_ar_model['metrics']['accuracy']['test'] = 0.0
                 final_ar_model['metrics']['accuracy']['combined'] = 0.0
 
-
-        #final_ar_model['tolerance'] = tolerance
-
         # Generating model metrics
         final_ar_model['metrics']['model'] = self._generate_model_metrics()
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gmodel_metric"], model_id)
-
-        # Generating anomalies metrics
-        if analysis_type == 'anomalies':
-            final_ar_model['metrics']['anomalies'] = self._generate_execution_metrics(dataframe=training_frame[x],
-                                                                                      source='train',
-                                                                                      antype=analysis_type)
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["ganomaly_metric"], model_id)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["gmodel_metric"], model_id)
 
         # Generating Variable importance
-        final_ar_model['metrics']['var_importance'] = self._generate_importance_variables()
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gvar_metric"], model_id)
+        final_ar_model['metrics']['var_importance'] = self._generate_importance_variables(column_chain=column_chain)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["gvar_metric"], model_id)
 
         # Generating scoring_history
         final_ar_model['metrics']['scoring'] = self._generate_scoring_history()
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gsco_metric"], model_id)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["gsco_metric"], model_id)
 
         final_ar_model['status'] = self._labels['success_op']
 
         generate_json_path(final_ar_model, user)
         self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["model_stored"], model_id)
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["end"], model_id)
 
         for handler in self._logging.logger.handlers:
             handler.flush()
-        # Cleaning H2OCluster
-        try:
-            if self._model_base is not None:
-                try:
-                    H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id,
-                                                             final_ar_model['model_parameters']['h2o']['parameters']['nfolds']['value']))
-                except KeyError:
-                    H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id, None))
-                #H2Oremove(self._model_base.model_id)
-        except H2OError:
-            self._logging.log_exec(analysis_id,
-                                   self._h2o_session.session_id, self._labels["delete_objects"],
-                                   self._model_base.model_id)
-        H2Oapi("POST /3/GarbageCollect")
+        # Saving models
+        self.store_model(final_ar_model, user=user)
         return analysis_id, final_ar_model
 
     ## Method to save model to persistence layer from armetadata
@@ -1058,11 +868,6 @@ class sparkHandler(object):
         fw = get_model_fw(armetadata)
         model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
         analysis_id = armetadata['model_id']
-
-        if model_id + self._get_ext() not in H2Olist()['key'].tolist():
-            return saved_model
-        else:
-            model_base = get_model(model_id + self._get_ext())
 
         #Updating status
         armetadata['status'] = self._labels["success_st"]
@@ -1086,26 +891,22 @@ class sparkHandler(object):
 
             load_path = ''.join(source_data) + each_storage_type['value']+'/'
             self._persistence.mkdir(type=each_storage_type['type'], path=load_path,
-                                    grants=int(self._config['storage']['grants'], 8))
+                                    grants=self._config['storage']['grants'])
             if each_storage_type['type'] == 'hdfs':
                 load_path = self._config['storage'][each_storage_type['type']]['uri'] + load_path
 
-            if self._get_ext() == '.pojo':
-                download_pojo(model=model_base, path=load_path, get_jar=True)
-            elif self._get_ext() == '.mojo':
-                self._model_base.download_mojo(path=load_path, get_genmodel_jar=True)
-            else:
-                save_model(model=model_base, path=load_path, force=True)
+                self._model_base.write().overwrite().save(path=load_path)
+
             load_storage.append(value=load_path + model_id + self._get_ext(),
                                 fstype=each_storage_type['type'], hash_type=each_storage_type['hash_type'])
             saved_model = True
 
         armetadata['load_path'] = load_storage
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["msaved"], model_id)
+        self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["msaved"], model_id)
 
         self._persistence.store_json(storage_json=armetadata['json_path'], ar_json=armetadata)
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
+        self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["model_stored"], model_id)
 
         return saved_model
 
@@ -1144,19 +945,19 @@ class sparkHandler(object):
         model_timestamp = str(time.time())
         self.analysis_id = base_ar['model_id']
         analysis_id = self.analysis_id
-        base_model_id = base_ar['model_parameters']['h2o']['parameters']['model_id']['value'] + '.model'
+        base_model_id = base_ar['model_parameters']['spark']['parameters']['model_id']['value'] + self._get_ext()
         model_id = base_model_id + '_' + model_timestamp
 
-        antype = base_ar['model_parameters']['h2o']['types'][0]['type']
+        antype = base_ar['model_parameters']['spark']['types'][0]['type']
 
-        modelid = base_ar['model_parameters']['h2o']['model']
+        modelid = base_ar['model_parameters']['spark']['model']
         base_ns = get_model_ns(base_ar)
 
         #Checking file source versus hash_value
         load_fails, remove_model = self._get_model(base_ar, base_model_id, remove_model)
 
         if load_fails or self._model_base is None:
-            self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
+            self._logging.log_critical(self.analysis_id, self._spark_session.sparkContext.applicationId,
                                        self._labels["no_models"], base_model_id)
             base_ar['status'] = self._labels['failed_op']  # Default Failed Operation Code
             return None
@@ -1167,7 +968,7 @@ class sparkHandler(object):
         if objective_column is None:
             exist_objective = False
         if exist_objective:
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["objective"],
+            self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["objective"],
                                    objective_column)
             # Recovering tolerance
             tolerance = base_ar['tolerance']
@@ -1178,11 +979,11 @@ class sparkHandler(object):
 
         if objective_column in list(predict_frame.columns.values):
             try:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id,
-                                   self._labels["cor_struct"],  str(data_initial['correlation'][objective_column]))
+                self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
+                                       self._labels["cor_struct"], str(data_initial['correlation'][objective_column]))
             except KeyError:
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                   self._labels["cor_struct"],  str(data_initial['correlation']))
+                self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
+                                       self._labels["cor_struct"], str(data_initial['correlation']))
             npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
                                                                                               base_ns=base_ns,
                                                                                               model_id=modelid,
@@ -1197,52 +998,36 @@ class sparkHandler(object):
                                                                                               exist_objective=False)
 
         if not norm_executed:
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["exec_norm"],
+            self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["exec_norm"],
                                    'No Normalizations Required')
         else:
-            # Transforming original dataframe to H2OFrame
-            predict_frame = H2OFrame(python_obj=predict_frame,
-                                     destination_frame='predict_frame_' + base_ar['model_id'])
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
-                                   'test_frame (' + str(predict_frame.nrows) + ')')
-            self._frame_list.append(predict_frame.frame_id)
+            # Transforming original dataframe to sparkFrame
+            predict_frame = self._spark_session.createDataframe(predict_frame)
+            self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["parsing_to_spark"],
+                                   'test_frame (' + str(predict_frame.count()) + ')')
 
             base_ar['data_normalized'] = data_normalized
             if objective_column in list(npredict_frame.columns.values):
                 try:
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                    self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["cor_struct"],
                                            str(data_normalized['correlation'][objective_column]))
                 except KeyError:
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["no_cor_struct"],
+                    self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["no_cor_struct"],
                                            str(data_normalized['correlation']))
 
-        #Transforming to H2OFrame
-        npredict_frame = H2OFrame(python_obj=npredict_frame,
-                                  destination_frame='npredict_frame_' + base_ar['model_id'])
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+        #Transforming to sparkFrame
+        npredict_frame = self._spark_session.createDataframe(npredict_frame)
+        self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["parsing_to_spark"],
                                'test_frame (' + str(npredict_frame.nrows) + ')')
         self._frame_list.append(npredict_frame.frame_id)
 
-        if exist_objective:
-            self.need_factor(atype=base_ar['model_parameters']['h2o']['types'][0]['type'],
-                             objective_column=objective_column, predict_frame=npredict_frame)
-
         base_ar['type'] = 'predict'
-        self._logging.log_info(self.analysis_id, self._h2o_session.session_id,
+        self._logging.log_info(self.analysis_id, self._spark_session.sparkContext.applicationId,
                                self._labels["action_type"], base_ar['type'])
 
         base_ar['timestamp'] = model_timestamp
-        if self._debug:
-            for each_storage_type in base_ar['log_path']:
-                each_storage_type['value'] = each_storage_type['value'].replace('train', 'predict') \
-                    .replace('.log', '_' + model_timestamp + '.log')
 
-            self._persistence.mkdir(type=base_ar['log_path'][0]['type'],
-                                    grants=int(self._config['storage']['grants'], 8),
-                                    path=dirname(base_ar['log_path'][0]['value']))
-            connection().start_logging(base_ar['log_path'][0]['value'])
-
-        self._logging.log_info(analysis_id, self._h2o_session.session_id,
+        self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
                                self._labels['st_predict_model'],
                                base_model_id)
 
@@ -1255,51 +1040,40 @@ class sparkHandler(object):
         if exist_objective:
             if predict_frame.nrows == npredict_frame.nrows:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
-                                                                        antype=antype,
-                                                                        tolerance=tolerance, base_type=objective_type)
+                                                                        tolerance=tolerance)
             else:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame, npredict_frame,
-                                                                        antype=antype,
-                                                                        tolerance=tolerance, base_type=objective_type)
+                                                                        tolerance=tolerance)
 
             self._frame_list.append(prediction_dataframe.frame_id)
 
             base_ar['execution_seconds'] = time.time() - start
             base_ar['tolerance'] = tolerance
 
-            prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
+            prediction_dataframe = prediction_dataframe.toPandas()
         else:
-            if antype == 'anomalies':
-                if norm_executed:
-                    predict_anomalies = self._predict_anomalies(predict_frame, npredict_frame,
-                                                                base_ar['metrics']['anomalies'])
-                else:
-                    predict_anomalies = self._predict_anomalies(npredict_frame, npredict_frame,
-                                                                base_ar['metrics']['anomalies'])
-                base_ar['execution_seconds'] = time.time() - start
-
             if antype == 'clustering':
                 if norm_executed:
                     accuracy, prediction_dataframe = self._predict_clustering(predict_frame, npredict_frame)
                 else:
                     accuracy, prediction_dataframe = self._predict_clustering(npredict_frame, npredict_frame)
-                self._frame_list.append(prediction_dataframe.frame_id)
 
                 base_ar['execution_seconds'] = time.time() - start
-                prediction_dataframe = prediction_dataframe.as_data_frame(use_pandas=True)
+                prediction_dataframe = prediction_dataframe.toPandas()
 
-        if self._debug:
-            connection().stop_logging()
-            self._persistence.store_file(filename=base_ar['log_path'][0]['value'],
-                                         storage_json=base_ar['log_path'])
 
         if not exist_objective or objective_type is not None:
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
-            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
-                                                                                        source=None, antype=antype)
+            self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
+                                   self._labels["gexec_metric"], model_id)
+
+            base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics( \
+                                                                                        dataframe=npredict_frame,
+                                                                                        objective_column=objective_column,
+                                                                                        antype=antype)
         if objective_column in npredict_frame.columns:
             base_ar['metrics']['accuracy']['predict'] = accuracy
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+            self._logging.log_info(analysis_id,
+                                   self._spark_session.sparkContext.applicationId, self._labels["model_pacc"],
                                    base_model_id + ' - ' + str(base_ar['metrics']['accuracy']['predict']))
 
         base_ar['status'] = self._labels['success_op']
@@ -1307,91 +1081,74 @@ class sparkHandler(object):
         # writing ar.json file
         generate_json_path(base_ar, user)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
-        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
-        self._logging.log_info(self.analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
+        self._logging.log_exec(self.analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["model_stored"], model_id)
+        self._logging.log_info(self.analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["end"], model_id)
         for handler in self._logging.logger.handlers:
             handler.flush()
 
-        # Cleaning H2OCluster
-        try:
-            H2Oremove(npredict_frame)
-            if norm_executed:
-                H2Oremove(predict_frame)
-        except H2OError:
-            self._logging.log_error(analysis_id,
-                                   self._h2o_session.session_id, self._labels["delete_frame"],
-                                   self._model_base.model_id)
-        try:
-            if self._model_base is not None and remove_model:
-                H2Oremove(self._model_base.model_id)
-        except H2OError:
-            self._logging.log_error(analysis_id,
-                                   self._h2o_session.session_id, self._labels["delete_objects"],
-                                   self._model_base.model_id)
-        H2Oapi("POST /3/GarbageCollect")
-
-        if antype == 'anomalies':
-            prediction = predict_anomalies
-        else:
-            prediction = prediction_dataframe
+        prediction = prediction_dataframe
 
         return prediction, base_ar
 
-    ## Internal method to get an H2Omodel from server or file transparent to user
+    ## Internal method to get an sparkmodel from server or file transparent to user
     # @param self Object pointer
     # @param base_ar armetadata to load from fs
     # @param base_model_id from searching on server memory objects
-    # @param remove_model to indicate if has been load from memory o need to remove at last
-    # @return load_fails, remove_model operation status True/False, needs to remove True/False
+    # @param remove_model to indicate if has been loaded from memory or need to be removed at last
+    # @return load_fails, remove_model operation status True/False, removed True/False
     def _get_model(self, base_ar, base_model_id, remove_model):
-        if base_model_id in H2Olist()['key'].tolist():
-            self._model_base = get_model(base_model_id)
-            if self._model_base is None:
-                load_fails = True
-            else:
-                load_fails = False
-        else:
-            load_fails = self._get_model_from_load_path(base_ar)
-            remove_model = True
+        load_fails = self._get_model_from_load_path(base_ar)
+        remove_model = True
         return load_fails, remove_model
 
-    ## Method to remove list of model from server
+    ## Method to remove list of model from disk
     # @param arlist List of ArMetadata
     # @return remove_fails True/False
-    def remove_models(self, arlist):
-        remove_fails = True
+    @staticmethod
+    def remove_models(arlist):
+        remove_fails = False
         try:
             assert isinstance(arlist, list)
         except AssertionError:
             return remove_fails
-        for armetadata in arlist:
-            fw = get_model_fw(armetadata)
-            model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']+'.model'
-            if model_id in H2Olist()['key'].tolist():
-                H2Oremove(model_id)
-            H2Oremove(self._get_temporal_objects_ids(model_id=model_id, nfolds=None))
 
-        return False
+        persistence = PersistenceHandler()
+        for ar_metadata in arlist:
+            try:
+                assert isinstance(ar_metadata['load_path'], list)
+            except AssertionError:
+                return True
+
+            _, ar_metadata['load_path'] = persistence.remove_file(load_path=ar_metadata['load_path'])
+
+            if len(ar_metadata['load_path']) == 0:
+                ar_metadata['load_path'] = None
+            else:
+                remove_fails = True
+
+            persistence.store_json(storage_json=ar_metadata["json_path"], ar_json=ar_metadata)
+
+        del persistence
+        return remove_fails
+
 
 ## auxiliary function (procedure) to generate model and train chain paramters to execute models
 # Modify model_command and train_command String to complete for eval()
 # @param each_model object pointer
 # @param model_command String with model command definition base structure
-# @param train_command String with train command base structure
-# @param train_parameters_list list(ATypesMetadata) or compatible OrderedDict()
-def generate_commands_parameters(each_model, model_command, train_command, train_parameters_list):
+def generate_commands_parameters(each_model, model_command):
     for key, value in each_model['parameters'].items():
         if value['seleccionable']:
             if isinstance(value['value'], str):
-                if key in train_parameters_list and value is not None:
-                    train_command.append(", %s=\'%s\'" % (key, value['value']))
-                else:
-                    model_command.append(", %s=\'%s\'" % (key, value['value']))
+                model_command.append(", %s=\'%s\'" % (key, value['value']))
             else:
-                if key in train_parameters_list and value is not None:
-                    train_command.append(", %s=%s" % (key, value['value']))
-                else:
+                if value is not None:
                     model_command.append(", %s=%s" % (key, value['value']))
+
 
 ## Auxiliary function to get the level of tolerance for regression analysis
 # @param columns list() of OrderedDict() [{Column description}]

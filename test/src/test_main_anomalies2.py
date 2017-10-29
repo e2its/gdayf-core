@@ -13,9 +13,10 @@ if __name__ == "__main__":
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
                                                           amode=ANOMALIES, metric='rmse', deep_impact=7)
 
-        controller.save_models(recomendations, mode=BEST)
+        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
+        '''controller.save_models(recomendations, mode=BEST)'''
         controller.reconstruct_execution_tree(recomendations, metric='rmse')
-        controller.remove_models(recomendations, mode=ALL)
+        controller.remove_models(recomendations, mode=BEST)
 
         #Prediction
         source_data = list()

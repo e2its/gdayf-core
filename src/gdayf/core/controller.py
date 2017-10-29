@@ -50,7 +50,7 @@ class Controller(object):
     # @return True if OK / False if wrong
     def config_checks(self):
         storage_conf = self._config['storage']
-        grants = int(storage_conf['grants'], 8)
+        grants = storage_conf['grants']
         localfs = (storage_conf['localfs'] is not None) \
                   and self._coherence_fs_checks(storage_conf['localfs'], grants=grants)
         hdfs = (storage_conf['hdfs'] is not None) \
@@ -411,6 +411,10 @@ class Controller(object):
 
         self.clean_handlers()
 
+        adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
+                                                                        model_list=
+                                                                        adviser.analysis_recommendation_order)
+
         return self._labels['success_op'], adviser.analysis_recommendation_order
 
     ## Method oriented to log leaderboard against selected metrics
@@ -543,6 +547,10 @@ class Controller(object):
         self._logging.log_info(adviser.analysis_id, 'controller', self._labels["end"])
 
         self.clean_handlers()
+
+        adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
+                                                                        model_list=
+                                                                        adviser.analysis_recommendation_order)
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
 

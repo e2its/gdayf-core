@@ -13,6 +13,7 @@
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
+        "autosaved": true,
         "tolerance": 0.05,
         "enabled" : true,
         "min_rows_enabled": false,
@@ -125,6 +126,11 @@
                 "value": true,
                 "seleccionable": true,
                 "type": "boolean"
+              } ,
+              "min_rows": {
+                  "value": 8.0,
+                  "seleccionable": true,
+                  "type": "float"
               }
             },
             "repetible":{
@@ -217,11 +223,6 @@
                 "value": true,
                 "seleccionable": true,
                 "type": "boolean"
-              },
-              "min_rows": {
-                  "value": 16.0,
-                  "seleccionable": true,
-                  "type": "float"
               },
               "col_sample_rate": {
                 "value": 0.9,
@@ -1326,6 +1327,11 @@
                 "value": true,
                 "seleccionable": true,
                 "type": "boolean"
+              },
+              "min_rows": {
+                "value": 8.0,
+                "seleccionable": true,
+                "type": "float"
               }
             },
             "repetible":{
@@ -1423,11 +1429,6 @@
                 "value": true,
                 "seleccionable": true,
                 "type": "boolean"
-              },
-              "min_rows": {
-                  "value":8.0,
-                  "seleccionable": true,
-                  "type": "float"
               },
               "col_sample_rate_change_per_level": {
                 "value": 1.0,
@@ -1818,6 +1819,11 @@
                 "value": "dart",
                 "seleccionable": true,
                 "type": [ "gbtree", "gblinear","dart"]
+              },
+              "min_rows": {
+                  "value": 16.0,
+                  "seleccionable": true,
+                  "type": "float"
               }
             },
             "repetible":{
@@ -1906,11 +1912,6 @@
               }
             },
             "sampling":{
-              "min_rows": {
-                  "value": 16.0,
-                  "seleccionable": true,
-                  "type": "float"
-              },
               "col_sample_rate": {
                 "value": 0.9,
                 "seleccionable": true,
@@ -2758,7 +2759,6 @@
         "spark.executor.memory": "1G",
         "spark.driver.memory": "1G",
         "start_spark": true,
-        "debug": false,
         "save_model": "NATIVE",
         "tolerance": 0.05,
         "enabled" : false,
@@ -2766,6 +2766,7 @@
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
+        "nfolds" : 3,
         "validation_frame_threshold" : 100000,
         "anomaly_threshold":
         {
@@ -2790,7 +2791,7 @@
             },
             {
               "type": "multinomial",
-              "active": false,
+              "active": true,
               "valued": "enum"
             },
             {
@@ -3015,7 +3016,7 @@
               },
               "regParam": {
                 "value": 0.0,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               },
               "standardization": {
@@ -3034,9 +3035,9 @@
                 "type": "str"
               },
               "elasticNetParam": {
-                "value": null,
-                "seleccionable": false,
-                "type": "[0.0:1.0]"
+                "value": 0.5,
+                "seleccionable": true,
+                "type": "float[0.0:1.0]"
               },
               "probabilityCol": {
                 "value": "probability",
@@ -3125,6 +3126,11 @@
                 "value": 10,
                 "seleccionable": true,
                 "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
               }
             },
             "repetible":{
@@ -3148,11 +3154,6 @@
             "sampling":{
               "maxBins": {
                 "value": 50,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "minInstancesPerNode": {
-                "value": 16,
                 "seleccionable": true,
                 "type": "int"
               }
@@ -3180,7 +3181,7 @@
               "impurity": {
                 "value": "gini",
                 "seleccionable": true,
-                "type": "[ 'entropy', 'gini']"
+                "type": "[ 'entropy']"
               }
             }
           }
@@ -3263,6 +3264,11 @@
                 "value": 5,
                 "seleccionable": true,
                 "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
               }
             },
             "repetible":{
@@ -3286,11 +3292,6 @@
             "sampling":{
               "maxBins": {
                 "value": 50,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "minInstancesPerNode": {
-                "value": 16,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -3411,6 +3412,11 @@
                 "value": 5,
                 "seleccionable": true,
                 "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
               }
             },
             "repetible":{
@@ -3434,11 +3440,6 @@
             "sampling":{
               "maxBins": {
                 "value": 50,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "minInstancesPerNode": {
-                "value": 16,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -3662,6 +3663,11 @@
                 "value": 5,
                 "seleccionable": true,
                 "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
               }
             },
             "repetible":{
@@ -3685,11 +3691,6 @@
             "sampling":{
               "maxBins": {
                 "value": 50,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "minInstancesPerNode": {
-                "value": 16,
                 "seleccionable": true,
                 "type": "int"
               }
@@ -3717,7 +3718,7 @@
               "impurity": {
                 "value": "variance",
                 "seleccionable": false,
-                "type": "['variance']"
+            "type": "[]"
               },
               "varianceCol": {
                 "value": null,
@@ -3800,6 +3801,11 @@
                 "value": 5,
                 "seleccionable": true,
                 "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
               }
             },
             "repetible":{
@@ -3823,11 +3829,6 @@
             "sampling":{
               "maxBins": {
                 "value": 50,
-                "seleccionable": true,
-                "type": "int"
-              },
-              "minInstancesPerNode": {
-                "value": 16,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -3947,6 +3948,11 @@
                 "value": 5,
                 "seleccionable": true,
                 "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
               }
             },
             "repetible":{
@@ -3973,11 +3979,6 @@
                 "seleccionable": true,
                 "type": "int"
               },
-              "minInstancesPerNode": {
-                "value": 16,
-                "seleccionable": true,
-                "type": "int"
-              },
               "subsamplingRate": {
                 "value": 0.9,
                 "seleccionable": true,
@@ -3986,7 +3987,7 @@
               "featureSubsetStrategy": {
                 "value": "auto",
                 "seleccionable": true,
-                "type": "['auto', 'all', 'onethird', 'sqrt', 'log2']"
+                "type": "['all', 'onethird', 'sqrt', 'log2']"
               }
             },
             "distribution":{
@@ -4012,7 +4013,7 @@
               "impurity": {
                 "value": "variance",
                 "seleccionable": true,
-                "type": "['variance']"
+                "type": "[]"
               }
             }
           }
@@ -4109,8 +4110,8 @@
                 "type": "['gaussian', 'binomial', 'poisson', 'gamma' ,'tweedie']"
               },
               "link": {
-                "value": null,
-                "seleccionable": false,
+                "value": "identity",
+                "seleccionable": true,
                 "type": "['identity', 'log', 'inverse', 'logit', 'probit', 'cloglog' , 'sqrt']"
               },
               "linkPower": {
@@ -4131,7 +4132,7 @@
               "solver": {
                 "value": "auto",
                 "seleccionable": true,
-                "type": "['auto', 'irls']"
+                "type": "['irls']"
               }
 
             },
@@ -4271,8 +4272,8 @@
                 "type": "str"
               },
               "elasticNetParam": {
-                "value": null,
-                "seleccionable": false,
+                "value": 0.5,
+                "seleccionable": true,
                 "type": "[0.0:1.0]"
               },
               "solver": {
@@ -4610,7 +4611,7 @@
         "hash_value": null, "hash_type":"MD5"
       },
     "primary_path": "localfs",
-    "grants": "0o644",
+    "grants": "755",
     "load_path": [
       {"value": "models" , "type":"hdfs",
         "hash_value": null, "hash_type":"MD5"
@@ -4642,7 +4643,7 @@
     "manage_on_train_errors" : true,
     "base_normalization_enabled": true,
     "exclusion_missing_threshold": 0.3,
-    "clustering_standardize_enabled" : true,
+    "clustering_standardize_enabled" : false,
     "standardize_enabled" : true,
     "std_threshold" : 0.1
   },
@@ -4691,6 +4692,36 @@
         "nv_min_sdev": [1e-3],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
+        "clustering_increment": 2.0
+      },
+      "spark": {
+        "min_rows_limit": 4,
+        "min_rows_increment": 2,
+        "max_interactions_increment": 1000,
+        "interactions_increment": 2,
+        "max_depth_increment": 2,
+        "ntrees_increment": 2,
+        "aggregationDepth_increment": 2,
+        "stepSize" : [
+          {"learn":0.5},
+          {"learn":0.05},
+          {"learn":0.01},
+          {"learn":0.005}
+        ],
+        "regParam" : [
+          {"value": 0.000001},
+          {"value": 0.00001},
+          {"value": 0.0001}
+        ],
+        "elastic_variation" : 0.2,
+        "nv_smoothing": [
+          {"value": 0.001},
+          {"value": 3},
+          {"value": 10}
+        ],
+        "nv_improvement" : 0.5,
+        "nv_divisor": 0.5,
+        "clustersize_divisor": 0.8,
         "clustering_increment": 2.0
       }
     },

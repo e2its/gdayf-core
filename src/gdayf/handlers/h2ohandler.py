@@ -83,6 +83,7 @@ class H2OHandler(object):
         self.start_h2o = self._config['frameworks'][self._framework]['conf']['start_h2o']
         self._debug = self._config['frameworks'][self._framework]['conf']['debug']
         self._save_model = self._config['frameworks'][self._framework]['conf']['save_model']
+        self._autosaved = self._config['frameworks'][self._framework]['conf']['autosaved']
         self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
         self._anomaly_threshold = self._config['frameworks'][self._framework]['conf']['anomaly_threshold']
         self._model_base = None
@@ -198,7 +199,7 @@ class H2OHandler(object):
                                        self._labels["down_path"], download_path)
                 persistence = PersistenceHandler()
                 persistence.mkdir(type=each_storage_type['type'], path=str(download_path),
-                                  grants=int(self._config['storage']['grants'], 8))
+                                  grants=self._config['storage']['grants'])
 
                 if type.upper() == 'MOJO':
                     try:
@@ -207,7 +208,7 @@ class H2OHandler(object):
                                                self._labels["success_op"], file_path)
                     except H2OError:
                         load_fails = True
-                        self._logging.log_error(self.analysis_id, self._h2o_session.session_id,
+                        self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
                                                 self._labels["failed_op"], download_path)
                 else:
                     try:
@@ -216,7 +217,7 @@ class H2OHandler(object):
                                                self._labels["success_op"], file_path)
                     except H2OError:
                         load_fails = True
-                        self._logging.log_error(self.analysis_id, self._h2o_session.session_id,
+                        self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
                                                self._labels["failed_op"], download_path)
         try:
             if self._model_base is not None and remove_model:
@@ -487,6 +488,7 @@ class H2OHandler(object):
                 accuracy = "Valid"
         if accuracy not in [0.0, -1.0]:
             accuracy = success.sum() / dataframe.nrows
+
 
         self._logging.log_info(self.analysis_id, self._h2o_session.session_id, self._labels["tolerance"],
                                str(tolerance))
@@ -895,7 +897,7 @@ class H2OHandler(object):
                 final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
                                                   hash_type=each_storage_type['hash_type'])
             self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'],
-                                    grants=int(self._config['storage']['grants'], 8),
+                                    grants=self._config['storage']['grants'],
                                     path=dirname(final_ar_model['log_path'][0]['value']))
             connection().start_logging(final_ar_model['log_path'][0]['value'])
 
@@ -1030,6 +1032,10 @@ class H2OHandler(object):
         self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
         self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
 
+        if self._autosaved:
+            self.store_model(armetadata=final_ar_model, user=user)
+            self.remove_memory_models([final_ar_model])
+
         for handler in self._logging.logger.handlers:
             handler.flush()
         # Cleaning H2OCluster
@@ -1045,6 +1051,7 @@ class H2OHandler(object):
             self._logging.log_exec(analysis_id,
                                    self._h2o_session.session_id, self._labels["delete_objects"],
                                    self._model_base.model_id)
+
         H2Oapi("POST /3/GarbageCollect")
         return analysis_id, final_ar_model
 
@@ -1086,7 +1093,7 @@ class H2OHandler(object):
 
             load_path = ''.join(source_data) + each_storage_type['value']+'/'
             self._persistence.mkdir(type=each_storage_type['type'], path=load_path,
-                                    grants=int(self._config['storage']['grants'], 8))
+                                    grants=self._config['storage']['grants'])
             if each_storage_type['type'] == 'hdfs':
                 load_path = self._config['storage'][each_storage_type['type']]['uri'] + load_path
 
@@ -1238,7 +1245,7 @@ class H2OHandler(object):
                     .replace('.log', '_' + model_timestamp + '.log')
 
             self._persistence.mkdir(type=base_ar['log_path'][0]['type'],
-                                    grants=int(self._config['storage']['grants'], 8),
+                                    grants=self._config['storage']['grants'],
                                     path=dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
 
@@ -1358,7 +1365,7 @@ class H2OHandler(object):
     ## Method to remove list of model from server
     # @param arlist List of ArMetadata
     # @return remove_fails True/False
-    def remove_models(self, arlist):
+    def remove_memory_models(self, arlist):
         remove_fails = True
         try:
             assert isinstance(arlist, list)
@@ -1370,8 +1377,38 @@ class H2OHandler(object):
             if model_id in H2Olist()['key'].tolist():
                 H2Oremove(model_id)
             H2Oremove(self._get_temporal_objects_ids(model_id=model_id, nfolds=None))
+        remove_fails = False
 
-        return False
+        return remove_fails
+
+    ## Method to remove list of model from server
+    # @param arlist List of ArMetadata
+    # @return remove_fails True/False
+    def remove_models(self, arlist):
+        remove_fails = True
+
+        if self._autosaved:
+            persistence = PersistenceHandler()
+            for ar_metadata in arlist:
+                try:
+                    assert isinstance(ar_metadata['load_path'], list)
+                except AssertionError:
+                    return remove_fails
+
+                _, ar_metadata['load_path'] = persistence.remove_file(load_path=ar_metadata['load_path'])
+
+                if len(ar_metadata['load_path']) == 0:
+                    ar_metadata['load_path'] = None
+
+                else:
+                    remove_fails = True
+                persistence.store_json(storage_json=ar_metadata["json_path"], ar_json=ar_metadata)
+
+            del persistence
+        else:
+            remove_fails = self.remove_memory_models(arlist)
+
+        return remove_fails
 
 ## auxiliary function (procedure) to generate model and train chain paramters to execute models
 # Modify model_command and train_command String to complete for eval()

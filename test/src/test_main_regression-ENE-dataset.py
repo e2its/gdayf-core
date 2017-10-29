@@ -11,12 +11,12 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                                                          amode=NORMAL, metric='rmse', deep_impact=7)
+                                                          amode=NORMAL, metric='rmse', deep_impact=2)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
-        controller.save_models(recomendations, mode=EACH_BEST)
+        '''controller.save_models(recomendations, mode=EACH_BEST)'''
         controller.reconstruct_execution_tree(recomendations, metric='rmse', store=True)
-        controller.remove_models(recomendations, mode=ALL)
+        controller.remove_models(recomendations, mode=EACH_BEST)
 
 
         #Prediction
@@ -37,7 +37,6 @@ if __name__ == "__main__":
         #controller = Controller()
         result = controller.get_java_model(recomendations[0], 'mojo')
 
-        controller.remove_models(recomendations, mode=ALL)
         controller.clean_handlers()
     del controller
 

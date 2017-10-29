@@ -42,13 +42,11 @@ class H2OModelMetadata(ModelMetadata):
                                 for parm, parm_value in subvalue.items():
                                     if parm_value['seleccionable']:
                                         self.model[key][parm] = parm_value
-
                             elif subkey == 'stopping':
                                 if amode in [POC, FAST, FAST_PARANOIAC]:
                                     for parm, parm_value in subvalue.items():
                                         if parm_value['seleccionable']:
                                             self.model[key][parm] = parm_value
-
                             elif subkey == 'effort':
                                     for parm, parm_value in subvalue.items():
                                         if parm_value['seleccionable']:
@@ -66,7 +64,6 @@ class H2OModelMetadata(ModelMetadata):
                                                         int(self.model[key][parm]['value'] * increment)
                                                 else:
                                                     self.model[key][parm]['value'] *= increment
-
                             elif subkey == 'distribution':
                                 for parm, parm_value in subvalue.items():
                                     if parm_value['seleccionable']:

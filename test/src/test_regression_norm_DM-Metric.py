@@ -19,11 +19,11 @@ if __name__ == "__main__":
                                                           amode=FAST, metric='rmse', deep_impact=5)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
-        controller.save_models(recomendations, mode=EACH_BEST)
+        '''controller.save_models(recomendations, mode=EACH_BEST)'''
         controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=False,
                                               user=controller.user_id,
                                               experiment=recomendations[0]['model_id'])
-        controller.remove_models(recomendations, mode=ALL)
+        controller.remove_models(recomendations, mode=BEST)
 
         #Prediction
         source_data = list()

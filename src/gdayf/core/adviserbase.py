@@ -11,6 +11,8 @@ from gdayf.conf.loadconfig import LoadConfig
 from gdayf.models.atypesmetadata import ATypesMetadata
 from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
+from gdayf.models.sparkframeworkmetadata import sparkFrameworkMetadata
+from gdayf.models.sparkmodelmetadata import sparkModelMetadata
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.common.constants import FTYPES
@@ -489,6 +491,16 @@ class Adviser(object):
                         for each_type in each_base_model['types']:
                             if each_type['active'] and each_type['type'] == atype[0]['type']:
                                 modelbase = H2OModelMetadata()
+                                model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
+                                wfw.models.append(model)
+                                model_list.append((fw, model, None))
+            if fw == 'spark' and fw_value['conf']['enabled']:
+                wfw = sparkFrameworkMetadata(defaultframeworks)
+                for each_base_model in wfw.get_default():
+                    if each_base_model['enabled']:
+                        for each_type in each_base_model['types']:
+                            if each_type['active'] and each_type['type'] == atype[0]['type']:
+                                modelbase = sparkModelMetadata()
                                 model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
                                 wfw.models.append(model)
                                 model_list.append((fw, model, None))

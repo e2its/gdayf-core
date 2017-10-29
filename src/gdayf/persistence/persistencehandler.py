@@ -1,12 +1,13 @@
 from json import dump, dumps, load, loads
 from collections import OrderedDict
 import mmap
-from os import path as ospath, chmod
+from os import path as ospath, chmod, remove
 from os.path import dirname
 from pathlib import Path
 from gdayf.common.utils import hash_key
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.utils import get_model_fw
+from gdayf.common.storagemetadata import StorageMetadata
 import gzip
 import mimetypes
 from hdfs import InsecureClient as Client, HdfsError
@@ -26,7 +27,7 @@ class PersistenceHandler(object):
     def __init__(self):
         self._config = LoadConfig().get_config()['storage']
 
-    ## Method used to store a file on one persistence system ['localfs', ' hdfs', ' mongoDB']
+    ## Method used to store a file on one persistence system ['localfs', ' hdfs']
     # using mmap structure to manage multi-persistence features
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
@@ -47,9 +48,6 @@ class PersistenceHandler(object):
                 global_op += result
             elif each_storage_type['type'] == 'hdfs':
                 result, each_storage_type['hash_value'] = self._store_file_to_hdfs(each_storage_type, mmap_)
-                global_op += result
-            elif each_storage_type['type'] == 'mongoDB':
-                result, each_storage_type['hash_value'] = self._store_file_to_mongoDB(each_storage_type, mmap_)
                 global_op += result
         mmap_.close()
         return global_op
@@ -74,7 +72,7 @@ class PersistenceHandler(object):
             return 1, None
         try:
             self._mkdir_hdfs(path=dirname(storage_json['value']),
-                             grants=int(self._config['grants']),
+                             grants=self._config['grants'],
                              client=client)
             with client.write(storage_json['value'], encoding='utf-8', overwrite=True) as wfile:
                 mmap_.seek(0)
@@ -108,7 +106,7 @@ class PersistenceHandler(object):
     def _store_file_to_localfs(self, storage_json, mmap_):
         if not ospath.exists(path=storage_json['value']):
             try:
-                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'],8))
+                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
                 with open(storage_json['value'], 'wb') as wfile:
                     mmap_.seek(0)
                     iterator = 0
@@ -117,22 +115,89 @@ class PersistenceHandler(object):
                         wfile.flush()
                         iterator += 1
                     wfile.close()
-                    chmod(storage_json['value'], int(self._config['grants'],8))
+                    chmod(storage_json['value'], int(self._config['grants'], 8))
             except IOError:
                 return 1, None
 
         return 0, hash_key(hash_type=storage_json['hash_type'], filename=storage_json['value'])
 
-    ## Protected method used to store a file on ['mongoDB']
-    #Not implemented yet !!
-    # using mmap structure to manage multi-persistence features
+
+    ## Method used to remove a file on one persistence system ['localfs',' hdfs']
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
-    # @param mmap_struct mmap structure containing the file to store
-    # @returns status (0,1) (hash_key)
-    def store_file_to_mongoDB(self, storage_json, mmap_struct):
-        # Not implemented not necessary
-        return 1, None
+    # @param ar_metadata model_structure
+    # @return global_op state (0 success) (n number of errors)
+
+    def remove_file(self, load_path):
+        global_op = 0
+
+        storage_metadata = StorageMetadata()
+        for each_storage_type in load_path:
+            if each_storage_type['type'] == 'localfs':
+                result, storage = self._remove_file_to_localfs(each_storage_type)
+                if storage is not None:
+                    storage_metadata.append(storage)
+                global_op += result
+            elif each_storage_type['type'] == 'hdfs':
+                result, storage = self._remove_file_to_hdfs(each_storage_type)
+                if storage is not None:
+                    storage_metadata.append(storage)
+                global_op += result
+        return global_op, storage_metadata.copy()
+
+    ## Method used to remove a file on one persistence system ['hdfs']
+    # @param self object pointer
+    # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
+    # @return global_op state (0 success) (n number of errors)
+    def _remove_file_to_hdfs(self,storage_json):
+        path = storage_json['value']
+        url_beginning = path.find('//') + 2
+        url_ending = path.find('/', url_beginning)
+        path = path[url_ending:]
+
+        try:
+            client = Client(url=self._config['hdfs']['url'])
+        except HdfsError as hexecution_error:
+            print(repr(hexecution_error))
+            return 1, None
+        except IOError as iexecution_error:
+            print(repr(iexecution_error))
+            return 1, None
+        except OSError as oexecution_error:
+            print(repr(oexecution_error))
+            return 1, None
+        try:
+            if client.delete(hdfs_path=path):
+                return 0, None
+            else:
+                return 1, storage_json
+
+        except HdfsError as hexecution_error:
+            print(repr(hexecution_error))
+            return 1, storage_json
+        except IOError as iexecution_error:
+            print(repr(iexecution_error))
+            return 1, storage_json
+        except OSError as oexecution_error:
+            print(repr(oexecution_error))
+            return 1, storage_json
+        finally:
+            del client
+
+
+    ## Method used to remove a file on one persistence system ['localfs']
+    # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
+    # @return boolean: op_success, path value [None if deleted or not exists]
+    @staticmethod
+    def _remove_file_to_localfs(storage_json):
+        if not ospath.exists(path=storage_json['value']):
+            return 0, None
+        else:
+            try:
+                remove(storage_json['value'])
+                return 0, None
+            except OSError:
+                return 1, storage_json
 
     ## Method used to store a json on all persistence system ['localfs', ' hdfs', ' mongoDB']
     # oriented to store full Analysis_results json but useful on whole json
@@ -194,7 +259,7 @@ class PersistenceHandler(object):
         #if not ospath.exists(storage_json['value']):
         try:
             self._mkdir_hdfs(path=dirname(storage_json['value']),
-                             grants=int(self._config['grants'],8),
+                             grants=self._config['grants'],
                              client=client)
             if compress:
                 json_str = dumps(ar_json, indent=4)
@@ -241,8 +306,8 @@ class PersistenceHandler(object):
             collection = db[storage_json['value']]
             model_id = ar_json['model_parameters'][get_model_fw(ar_json)]['parameters']['model_id']['value']
             filter_cond = "model_parameters." + get_model_fw(ar_json) + ".parameters.model_id.value"
-            cond =[{filter_cond: model_id}, {"type": ar_json['type']},
-                   {"model_id": ar_json['model_id']},  {"timestamp": ar_json['timestamp']}]
+            cond = [{filter_cond: model_id}, {"type": ar_json['type']},
+                    {"model_id": ar_json['model_id']},  {"timestamp": ar_json['timestamp']}]
             query = {"$and": cond}
 
             count = collection.find(query).count()
@@ -305,7 +370,7 @@ class PersistenceHandler(object):
     # @return operation status (0 success) (1 error)
     def mkdir(self, type, path, grants):
         if type == 'localfs':
-            return self._mkdir_localfs(path=path, grants=grants)
+            return self._mkdir_localfs(path=path, grants=int(grants, 8))
         elif type == 'hdfs':
             return self._mkdir_hdfs(path=path, grants=grants)
         elif type == 'mongoDB':

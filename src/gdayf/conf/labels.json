@@ -80,7 +80,9 @@
         "success_st" : ":Executed:",
         "hk_check":":Checking for Hash_Keys:",
         "down_path": ":Download Path:",
-        "no_models":": No base model to saved on Storage"
+        "no_models":": No base model to saved on Storage",
+        "failed_remove": ": Error deleting model from Storage",
+        "success_remove": ": Deleted model from Storage"
       },
       "inputhandler" : {},
       "adviser": {
