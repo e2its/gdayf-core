@@ -17,7 +17,7 @@ $tot.withinss = sum ( $withinss )
 $totss = $tot.withinss + $betweenss
 '''
 from gdayf.metrics.metricmetadata import MetricMetadata
-import numpy as np
+from pandas import DataFrame
 import time
 
 
@@ -67,11 +67,13 @@ class ClusteringMetricMetadata(MetricMetadata):
     # @param model BisectingKMeans|KMeans instance
     # @param columns  columns applied to build Cluster
     # @param data as Apache Spark DataFrame
-    def set_sparkmetrics(self, model, data, columns):
+    def set_sparkmetrics(self, model, data):
 
         start = time.time()
         if model is not None and data is not None:
-            model.clusterCenters()
+            self['clusterCenters'] = DataFrame(model.clusterCenters())
+            self['k'] = self['clusterCenters'].shape[0]
+            self['clusterCenters'] = DataFrame(model.clusterCenters()).to_json(orient='split')
             self['bettweenss'] = 1e15  # Need to be implemented
             self['totss'] = 1e15  # Need to be implemented
             self['tot_withinss'] = model.computeCost(data)

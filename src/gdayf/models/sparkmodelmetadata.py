@@ -79,8 +79,11 @@ class sparkModelMetadata(ModelMetadata):
                         self.model[key] = atype
                     else:
                         self.model[key] = value
-        # Fijamos semilla
-        self.model['parameters']['seed']['value'] = int(ts)
+        try:
+            # Fijamos semilla
+            self.model['parameters']['seed']['value'] = int(ts)
+        except KeyError:
+             pass
         return self.model
 
 

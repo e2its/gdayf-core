@@ -444,23 +444,26 @@ class AdviserAStar(Adviser):
         metric_value, _, objective = eval('self.get_' + self.metric + '(armetadata)')
 
         if get_model_fw(armetadata) == 'spark' and metric_value != objective:
-            scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
+            try:
+                scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
+            except ValueError:
+                print("TRACE: Not scoring: " + model)
             config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['spark']
             min_rows_limit = config['min_rows_limit']
             min_rows_increment = config['min_rows_increment']
             max_interactions_increment = config['max_interactions_increment']
-            interactions_increment = config['max_interactions_increment']
+            interactions_increment = config['interactions_increment']
             max_depth_increment = config['max_depth_increment']
             ntrees_increment = config['ntrees_increment']
             stepSize = config['stepSize']
-            aggregationDepth_increment = config['learning_conf']
+            aggregationDepth_increment = config['aggregationDepth_increment']
             regParam = config['regParam']
             elastic_variation = config['elastic_variation']
             nv_smoothing = config['nv_smoothing']
             nv_improvement = config['nv_improvement']
             nv_divisor = config['nv_divisor']
             clustering_increment = config['clustering_increment']
-            clustersize_divisor = config['clustersize_divisor']
+            initstep_increment = config['initstep_increment']
 
             if model['model'] == 'LinearSVC':
                 if self.deepness == 2 and len(regParam) != 0:
@@ -525,12 +528,12 @@ class AdviserAStar(Adviser):
                 self.safe_append(model_list, new_armetadata)
 
             elif model['model'] == 'DecisionTreeClassifier' or model['model'] == 'DecisionTreeRegressor':
-                if self.deepness == 2 and len(model['parameters']['impurity']['type']) != 0:
-                    for element in model['parameters']['impurity']['type']:
+                '''if self.deepness == 2 and len(eval(model['parameters']['impurity']['type'])) != 0:
+                    for element in eval(model['parameters']['impurity']['type']):
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['spark']
                         model_aux['parameters']['impurity']['value'] = element
-                        self.safe_append(model_list, new_armetadata)
+                        self.safe_append(model_list, new_armetadata)'''
                     
                 if model['parameters']['minInstancesPerNode']['value'] > (min_rows_limit / 2):
                     new_armetadata = armetadata.copy_template()
@@ -540,30 +543,30 @@ class AdviserAStar(Adviser):
                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
-                if scoring_metric['depth'] >= model['parameters']['maxDepth']['value']:
+                if scoring_metric['max_depth'][0] >= model['parameters']['maxDepth']['value']:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['spark']
                     model_aux['parameters']['maxDepth']['value'] = \
                         model_aux['parameters']['maxDepth']['value'] * max_depth_increment
                     self.safe_append(model_list, new_armetadata)
 
-            elif model['model'] == 'GBTClassifier' or model['model'] == 'GBTRegressor':
-                if self.deepness == 2 and len(stepSize) != 0 and len(model['parameters']['impurity']['type']) != 0:
+            elif model['model'] == 'GBTRegressor':
+                if self.deepness == 2 and len(stepSize) != 0 and len(eval(model['parameters']['lossType']['type'])) != 0:
                     for stepsize in stepSize:
-                        for element in model['parameters']['impurity']['type']:
+                        for element in eval(model['parameters']['lossType']['type']):
                             new_armetadata = armetadata.copy_template()
                             model_aux = new_armetadata['model_parameters']['spark']
-                            model_aux['parameters']['impurity']['value'] = element
-                            model_aux['parameters']['stepSize']['value'] = stepsize
+                            model_aux['parameters']['lossType']['value'] = element
+                            model_aux['parameters']['stepSize']['value'] = stepsize['learn']
                             self.safe_append(model_list, new_armetadata)
                 elif self.deepness == 2 and len(stepSize) != 0:
                     for stepsize in stepSize:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['spark']
-                        model_aux['parameters']['stepSize']['value'] = stepsize
+                        model_aux['parameters']['stepSize']['value'] = stepsize['learn']
                         self.safe_append(model_list, new_armetadata)
-                elif self.deepness == 2 and len(model['parameters']['impurity']['type']) != 0:
-                    for element in model['parameters']['impurity']['type']:
+                elif self.deepness == 2 and len(eval(model['parameters']['lossType']['type'])) != 0:
+                    for element in eval(model['parameters']['lossType']['type']):
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['spark']
                         model_aux['parameters']['impurity']['value'] = element
@@ -577,13 +580,55 @@ class AdviserAStar(Adviser):
                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
-                if scoring_metric['depth'] >= model['parameters']['maxDepth']['value']:
+                if scoring_metric['max_depth'][0] >= model['parameters']['maxDepth']['value']:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['spark']
                     model_aux['parameters']['maxDepth']['value'] *= max_depth_increment
                     self.safe_append(model_list, new_armetadata)
 
-                if scoring_metric['trees'] >= model['parameters']['maxIter']['value']:
+                if scoring_metric['trees'][0] >= model['parameters']['maxIter']['value']:
+                    new_armetadata = armetadata.copy_template()
+                    model_aux = new_armetadata['model_parameters']['spark']
+                    model_aux['parameters']['maxIter']['value'] *= ntrees_increment
+                    self.safe_append(model_list, new_armetadata)
+
+            elif model['model'] == 'GBTClassifier':
+                if self.deepness == 2 and len(stepSize) != 0 and len(eval(model['parameters']['lossType']['type'])) != 0:
+                    for stepsize in stepSize:
+                        for element in eval(model['parameters']['lossType']['type']):
+                            new_armetadata = armetadata.copy_template()
+                            model_aux = new_armetadata['model_parameters']['spark']
+                            model_aux['parameters']['lossType']['value'] = element
+                            model_aux['parameters']['stepSize']['value'] = stepsize['learn']
+                            self.safe_append(model_list, new_armetadata)
+                elif self.deepness == 2 and len(stepSize) != 0:
+                    for stepsize in stepSize:
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['spark']
+                        model_aux['parameters']['stepSize']['value'] = stepsize['learn']
+                        self.safe_append(model_list, new_armetadata)
+                elif self.deepness == 2 and len(eval(model['parameters']['impurity']['type'])) != 0:
+                    for element in eval(model['parameters']['lossType']['type']):
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['spark']
+                        model_aux['parameters']['lossType']['value'] = element
+                        self.safe_append(model_list, new_armetadata)
+
+                if model['parameters']['minInstancesPerNode']['value'] > (min_rows_limit / 2):
+                    new_armetadata = armetadata.copy_template()
+                    model_aux = new_armetadata['model_parameters']['spark']
+                    model_aux['parameters']['minInstancesPerNode']['value'] = round(
+                        model_aux['parameters']['minInstancesPerNode']['value']
+                        / min_rows_increment, 0)
+                    self.safe_append(model_list, new_armetadata)
+
+                if scoring_metric['max_depth'][0] >= model['parameters']['maxDepth']['value']:
+                    new_armetadata = armetadata.copy_template()
+                    model_aux = new_armetadata['model_parameters']['spark']
+                    model_aux['parameters']['maxDepth']['value'] *= max_depth_increment
+                    self.safe_append(model_list, new_armetadata)
+
+                if scoring_metric['trees'][0] >= model['parameters']['maxIter']['value']:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['spark']
                     model_aux['parameters']['maxIter']['value'] *= ntrees_increment
@@ -591,22 +636,22 @@ class AdviserAStar(Adviser):
 
             elif model['model'] == 'RandomForestClassifier' or model['model'] == 'RandomForestRegressor':
 
-                if self.deepness == 2 and len(model['parameters']['featureSubsetStrategy']['type']) != 0 \
-                        and len(model['parameters']['impurity']['type']) != 0:
-                    for featuresubsetstrategy in model['parameters']['featureSubsetStrategy']['type']:
-                        for element in model['parameters']['impurity']['type']:
+                if self.deepness == 2 and len(eval(model['parameters']['featureSubsetStrategy']['type'])) != 0 \
+                        and len(eval(model['parameters']['impurity']['type'])) != 0:
+                    for featuresubsetstrategy in eval(model['parameters']['featureSubsetStrategy']['type']):
+                        for element in eval(model['parameters']['impurity']['type']):
                             new_armetadata = armetadata.copy_template()
                             model_aux = new_armetadata['model_parameters']['spark']
                             model_aux['parameters']['impurity']['value'] = element
                             model_aux['parameters']['featureSubsetStrategy']['value'] = featuresubsetstrategy
                             self.safe_append(model_list, new_armetadata)
-                elif self.deepness == 2 and len(stepSize) != 0:
-                    for featuresubsetstrategy in model['parameters']['featureSubsetStrategy']['type']:
+                elif self.deepness == 2 and len(eval(model['parameters']['featureSubsetStrategy']['type'])) != 0:
+                    for featuresubsetstrategy in eval(model['parameters']['featureSubsetStrategy']['type']):
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['spark']
                         model_aux['parameters']['featureSubsetStrategy']['value'] = featuresubsetstrategy
                         self.safe_append(model_list, new_armetadata)
-                elif self.deepness == 2 and len(model['parameters']['impurity']['type']) != 0:
+                elif self.deepness == 2 and len(eval(model['parameters']['impurity']['type'])) != 0:
                     for element in model['parameters']['impurity']['type']:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['spark']
@@ -621,13 +666,13 @@ class AdviserAStar(Adviser):
                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
-                if scoring_metric['depth'] >= model['parameters']['maxDepth']['value']:
+                if scoring_metric['max_depth'][0] >= model['parameters']['maxDepth']['value']:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['spark']
                     model_aux['parameters']['maxDepth']['value'] *= max_depth_increment
                     self.safe_append(model_list, new_armetadata)
 
-                if scoring_metric['trees'] >= model['parameters']['numTrees']['value']:
+                if scoring_metric['trees'][0] >= model['parameters']['numTrees']['value']:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['spark']
                     model_aux['parameters']['numTrees']['value'] *= ntrees_increment
@@ -679,18 +724,38 @@ class AdviserAStar(Adviser):
                                                                           'value'] * (1 - nv_divisor)
                     self.safe_append(model_list, new_armetadata)
 
-            elif model['model'] == 'BisectingKMeans' or model['model'] == 'KMeans':
+            elif model['model'] == 'BisectingKMeans':
 
                 new_armetadata = armetadata.copy_template()
                 model_aux = new_armetadata['model_parameters']['spark']
-                model_aux['parameters']['max_iterations']['value'] = \
+                model_aux['parameters']['maxIter']['value'] = \
                     int(model_aux['parameters']['maxIter']['value'] * clustering_increment)
                 self.safe_append(model_list, new_armetadata)
 
+                '''new_armetadata = armetadata.copy_template()
+                model_aux = new_armetadata['model_parameters']['spark']
+                model_aux['parameters']['minDivisibleClusterSize']['value'] *= clustering_increment
+                self.safe_append(model_list, new_armetadata)'''
+
+            elif model['model'] == 'KMeans':
+
+                if self.deepness == 2 and len(eval(model['parameters']['initMode']['type'])) != 0:
+                    for element in eval(model['parameters']['initMode']['type']):
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['spark']
+                        model_aux['parameters']['initMode']['value'] = element
+                        self.safe_append(model_list, new_armetadata)
+
                 new_armetadata = armetadata.copy_template()
                 model_aux = new_armetadata['model_parameters']['spark']
-                model_aux['parameters']['smoothing']['value'] *= clustersize_divisor
+                model_aux['parameters']['maxIter']['value'] = \
+                    int(model_aux['parameters']['maxIter']['value'] * clustering_increment)
                 self.safe_append(model_list, new_armetadata)
+
+                '''new_armetadata = armetadata.copy_template()
+                model_aux = new_armetadata['model_parameters']['spark']
+                model_aux['parameters']['initSteps']['value'] *= initstep_increment
+                self.safe_append(model_list, new_armetadata)'''
 
             else:
                 return None

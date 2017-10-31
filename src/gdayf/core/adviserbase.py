@@ -555,7 +555,7 @@ class Adviser(object):
     def get_test_accuracy(model):
         try:
             return float(model['metrics']['accuracy']['test']),\
-                   1/float(model['metrics']['execution']['train']['RMSE']),\
+                   1/float(model['metrics']['execution']['test']['RMSE']),\
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['test']), \
@@ -607,6 +607,10 @@ class Adviser(object):
                    1/float(model['metrics']['execution']['train']['betweenss']), \
                    0.0
         except ZeroDivisionError:
+            return float(model['metrics']['execution']['train']['tot_withinss']), \
+                   10e+308, \
+                   0.0
+        except TypeError:
             return float(model['metrics']['execution']['train']['tot_withinss']), \
                    10e+308, \
                    0.0

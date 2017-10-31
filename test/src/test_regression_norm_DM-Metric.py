@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
         '''controller.save_models(recomendations, mode=EACH_BEST)'''
-        controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=False,
+        controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=True,
                                               user=controller.user_id,
                                               experiment=recomendations[0]['model_id'])
         controller.remove_models(recomendations, mode=BEST)

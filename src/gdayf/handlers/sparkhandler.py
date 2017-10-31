@@ -80,10 +80,8 @@ class sparkHandler(object):
         self.spark_executor_mem = self._config['frameworks'][self._framework]['conf']['spark.executor.memory']
         self.spark_driver_mem = self._config['frameworks'][self._framework]['conf']['spark.driver.memory']
         self.start_spark = self._config['frameworks'][self._framework]['conf']['start_spark']
-        self._debug = self._config['frameworks'][self._framework]['conf']['debug']
         self._save_model = self._config['frameworks'][self._framework]['conf']['save_model']
         self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
-        self._anomaly_threshold = self._config['frameworks'][self._framework]['conf']['anomaly_threshold']
         self._model_base = None
         self.analysis_id = None
         self._spark_session = None
@@ -94,7 +92,7 @@ class sparkHandler(object):
     ## Destructor
     def __del__(self):
         if self._spark_session is not None and self.is_alive():
-            self._spark_session.close()
+            self._spark_session.stop()
 
     ## Class Method for cluster shutdown
     # @param cls class pointer
@@ -128,11 +126,14 @@ class sparkHandler(object):
     def connect(self):
         initiated = False
         try:
-            spark = SparkSession.builder.master(self.url + '[' + self.nthreads + ']').appName(self.analysis_id) \
+            spark = SparkSession.builder.master(self.url + '[' + str(self.nthreads) + ']')\
+                .appName('job_gdayf_'+self.url+'_' + time.strftime("%b-%d-%Y_%H:%M:%S-%z", time.localtime())) \
                 .config("spark.executor.memory", self.spark_executor_mem) \
                 .config("spark.driver.memory", self.spark_driver_mem) \
                 .config("spark_warehouse_dir", self.spark_warehouse_dir)
+
             self._spark_session = spark.getOrCreate()
+            self._spark_session.spark.sparkContext.setLogLevel("INFO")
 
         except Py4JJavaError:
             self._logging.log_critical('gDayF', "sparkHandler", self._labels["failed_conn"])
@@ -141,7 +142,7 @@ class sparkHandler(object):
             self._logging.log_info('gDayF', "sparkHandler", self._labels["start"])
             self._logging.log_info('gDayF', "sparkHandler", self._labels["framework"], self._framework)
             self._logging.log_info('gDayF', "sparkHandler", self._labels["sess"],
-                                   self._spark_session.sparkContext.applicationId())
+                                   self._spark_session.sparkContext.applicationId)
             return initiated
 
     ## Get Spark dtype for column
@@ -173,15 +174,15 @@ class sparkHandler(object):
     def _get_temporal_objects_ids(self, model_id, nfolds):
         pass
 
-    ## Generate java model class_
+    ## Generate pdml model class_
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @param type ['pojo', 'mojo']
     # @param user user_id
     # @return download_path, MD5 hash_key
     # Not implemented
-    def get_java_model(self, ar_metadata, type, user):
-        pass
+    def get_external_model(self, ar_metadata, type, user):
+        return False
 
     ## Load a model in sparkCluster from disk
     # @param self object pointer
@@ -225,7 +226,7 @@ class sparkHandler(object):
     ## Remove used dataframes during analysis execution_
     # @param self object pointer
     # Not implemented
-    def delete_sparkframes (self):
+    def delete_frames(self):
         pass
 
     ## Generate base path to store all files [models, logs, json] relative to it
@@ -312,7 +313,10 @@ class sparkHandler(object):
 
         evaluator = self._get_evaluator(analysis_type=antype, objective_column=objective_column)
 
-        model_metrics.set_sparkmetrics(evaluator=evaluator, data=dataframe)
+        if isinstance(model_metrics, ClusteringMetricMetadata):
+            model_metrics.set_sparkmetrics(model=self._model_base.stages[-1], data=dataframe)
+        else:
+            model_metrics.set_sparkmetrics(evaluator=evaluator, data=dataframe, objective_column=objective_column)
         return model_metrics
 
     ## Generate model scoring_history metrics
@@ -320,8 +324,8 @@ class sparkHandler(object):
     # @return json_pandas_dataframe structure orient=split
     def _generate_scoring_history(self):
         if isinstance(self._model_base.stages[-1], GBTRegressionModel) or \
-                isinstance(self._model_base.stages[-1], RandomForestRegressor) or \
-                isinstance(self._model_base.stages[-1], GBTClassifier):
+                isinstance(self._model_base.stages[-1], RandomForestRegressionModel) or \
+                isinstance(self._model_base.stages[-1], GBTClassificationModel):
             maximo = 0
             for itera in range(0, len(self._model_base.stages[-1].trees)):
                 maximo = max(maximo, self._model_base.stages[-1].trees[itera].depth)
@@ -331,7 +335,7 @@ class sparkHandler(object):
                                    'total_nodes': self._model_base.stages[-1].totalNumNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], RandomForestClassifier):
+        elif isinstance(self._model_base.stages[-1], RandomForestClassificationModel):
             maximo = 0
             for itera in range(0, len(self._model_base.stages[-1].trees)):
                 maximo = max(maximo, self._model_base.stages[-1].trees[itera].depth)
@@ -342,26 +346,24 @@ class sparkHandler(object):
                                    'numFeatures': self._model_base.stages[-1].numFeatures,
                                    'numClasses': self._model_base.stages[-1].numClasses},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], DecisionTreeRegressor):
+        elif isinstance(self._model_base.stages[-1], DecisionTreeRegressionModel):
             return DataFrame(data={'trees': 1,
                                    'max_depth': self._model_base.stages[-1].depth,
                                    'total_nodes': self._model_base.stages[-1].numNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], NaiveBayes):
-            return DataFrame(data={'pi': self._model_base.stages[-1].pi,
-                                   'theta': self._model_base.stages[-1].theta,
-                                   'numFeatures': self._model_base.stages[-1].numFeatures,
+        elif isinstance(self._model_base.stages[-1], NaiveBayesModel):
+            return DataFrame(data={'numFeatures': self._model_base.stages[-1].numFeatures,
                                    'numClasses': self._model_base.stages[-1].numClasses},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], DecisionTreeClassifier):
+        elif isinstance(self._model_base.stages[-1], DecisionTreeClassificationModel):
             return DataFrame(data={'trees': 1,
                                    'max_depth': self._model_base.stages[-1].depth,
                                    'total_nodes': self._model_base.stages[-1].numNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures,
                                    'numClasses': self._model_base.stages[-1].numClasses},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], GeneralizedLinearRegression):
+        elif isinstance(self._model_base.stages[-1], GeneralizedLinearRegressionModel):
             summary = self._model_base.stages[-1].summary
             return DataFrame(data={'aic': summary.aic,
                                    'intercept': str(self._model_base.stages[-1].intercept),
@@ -373,7 +375,7 @@ class sparkHandler(object):
                                    'residuals': summary.residuals,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], LinearRegression):
+        elif isinstance(self._model_base.stages[-1], LinearRegressionModel):
             summary = self._model_base.stages[-1].summary
             return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
                                    'degreesOfFreedom': summary.degreesOfFreedom,
@@ -383,31 +385,27 @@ class sparkHandler(object):
                                    'explainedVariance': summary.explainedVariance,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], LinearSVC):
+        elif isinstance(self._model_base.stages[-1], LinearSVCModel):
             return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
                                    'intercept': self._model_base.stages[-1].intercept,
                                    'numClasses': self._model_base.stages[-1].numClasses,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], LogisticRegressionModel):
-            summary = self._model_base.stages[-1].summary
-            if isinstance(summary, BinaryLogisticRegressionTrainingSummary):
+            try :
+                summary = self._model_base.stages[-1].summary
                 return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
-                                       'coefifientsMatrix': str(self._model_base.stages[-1].coefficientsMatrix),
                                        'intercept': self._model_base.stages[-1].intercept,
-                                       'interceptVector': str(self._model_base.stages[-1].interceptVector),
                                        'totalIterations': summary.totalIterations,
                                        'roc': summary.roc.toPandas().to_json(orient='split'),
                                        'pr': summary.pr.toPandas().to_json(orient='split')},
                                  index=[0]).to_json(orient='split')
-            else:
-                return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
-                                       'coefifientsMatrix': str(self._model_base.stages[-1].coefficientsMatrix),
-                                       'intercept': self._model_base.stages[-1].intercept,
+            except RuntimeError:
+                return DataFrame(data={'coefifientsMatrix': str(self._model_base.stages[-1].coefficientMatrix),
                                        'interceptVector': str(self._model_base.stages[-1].interceptVector)},
                                  index=[0]).to_json(orient='split')
-        elif isinstance(self._model_base.stages[-1], BisectingKMeans) or \
-                isinstance(self._model_base.stages[-1], KMeans):
+        elif isinstance(self._model_base.stages[-1], BisectingKMeansModel) or \
+                isinstance(self._model_base.stages[-1], KMeansModel):
             summary = self._model_base.stages[-1].summary
             return DataFrame(data={'clusterCenters': str(self._model_base.stages[-1].clusterCenters()),
                                    'clusterSizes': str(summary.clusterSizes),
@@ -421,17 +419,28 @@ class sparkHandler(object):
     def _generate_importance_variables(self, column_chain):
         var_importance = OrderedDict()
         for columns in column_chain:
-            var_importance[columns] = self._model_base.stages[-1].featureImportances[column_chain.index(columns)]
+            try:
+                var_importance[columns] = self._model_base.stages[-1].featureImportances[column_chain.index(columns)]
+            except AttributeError:
+                var_importance[columns] = None
         return var_importance
 
     ## Generate model summary metrics
     # @param self object pointer
     # @return json_pandas_dataframe structure orient=split
     def _generate_model_metrics(self):
-        if isinstance(self._model_base.stages[-1], LogisticRegression) or \
-                isinstance(self._model_base.stages[-1], LinearRegression):
-            summary = self._model_base.stages[-1].summary
-            return DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split')
+        if isinstance(self._model_base.stages[-1], LogisticRegressionModel) or \
+                isinstance(self._model_base.stages[-1], LinearRegressionModel):
+            try:
+                summary = self._model_base.stages[-1].summary
+                return DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split')
+            except RuntimeError:
+                return None
+        elif isinstance(self._model_base.stages[-1], NaiveBayesModel):
+            metrics = OrderedDict()
+            metrics['pi'] = DataFrame(self._model_base.stages[-1].pi.values).to_json(orient='split')
+            metrics['theta'] = DataFrame(self._model_base.stages[-1].theta.values).to_json(orient='split')
+            return metrics
         return None
 
     ## Generate accuracy metrics for model
@@ -469,7 +478,8 @@ class sparkHandler(object):
         accuracy = -1.0
         dataframe_cols = odataframe.columns
         #bug SPARK-14948
-        prediccion = odataframe.withColumn('prediction', self._model_base.tranform(dataframe).prediction)
+        #prediccion = odataframe.withColumn('prediction', self._model_base.transform(dataframe).prediction)
+        prediccion = self._model_base.transform(dataframe)
 
         if objective in dataframe.columns:
             accuracy = self._accuracy(objective=objective, dataframe=prediccion, tolerance=tolerance)
@@ -576,13 +586,10 @@ class sparkHandler(object):
         # python train parameters effective
         self.analysis_id = analysis_id
         supervised = True
+        tolerance = 0.0
         objective_column = base_ar['objective_column']
         if objective_column is None:
            supervised = False
-
-        train_parameters_list = ['max_runtime_secs', 'fold_column',
-                                 'weights_column', 'offset_column']
-
 
         valid_frame = None
         test_frame = None
@@ -593,6 +600,7 @@ class sparkHandler(object):
 
         base_ns = get_model_ns(base_ar)
         modelid = base_ar['model_parameters']['spark']['model']
+        artype = base_ar['model_parameters']['spark']['types'][0]["type"]
         self._logging.log_info(analysis_id,
                                self._spark_session.sparkContext.applicationId,
                                self._labels["st_analysis"], modelid)
@@ -636,19 +644,19 @@ class sparkHandler(object):
                                                                     model_id=modelid, filtering=filtering,
                                                                     exist_objective=True)
 
-        training_frame = self._spark_session.createDataframe(training_pframe)
+        training_frame = self._spark_session.createDataFrame(training_pframe)
         self._logging.log_info(analysis_id,
                                self._spark_session.sparkContext.applicationId,
                                self._labels["parsing_to_spark"],
                                'training_frame(' + str(training_frame.count()) + ')')
 
         if "test_frame" in kwargs.keys():
-            test_frame = self._spark_session.createDataframe(test_frame)
+            test_frame = self._spark_session.createDataFrame(test_frame)
             self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
                                    self._labels["parsing_to_spark"],
                                    'test_frame (' + str(test_frame.count()) + ')')
 
-        if supervised:
+        if supervised and artype == 'regression':
             # Initializing base structures
             self._logging.log_info(analysis_id,
                                    self._spark_session.sparkContext.applicationId, self._labels["objective"],
@@ -686,7 +694,6 @@ class sparkHandler(object):
         ignored_columns = norm.ignored_columns(base_ns)
         converter = OrderedDict()
         for element in training_frame.dtypes:
-            column_rename = None
             if element[0] not in ignored_columns:
                 if element[1] in invalid_types:
                     transformation_chain.append(StringIndexer() \
@@ -707,7 +714,10 @@ class sparkHandler(object):
                     column_chain.append(element[0])
         del norm
         ''' Packaging Features '''
-        column_chain.remove(objective_column)
+        try:
+            column_chain.remove(objective_column)
+        except ValueError:
+            pass
         transformation_chain.append(VectorAssembler().setInputCols(column_chain).setOutputCol('features'))
 
         ''' Compose Model'''
@@ -717,7 +727,7 @@ class sparkHandler(object):
         model_command.append("featuresCol=\'features\'")
 
         if supervised:
-            model_command.append(", labelCol=objective_column=\'%s\'" % objective_column)
+            model_command.append(", labelCol=\'%s\'" % objective_column)
 
         generate_commands_parameters(base_ar['model_parameters']['spark'], model_command)
 
@@ -728,134 +738,155 @@ class sparkHandler(object):
         pipeline = Pipeline(stages=transformation_chain)
         grid = ParamGridBuilder().build()
         antype = base_ar['model_parameters']['spark']['types'][0]['type']
-        if training_pframe.count(axis=0).all() <=  \
-                self._config['frameworks']['spark']['conf']['validation_frame_threshold']:
-
-            model = CrossValidator(estimator=pipeline,
-                                   estimatorParamMaps=grid,
-                                   evaluator=self._get_evaluator(analysis_type=antype,
-                                                                 objective_column=objective_column),
-                                   numFolds=self._config['frameworks']['spark']['conf']['nfolds'],
-                                   seed=base_ar['timestamp'])
-        else:
-            model = TrainValidationSplit(estimator=pipeline,
-                                         estimatorParamMaps=grid,
-                                         evaluator=self._get_evaluator(analysis_type=antype,
-                                                                       objective_column=objective_column),
-                                         tranRation=self._config['frameworks']['spark']['conf']['validation_frame_ratio'],
-                                         seed=base_ar['timestamp'])
-        start = time.time()
+        aborted = False
         try:
-            self._model_base = model.fit(training_frame).bestModel
-            final_ar_model['status'] = 'Executed'
-            # Generating aditional model parameters Model_ID
-            final_ar_model['model_parameters']['spark']['parameters']['model_id'] = ParameterMetadata()
-            final_ar_model['model_parameters']['spark']['parameters']['model_id'].set_value(value=model_id,
-                                                                                            seleccionable=False,
-                                                                                            type="str")
-
-        except Py4JJavaError as execution_error:
-            self._logging.log_error(analysis_id,
-                                    self._spark_session.sparkContext.applicationId,
-                                    self._labels["abort"],
-                                    repr(execution_error))
-
-        final_ar_model['execution_seconds'] = time.time() - start
-        self._logging.log_exec(analysis_id,
-                               self._spark_session.sparkContext.applicationId, self._labels["tmodel"],
-                               model_id)
-        self._logging.log_exec(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["exec_time"],
-                               str(final_ar_model['execution_seconds']))
-
-        # Filling whole json ar.json
-        final_ar_model['ignored_parameters'], \
-        final_ar_model['full_parameters_stack'] = self._generate_params(modeldef=modeldef)
-
-
-        # Generating execution metrics
-        final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
-
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId, self._labels["gexec_metric"],
-                               model_id)
-
-        prediction_train = self._model_base.transform(training_frame)
-
-        final_ar_model['metrics']['execution']['train'] = \
-            self._generate_execution_metrics(dataframe=prediction_train,
-                                             antype=analysis_type,
-                                             objective_column=objective_column)
-        final_ar_model['metrics']['accuracy'] = OrderedDict()
-
-        if supervised:
-            final_ar_model['metrics']['accuracy']['train'] = \
-            self._accuracy(objective=objective_column, dataframe=prediction_train, tolerance=tolerance)
-            self._logging.log_exec(analysis_id,
-                                   self._spark_session.sparkContext.applicationId, self._labels["model_tacc"],
-                                   model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
-            final_ar_model['tolerance'] = tolerance
-        else:
-            final_ar_model['metrics']['accuracy']['train'] = 0.0
-
-        if test_frame is not None:
             if supervised:
-                final_ar_model['metrics']['accuracy']['test'] = \
-                    self._accuracy(objective=objective_column, dataframe=test_frame,  tolerance=tolerance)
+                if training_pframe.count(axis=0).all() <=  \
+                        self._config['frameworks']['spark']['conf']['validation_frame_threshold']:
 
-                train_balance = self._config['frameworks']['spark']['conf']['train_balance_metric']
-                test_balance = 1 - train_balance
-                final_ar_model['metrics']['accuracy']['combined'] = \
-                    (final_ar_model['metrics']['accuracy']['train']*train_balance +
-                     final_ar_model['metrics']['accuracy']['test']*test_balance)
+                    model = CrossValidator(estimator=pipeline,
+                                           estimatorParamMaps=grid,
+                                           evaluator=self._get_evaluator(analysis_type=antype,
+                                                                         objective_column=objective_column),
+                                           numFolds=self._config['frameworks']['spark']['conf']['nfolds'],
+                                           seed=int(base_ar['timestamp']))
+                else:
+                    model = TrainValidationSplit(estimator=pipeline,
+                                                 estimatorParamMaps=grid,
+                                                 evaluator=self._get_evaluator(analysis_type=antype,
+                                                                               objective_column=objective_column),
+                                                 tranRation=self._config['frameworks']['spark']['conf']['validation_frame_ratio'],
+                                                 seed=int(base_ar['timestamp']))
+                start = time.time()
 
-                self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
-                                       self._labels["model_pacc"],
-                                       model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['test']))
-
-                self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
-                                       self._labels["model_cacc"],
-                                       model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
+                try:
+                    self._model_base = model.fit(training_frame).bestModel
+                except Py4JJavaError:
+                    aborted = True
             else:
+                model = pipeline
+                start = time.time()
 
-                final_ar_model['metrics']['accuracy']['test'] = 0.0
-                final_ar_model['metrics']['accuracy']['combined'] = 0.0
+                try:
+                    self._model_base = model.fit(training_frame)
+                except Py4JJavaError:
+                    aborted = True
 
-        # Generating model metrics
-        final_ar_model['metrics']['model'] = self._generate_model_metrics()
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["gmodel_metric"], model_id)
+            if not aborted:
 
-        # Generating Variable importance
-        final_ar_model['metrics']['var_importance'] = self._generate_importance_variables(column_chain=column_chain)
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["gvar_metric"], model_id)
+                final_ar_model['status'] = 'Executed'
+                # Generating aditional model parameters Model_ID
+                final_ar_model['model_parameters']['spark']['parameters']['model_id'] = ParameterMetadata()
+                final_ar_model['model_parameters']['spark']['parameters']['model_id'].set_value(value=model_id,
+                                                                                                seleccionable=False,
+                                                                                                type="str")
 
-        # Generating scoring_history
-        final_ar_model['metrics']['scoring'] = self._generate_scoring_history()
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["gsco_metric"], model_id)
 
-        final_ar_model['status'] = self._labels['success_op']
 
-        generate_json_path(final_ar_model, user)
-        self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
+                final_ar_model['execution_seconds'] = time.time() - start
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId, self._labels["tmodel"],
+                                       model_id)
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["exec_time"],
+                                       str(final_ar_model['execution_seconds']))
 
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["model_stored"], model_id)
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["end"], model_id)
+                # Filling whole json ar.json
+                final_ar_model['ignored_parameters'], \
+                final_ar_model['full_parameters_stack'] = self._generate_params(modeldef=modeldef)
 
-        for handler in self._logging.logger.handlers:
-            handler.flush()
-        # Saving models
-        self.store_model(final_ar_model, user=user)
+
+                # Generating execution metrics
+                final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
+
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId, self._labels["gexec_metric"],
+                                       model_id)
+
+                prediction_train = self._model_base.transform(training_frame)
+
+                final_ar_model['metrics']['execution']['train'] = \
+                    self._generate_execution_metrics(dataframe=prediction_train,
+                                                     antype=analysis_type,
+                                                     objective_column=objective_column)
+                final_ar_model['metrics']['accuracy'] = OrderedDict()
+
+                if supervised:
+                    final_ar_model['metrics']['accuracy']['train'] = \
+                        self._accuracy(objective=objective_column, dataframe=prediction_train, tolerance=tolerance)
+                    self._logging.log_exec(analysis_id,
+                                           self._spark_session.sparkContext.applicationId, self._labels["model_tacc"],
+                                           model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
+                    final_ar_model['tolerance'] = tolerance
+                else:
+                    final_ar_model['metrics']['accuracy']['train'] = 0.0
+
+                if test_frame is not None:
+                    prediction_test = self._model_base.transform(test_frame)
+                    if supervised:
+                        final_ar_model['metrics']['accuracy']['test'] = \
+                            self._accuracy(objective=objective_column, dataframe=prediction_test,  tolerance=tolerance)
+
+                        train_balance = self._config['frameworks']['spark']['conf']['train_balance_metric']
+                        test_balance = 1 - train_balance
+                        final_ar_model['metrics']['accuracy']['combined'] = \
+                            (final_ar_model['metrics']['accuracy']['train']*train_balance +
+                             final_ar_model['metrics']['accuracy']['test']*test_balance)
+
+                        self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
+                                               self._labels["model_pacc"],
+                                               model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['test']))
+
+                        self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
+                                               self._labels["model_cacc"],
+                                               model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
+                    else:
+
+                        final_ar_model['metrics']['accuracy']['test'] = 0.0
+                        final_ar_model['metrics']['accuracy']['combined'] = 0.0
+
+                # Generating model metrics
+                final_ar_model['metrics']['model'] = self._generate_model_metrics()
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["gmodel_metric"], model_id)
+
+                # Generating Variable importance
+                final_ar_model['metrics']['var_importance'] = self._generate_importance_variables(column_chain=column_chain)
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["gvar_metric"], model_id)
+
+                # Generating scoring_history
+                final_ar_model['metrics']['scoring'] = self._generate_scoring_history()
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["gsco_metric"], model_id)
+
+                final_ar_model['status'] = self._labels['success_op']
+
+                generate_json_path(final_ar_model, user)
+                self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
+
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["model_stored"], model_id)
+                self._logging.log_info(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["end"], model_id)
+
+                # Saving models
+                self.store_model(final_ar_model, user=user)
+        except Py4JJavaError as execution_error:
+            final_ar_model['status'] = 'aborted'
+            self._logging.log_critical(analysis_id,
+                                       self._spark_session.sparkContext.applicationId,
+                                       self._labels["abort"],
+                                       repr(execution_error))
+        finally:
+            for handler in self._logging.logger.handlers:
+                handler.flush()
         return analysis_id, final_ar_model
 
     ## Method to save model to persistence layer from armetadata
@@ -895,7 +926,7 @@ class sparkHandler(object):
             if each_storage_type['type'] == 'hdfs':
                 load_path = self._config['storage'][each_storage_type['type']]['uri'] + load_path
 
-                self._model_base.write().overwrite().save(path=load_path)
+            self._model_base.write().overwrite().save(path=load_path + model_id + self._get_ext())
 
             load_storage.append(value=load_path + model_id + self._get_ext(),
                                 fstype=each_storage_type['type'], hash_type=each_storage_type['hash_type'])
@@ -1002,7 +1033,7 @@ class sparkHandler(object):
                                    'No Normalizations Required')
         else:
             # Transforming original dataframe to sparkFrame
-            predict_frame = self._spark_session.createDataframe(predict_frame)
+            predict_frame = self._spark_session.createDataFrame(predict_frame)
             self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["parsing_to_spark"],
                                    'test_frame (' + str(predict_frame.count()) + ')')
 
@@ -1015,11 +1046,11 @@ class sparkHandler(object):
                     self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["no_cor_struct"],
                                            str(data_normalized['correlation']))
 
+        columns = npredict_frame.columns.values
         #Transforming to sparkFrame
-        npredict_frame = self._spark_session.createDataframe(npredict_frame)
+        npredict_frame = self._spark_session.createDataFrame(npredict_frame)
         self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["parsing_to_spark"],
-                               'test_frame (' + str(npredict_frame.nrows) + ')')
-        self._frame_list.append(npredict_frame.frame_id)
+                               'test_frame (' + str(npredict_frame.count()) + ')')
 
         base_ar['type'] = 'predict'
         self._logging.log_info(self.analysis_id, self._spark_session.sparkContext.applicationId,
@@ -1032,25 +1063,29 @@ class sparkHandler(object):
                                base_model_id)
 
         if objective_column in npredict_frame.columns:
-            objective_type = npredict_frame.type(objective_column)
+            for element in npredict_frame.dtypes:
+                if element[0] == objective_column:
+                    if element[1] == 'string':
+                        objective_column = objective_column + '_to_index'
+                        objective_type = 'double'
+                    else:
+                        objective_type = element[1]
         else:
             objective_type = None
 
         start = time.time()
         if exist_objective:
-            if predict_frame.nrows == npredict_frame.nrows:
+            if predict_frame.count() == npredict_frame.count():
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
                                                                         tolerance=tolerance)
             else:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame, npredict_frame,
                                                                         tolerance=tolerance)
 
-            self._frame_list.append(prediction_dataframe.frame_id)
-
             base_ar['execution_seconds'] = time.time() - start
             base_ar['tolerance'] = tolerance
 
-            prediction_dataframe = prediction_dataframe.toPandas()
+            #prediction_dataframe = prediction_dataframe.toPandas()
         else:
             if antype == 'clustering':
                 if norm_executed:
@@ -1059,7 +1094,7 @@ class sparkHandler(object):
                     accuracy, prediction_dataframe = self._predict_clustering(npredict_frame, npredict_frame)
 
                 base_ar['execution_seconds'] = time.time() - start
-                prediction_dataframe = prediction_dataframe.toPandas()
+                #prediction_dataframe = prediction_dataframe.toPandas()
 
 
         if not exist_objective or objective_type is not None:
@@ -1067,7 +1102,7 @@ class sparkHandler(object):
                                    self._labels["gexec_metric"], model_id)
 
             base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics( \
-                                                                                        dataframe=npredict_frame,
+                                                                                        dataframe=prediction_dataframe,
                                                                                         objective_column=objective_column,
                                                                                         antype=antype)
         if objective_column in npredict_frame.columns:
@@ -1090,7 +1125,20 @@ class sparkHandler(object):
         for handler in self._logging.logger.handlers:
             handler.flush()
 
-        prediction = prediction_dataframe
+        command = list()
+        col_sep = False
+        command.append("prediction_dataframe.select(")
+        for element in columns:
+            if not col_sep:
+                command.append('\"' + element + '\"')
+                col_sep = True
+            else:
+                command.append(',')
+                command.append('\"' + element + '\"')
+        command.append(', \"prediction\"')
+        command.append(").toPandas()")
+
+        prediction = eval("".join(command))
 
         return prediction, base_ar
 
@@ -1164,6 +1212,7 @@ def get_tolerance(columns, objective_column, tolerance=0.0):
             max_val = float(each_column["max"])
     if min_val is None or max_val is None:
         threshold = 0
+
     else:
         threshold = (max_val - min_val) * tolerance
     return threshold

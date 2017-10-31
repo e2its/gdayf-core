@@ -3,6 +3,7 @@
 # and expose API to users
 
 from gdayf.handlers.h2ohandler import H2OHandler
+from gdayf.handlers.sparkhandler import sparkHandler
 from gdayf.handlers.inputhandler import inputHandlerCSV
 from gdayf.common.dfmetada import DFMetada
 
@@ -242,15 +243,13 @@ class Controller(object):
             return self._labels['failed_input']
 
         fw = get_model_fw(base_ar)
-        if fw == 'h2o':
-            self.init_handler(fw)
-            prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
-                                                                            base_ar=base_ar,
-                                                                            user=self.user_id)
-            self.clean_handler(fw)
-        else:
-            prediction_frame = None
-                
+
+        self.init_handler(fw)
+        prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
+                                                                        base_ar=base_ar,
+                                                                        user=self.user_id)
+        self.clean_handler(fw)
+
         self._logging.log_info('gDayF', 'controller', self._labels["pred_end"])
 
         return prediction_frame
@@ -259,7 +258,7 @@ class Controller(object):
     # @param fw framework
     def clean_handler(self, fw):
         if self.model_handler[fw]['handler'] is not None:
-            self.model_handler[fw]['handler'].delete_h2oframes()
+            self.model_handler[fw]['handler'].delete_frames()
             self.model_handler[fw]['handler'] = None
 
     ## Method oriented to init handler objects
@@ -267,10 +266,16 @@ class Controller(object):
     def init_handler(self, fw):
         try:
             if self.model_handler[fw]['handler'] is None:
-                self.model_handler[fw]['handler'] = H2OHandler()
+                if fw == 'h2o':
+                    self.model_handler[fw]['handler'] = H2OHandler()
+                elif fw == 'spark':
+                    self.model_handler[fw]['handler'] = sparkHandler()
         except KeyError:
             self.model_handler[fw] = OrderedDict()
-            self.model_handler[fw]['handler'] = H2OHandler()
+            if fw == 'h2o':
+                self.model_handler[fw]['handler'] = H2OHandler()
+            elif fw == 'spark':
+                self.model_handler[fw]['handler'] = sparkHandler()
             self.model_handler[fw]['initiated'] = False
         if not self.model_handler[fw]['handler'].is_alive():
             initiated = self.model_handler[fw]['handler'].connect()
@@ -375,9 +380,7 @@ class Controller(object):
                     except KeyError:
                         pass
 
-                if fw == 'h2o':
-                    self.init_handler(fw)
-
+                self.init_handler(fw)
                 if pd_test_dataset is not None:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
                                                                                          training_pframe=pd_dataset,
@@ -511,8 +514,8 @@ class Controller(object):
 
             for each_model in adviser.next_analysis_list:
                 fw = get_model_fw(each_model)
-                if fw == 'h2o':
-                    self.init_handler(fw)
+
+                self.init_handler(fw)
 
                 if pd_test_dataset is not None:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(
@@ -559,12 +562,11 @@ class Controller(object):
     # @param armetadata Armetada object
     # @param type base type if is possible
     # @return download_path, hash MD5 key
-    def get_java_model(self, armetadata, type='pojo'):
+    def get_external_model(self, armetadata, type='pojo'):
         fw = get_model_fw(armetadata)
-        if fw == 'h2o':
-            self.init_handler(fw)
-            results = self.model_handler[fw]['handler'].get_java_model(armetadata, type, user=self.user_id)
-            self.clean_handler(fw)
+        self.init_handler(fw)
+        results = self.model_handler[fw]['handler'].get_external_model(armetadata, type, user=self.user_id)
+        self.clean_handler(fw)
         return results
 
     ## Method leading and controlling model savings
@@ -632,9 +634,14 @@ class Controller(object):
                     model_list.append(model)
         elif mode == ALL:
             model_list = arlist
-        for fw in self._config['frameworks'].keys():
+        fw_list = list()
+        for models in model_list:
+            if get_model_fw(models) not in fw_list:
+                fw_list.append(get_model_fw(models))
+
+        for fw in fw_list:
             self.init_handler(fw)
-            results = self.model_handler[fw]['handler'].remove_models(model_list)
+            self.model_handler[fw]['handler'].remove_models(model_list)
             self.clean_handler(fw)
 
     ##Method oriented to generate execution tree for visualizations and analysis issues

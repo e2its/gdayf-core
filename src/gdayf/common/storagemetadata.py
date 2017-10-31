@@ -35,7 +35,7 @@ class StorageMetadata (list):
             fs['value'] = value
             fs['hash_type'] = hash_type
 
-            if fstype == 'localfs' and path.exists(value):
+            if fstype == 'localfs' and path.exists(value) and not path.isdir(value):
                 fs['hash_value'] = hash_key(hash_type=hash_type, filename=fs['value'])
             else:
                 fs['hash_value'] = None

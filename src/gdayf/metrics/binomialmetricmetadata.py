@@ -98,6 +98,7 @@ class BinomialMetricMetadata(MetricMetadata):
                 self['AUPR'] = evaluator.evaluate(data, {evaluator.metricName: "areaUnderPR"})
                 self['nobs'] = data.count()
                 self['model_category'] = 'Binomial'
+                self['max_criteria_and_metric_scores'] = None
 
                 #Generating ConfusionMatrix
                 tp = data.select("prediction", data[objective_column].cast('float'))\

@@ -3,6 +3,7 @@ from collections import OrderedDict
 import mmap
 from os import path as ospath, chmod, remove
 from os.path import dirname
+from shutil import rmtree
 from pathlib import Path
 from gdayf.common.utils import hash_key
 from gdayf.conf.loadconfig import LoadConfig
@@ -167,7 +168,7 @@ class PersistenceHandler(object):
             print(repr(oexecution_error))
             return 1, None
         try:
-            if client.delete(hdfs_path=path):
+            if client.delete(hdfs_path=path, recursive=True):
                 return 0, None
             else:
                 return 1, storage_json
@@ -194,7 +195,10 @@ class PersistenceHandler(object):
             return 0, None
         else:
             try:
-                remove(storage_json['value'])
+                if ospath.isdir(storage_json['value']):
+                    rmtree(storage_json['value'])
+                else:
+                    remove(storage_json['value'])
                 return 0, None
             except OSError:
                 return 1, storage_json

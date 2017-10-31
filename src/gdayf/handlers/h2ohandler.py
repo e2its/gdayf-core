@@ -164,7 +164,7 @@ class H2OHandler(object):
     # @param type ['pojo', 'mojo']
     # @param user user_id
     # @return download_path, MD5 hash_key
-    def get_java_model(self, ar_metadata, type, user):
+    def get_external_model(self, ar_metadata, type, user):
         remove_model = False
         fw = get_model_fw(ar_metadata)
         model_id = ar_metadata['model_parameters'][fw]['parameters']['model_id']['value']
@@ -268,7 +268,7 @@ class H2OHandler(object):
 
     ## Remove used dataframes during analysis execution_
     # @param self object pointer
-    def delete_h2oframes (self):
+    def delete_frames (self):
         for frame_id in self._frame_list:
             try:
                 H2Oremove(frame_id)

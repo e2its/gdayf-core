@@ -15,7 +15,7 @@
         "save_model": "NATIVE",
         "autosaved": true,
         "tolerance": 0.05,
-        "enabled" : true,
+        "enabled" : false,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -2754,14 +2754,14 @@
       "conf": {
         "download_dir": "downloads",
         "master": "local",
-        "nthreads": 3,
+        "nthreads": 4,
         "spark_warehouse_dir": "/Data/Data/spark_warehouse",
-        "spark.executor.memory": "1G",
-        "spark.driver.memory": "1G",
+        "spark.executor.memory": "6G",
+        "spark.driver.memory": "2G",
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.05,
-        "enabled" : false,
+        "enabled" : true,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -2791,7 +2791,7 @@
             },
             {
               "type": "multinomial",
-              "active": true,
+              "active": false,
               "valued": "enum"
             },
             {
@@ -2852,7 +2852,7 @@
               },
               "aggregationDepth": {
                 "value": 2,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "int"
               }
             },
@@ -2882,7 +2882,7 @@
                 "type": "boolean"
               },
               "regParam": {
-                "value": 0.0,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -2910,7 +2910,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -2980,7 +2980,7 @@
               },
               "aggregationDepth": {
                 "value": 2,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "int"
               }
             },
@@ -3015,8 +3015,8 @@
                 "type": "boolean"
               },
               "regParam": {
-                "value": 0.0,
-                "seleccionable": false,
+                "value": 0.000001,
+                "seleccionable": true,
                 "type": "float"
               },
               "standardization": {
@@ -3059,7 +3059,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3192,7 +3192,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3328,8 +3328,8 @@
               },
               "lossType": {
                 "value": "logistic",
-                "seleccionable": false,
-                "type": "['logistic']"
+                "seleccionable": true,
+                "type": "[]"
               }
             }
           }
@@ -3340,7 +3340,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3565,7 +3565,7 @@
             "distribution":{
               "modelType": {
                 "value": "multinomial",
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "['multinomial','bernoulli']"
               }
             },
@@ -3596,7 +3596,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3734,7 +3734,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3864,14 +3864,14 @@
                 "type": "boolean"
               },
               "lossType": {
-                "value": "logistic",
-                "seleccionable": false,
-                "type": "['logistic']"
+                "value": "squared",
+                "seleccionable": true,
+                "type": "['absolute']"
               },
               "impurity": {
                 "value": "variance",
                 "seleccionable": false,
-                "type": "['variance']"
+                "type": "[]"
               }
             }
           }
@@ -3882,7 +3882,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4024,7 +4024,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4125,8 +4125,8 @@
                 "type": "str"
               },
               "variancePower": {
-                "value": 0.0,
-                "seleccionable": false,
+                "value": null,
+                "seleccionable": true,
                 "type": "float[0;[1:Inf)]"
               },
               "solver": {
@@ -4145,7 +4145,7 @@
                 "type": "boolean"
               },
               "regParam": {
-                "value": 0.0,
+                "value": 0.00000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -4163,7 +4163,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4257,7 +4257,7 @@
                 "type": "boolean"
               },
               "regParam": {
-                "value": 0.0,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -4291,7 +4291,7 @@
           "module": "pyspark.ml.clustering",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4344,7 +4344,7 @@
             },
             "effort":{
               "maxIter": {
-                "value": 100,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -4388,7 +4388,7 @@
           "module": "pyspark.ml.clustering",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4441,12 +4441,12 @@
             },
             "effort":{
               "maxIter": {
-                "value": 100,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               },
               "k": {
-                "value": 2,
+                "value": 4,
                 "seleccionable": true,
                 "type": "int"
               }
@@ -4479,7 +4479,7 @@
               "initMode": {
                 "value": "k-means||",
                 "seleccionable": true,
-                "type": "['random','k-means||']"
+                "type": "['random']"
               },
               "initSteps": {
                 "value": 2,
@@ -4594,17 +4594,17 @@
   },
   "storage": {
     "localfs":
-      {"value": "/Data/gdayf/experiments" , "type":"localfs",
+      {"value": "/Data/gdayf-proof/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
     "hdfs":
-      {"value": "/gdayf/experiments" , "type":"hdfs",
+      {"value": "/gdayf-proof/experiments" , "type":"hdfs",
         "url":"http://localhost:50070",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
       },
     "mongoDB":
-      { "value": "gdayf",
+      { "value": "gdayf-proof",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
@@ -4709,7 +4709,6 @@
           {"learn":0.005}
         ],
         "regParam" : [
-          {"value": 0.000001},
           {"value": 0.00001},
           {"value": 0.0001}
         ],
@@ -4721,7 +4720,7 @@
         ],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "clustersize_divisor": 0.8,
+        "initstep_increment": 2,
         "clustering_increment": 2.0
       }
     },

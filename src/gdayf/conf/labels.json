@@ -49,6 +49,8 @@
         "no_cor_struct": ":Objective column no correlated data:",
         "parsing_to_h2o": ":Parse executed from pandas to H2OFrames:",
         "getting_from_h2o" :  ":Reused H2OFrame stored on H2OCluster:",
+        "parsing_to_spark": ":Parse executed from pandas to Apache Spark DataFrames:",
+        "getting_from_spark" :  ":Reused pache Spark DataFrame stored on Spark Cluster:",
         "tolerance":":Setting Tolerance's Threshold value to (native units): ",
         "action_type": ":Analysis Action Objective:",
         "exec_norm": ":Executing Normalizations:",
