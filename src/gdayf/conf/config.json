@@ -15,7 +15,7 @@
         "save_model": "NATIVE",
         "autosaved": true,
         "tolerance": 0.05,
-        "enabled" : false,
+        "enabled" : true,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -2767,7 +2767,7 @@
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
         "nfolds" : 3,
-        "validation_frame_threshold" : 100000,
+        "validation_frame_threshold" : 1000,
         "anomaly_threshold":
         {
           "columns" :0.15,
@@ -2782,7 +2782,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3340,7 +3340,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -3488,7 +3488,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4645,7 +4645,8 @@
     "exclusion_missing_threshold": 0.3,
     "clustering_standardize_enabled" : false,
     "standardize_enabled" : true,
-    "std_threshold" : 0.1
+    "std_threshold" : 0.1,
+    "special_spark_naive_offset" : 2.0
   },
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",

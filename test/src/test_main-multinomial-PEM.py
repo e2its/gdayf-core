@@ -10,7 +10,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                          amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=5)
+                                                          amode=FAST, metric='test_accuracy', deep_impact=5)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy', accuracy=True)
 
@@ -32,12 +32,12 @@ if __name__ == "__main__":
 
         # Save Pojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'pojo')
+        result = controller.get_external_model(recomendations[0], 'pojo')
         print(result)
 
         # Save Mojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'mojo')
+        result = controller.get_external_model(recomendations[0], 'mojo')
         print(result)
 
         controller.clean_handlers()

@@ -30,7 +30,10 @@ if __name__ == "__main__":
         #controller = Controller()
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                       model_file=recomendations[0]['json_path'][0]['value'])
-        print(prediction_frame)
+        if 'predict' in prediction_frame.columns.values:
+            print(prediction_frame[['Y2', 'predict']])
+        elif 'prediction' in prediction_frame.columns.values:
+            print(prediction_frame[['Y2', 'prediction']])
 
         # Save Pojo
         #controller = Controller()

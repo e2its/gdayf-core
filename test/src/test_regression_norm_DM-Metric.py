@@ -34,8 +34,10 @@ if __name__ == "__main__":
         #Prediccion
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                       model_file=recomendations[0]['json_path'][0]['value'])
-        pprint(prediction_frame[['Weather_Temperature', 'predict']])
-        #pprint(prediction_frame)
+        if 'predict' in prediction_frame.columns.values:
+            pprint(prediction_frame[['Weather_Temperature', 'predict']])
+        elif 'prediction' in prediction_frame.columns.values:
+            pprint(prediction_frame[['Weather_Temperature', 'prediction']])
 
         # Save Pojo
         result = controller.get_java_model(recomendations[0], 'pojo')

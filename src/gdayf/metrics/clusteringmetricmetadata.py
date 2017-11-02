@@ -80,6 +80,5 @@ class ClusteringMetricMetadata(MetricMetadata):
             self['nobs'] = data.count()
             self['model_category'] = 'Clustering'
             self['predictions'] = None
-            self['rmsle'] = None
+            self['RMSE'] = 10e+308
             self['scoring_time'] = int(time.time() - start)
-

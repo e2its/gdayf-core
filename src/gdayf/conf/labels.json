@@ -77,14 +77,16 @@
         "st_predict_model": ":Starting Prediction Model:",
         "delete_objects" : ":No Model Objects to delete:",
         "delete_frame" : ":No H2ODataframe to delete:",
-        "failed_op" : ":Execution Failed:",
-        "success_op" : ":Executed:",
-        "success_st" : ":Executed:",
+        "failed_op" : "Aborted",
+        "success_op" : "Executed",
         "hk_check":":Checking for Hash_Keys:",
         "down_path": ":Download Path:",
-        "no_models":": No base model to saved on Storage",
-        "failed_remove": ": Error deleting model from Storage",
-        "success_remove": ": Deleted model from Storage"
+        "no_models":": No base model to saved on Storage:",
+        "failed_remove": ": Error deleting model from Storage:",
+        "success_remove": ": Deleted model from Storage:",
+        "def_naive_norm": "Generating spacial norms for Apache Spark Naive Model:",
+        "abort_data_nc": "Aborting model conditions not compatible:",
+        "trc:label_cardinality" : "Objective_column Cardinality:"
       },
       "inputhandler" : {},
       "adviser": {

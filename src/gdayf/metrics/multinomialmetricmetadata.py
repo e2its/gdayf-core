@@ -78,7 +78,7 @@ class MultinomialMetricMetadata(MetricMetadata):
                 self['accuracy'] = evaluator.evaluate(data, {evaluator.metricName: "accuracy"})
                 self['nobs'] = data.count()
                 self['model_category'] = 'Multinomial'
-
+                self['RMSE'] = 10e+308
 
                 #Generating ConfusionMatrix
                 dimcount = data.select(objective_column).distinct().count()
