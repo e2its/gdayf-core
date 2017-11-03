@@ -15,7 +15,7 @@
         "save_model": "NATIVE",
         "autosaved": true,
         "tolerance": 0.05,
-        "enabled" : true,
+        "enabled" : false,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -2767,7 +2767,7 @@
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
         "nfolds" : 3,
-        "validation_frame_threshold" : 1000,
+        "validation_frame_threshold" : 100000,
         "anomaly_threshold":
         {
           "columns" :0.15,
@@ -3734,7 +3734,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -3882,7 +3882,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",

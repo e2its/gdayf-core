@@ -473,29 +473,26 @@ class sparkHandler(object):
     # on dataframe objective's column
     # @param self object pointer
     # @param objective objective column if apply
-    # @param odataframe original sparkFrame
     # @param dataframe normalized sparkFrame
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model, prediction_dataframe
-    def _predict_accuracy(self, objective, odataframe, dataframe, tolerance=0.0):
+    def _predict_accuracy(self, objective, dataframe, tolerance=0.0):
         accuracy = -1.0
-        dataframe_cols = odataframe.columns
         #bug SPARK-14948
         #prediccion = odataframe.withColumn('prediction', self._model_base.transform(dataframe).prediction)
         prediccion = self._model_base.transform(dataframe)
-
-        if objective in dataframe.columns:
+        columns = dataframe.columns
+        if objective in columns:
             accuracy = self._accuracy(objective=objective, dataframe=prediccion, tolerance=tolerance)
         return accuracy, prediccion
 
     ## Generate detected anomalies on dataframe
     # @param self object pointer
-    # @param odataframe original sparkFrame
     # @param dataframe normalized sparkFrame
     # @param objective objective column if apply
     # @return OrderedDict with anomalies
-    def _predict_clustering(self, odataframe, dataframe, objective=None):
-        return self._predict_accuracy(objective=objective, odataframe=odataframe, dataframe=dataframe)
+    def _predict_clustering(self, dataframe, objective=None):
+        return self._predict_accuracy(objective=objective, dataframe=dataframe)
 
     ## Generate model full values parameters for execution analysis
     # @param self object pointer
@@ -610,6 +607,8 @@ class sparkHandler(object):
 
         valid_frame = None
         test_frame = None
+
+
         if "test_frame" in kwargs.keys():
             test_frame = kwargs['test_frame']
         else:
@@ -666,18 +665,18 @@ class sparkHandler(object):
                                        self._labels["cor_struct"],
                                        str(data_initial['correlation']))
             if test_frame is not None:
-                test_frame, _, _, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns,
+                test_frame, _, test_hash_value, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns,
                                                                     model_id=modelid, filtering=filtering,
                                                                     exist_objective=True)
 
-        training_frame = self._spark_session.createDataFrame(training_pframe)
+        training_frame = self._spark_session.createDataFrame(training_pframe).cache()
         self._logging.log_info(analysis_id,
                                self._spark_session.sparkContext.applicationId,
                                self._labels["parsing_to_spark"],
                                'training_frame(' + str(training_frame.count()) + ')')
 
         if "test_frame" in kwargs.keys():
-            test_frame = self._spark_session.createDataFrame(test_frame)
+            test_frame = self._spark_session.createDataFrame(test_frame).cache()
             self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
                                    self._labels["parsing_to_spark"],
                                    'test_frame (' + str(test_frame.count()) + ')')
@@ -718,7 +717,7 @@ class sparkHandler(object):
         column_chain = list()
         norm = Normalizer()
         ignored_columns = norm.ignored_columns(base_ns)
-        converter = OrderedDict()
+        decoder = None
         for element in training_frame.dtypes:
             if element[0] not in ignored_columns:
                 if element[1] in invalid_types or (modelid == 'NaiveBayes' and artype == 'binomial'):
@@ -734,8 +733,8 @@ class sparkHandler(object):
                         column_rename = element[0] + '_to_onehot'
                     else:
                         objective_column = column_rename
+                        decoder = len(transformation_chain) - 1
                     column_chain.append(column_rename)
-                    converter[column_rename] = element[0]
                 else:
                     column_chain.append(element[0])
         del norm
@@ -844,6 +843,10 @@ class sparkHandler(object):
                                                      antype=analysis_type,
                                                      objective_column=objective_column)
 
+            final_ar_model['metrics']['execution']['predict'] = OrderedDict()
+            final_ar_model['metrics']['execution']['predict']['decoder'] = decoder
+
+            final_ar_model['metrics']['accuracy'] = OrderedDict()
             final_ar_model['metrics']['accuracy'] = OrderedDict()
 
             if supervised:
@@ -1047,7 +1050,6 @@ class sparkHandler(object):
         analysis_id = self.analysis_id
         base_model_id = base_ar['model_parameters']['spark']['parameters']['model_id']['value'] + self._get_ext()
         model_id = base_model_id + '_' + model_timestamp
-
         antype = base_ar['model_parameters']['spark']['types'][0]['type']
 
         modelid = base_ar['model_parameters']['spark']['model']
@@ -1102,9 +1104,9 @@ class sparkHandler(object):
                                    'No Normalizations Required')
         else:
             # Transforming original dataframe to sparkFrame
-            predict_frame = self._spark_session.createDataFrame(predict_frame)
+            '''predict_frame = self._spark_session.createDataFrame(predict_frame).cache()
             self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["parsing_to_spark"],
-                                   'test_frame (' + str(predict_frame.count()) + ')')
+                                   'test_frame (' + str(predict_frame.count()) + ')')'''
 
             base_ar['data_normalized'] = data_normalized
             if objective_column in list(npredict_frame.columns.values):
@@ -1115,9 +1117,8 @@ class sparkHandler(object):
                     self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["no_cor_struct"],
                                            str(data_normalized['correlation']))
 
-        columns = npredict_frame.columns.values
         #Transforming to sparkFrame
-        npredict_frame = self._spark_session.createDataFrame(npredict_frame)
+        npredict_frame = self._spark_session.createDataFrame(npredict_frame).cache()
         self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId, self._labels["parsing_to_spark"],
                                'test_frame (' + str(npredict_frame.count()) + ')')
 
@@ -1130,6 +1131,10 @@ class sparkHandler(object):
         self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
                                self._labels['st_predict_model'],
                                base_model_id)
+        if base_ar['metrics']['execution']['predict']['decoder'] is not None:
+            decoder = self._model_base.stages[base_ar['metrics']['execution']['predict']['decoder']]
+        else:
+            decoder = None
 
         if objective_column in npredict_frame.columns:
             for element in npredict_frame.dtypes:
@@ -1143,12 +1148,9 @@ class sparkHandler(object):
             objective_type = None
 
         start = time.time()
+
         if exist_objective:
-            if predict_frame.count() == npredict_frame.count():
-                accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
-                                                                        tolerance=tolerance)
-            else:
-                accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame, npredict_frame,
+            accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame,
                                                                         tolerance=tolerance)
 
             base_ar['execution_seconds'] = time.time() - start
@@ -1158,9 +1160,9 @@ class sparkHandler(object):
         else:
             if antype == 'clustering':
                 if norm_executed:
-                    accuracy, prediction_dataframe = self._predict_clustering(predict_frame, npredict_frame)
+                    accuracy, prediction_dataframe = self._predict_clustering(npredict_frame)
                 else:
-                    accuracy, prediction_dataframe = self._predict_clustering(npredict_frame, npredict_frame)
+                    accuracy, prediction_dataframe = self._predict_clustering(npredict_frame)
 
                 base_ar['execution_seconds'] = time.time() - start
                 #prediction_dataframe = prediction_dataframe.toPandas()
@@ -1174,7 +1176,7 @@ class sparkHandler(object):
                                                                                         dataframe=prediction_dataframe,
                                                                                         objective_column=objective_column,
                                                                                         antype=antype)
-        if objective_column in npredict_frame.columns:
+        if objective_column in prediction_dataframe.columns:
             base_ar['metrics']['accuracy']['predict'] = accuracy
             self._logging.log_info(analysis_id,
                                    self._spark_session.sparkContext.applicationId, self._labels["model_pacc"],
@@ -1194,9 +1196,15 @@ class sparkHandler(object):
         for handler in self._logging.logger.handlers:
             handler.flush()
 
+        if decoder is not None:
+            labelConverter = IndexToString(inputCol="prediction", outputCol="predictedLabel",
+                                           labels=decoder.labels)
+            prediction_dataframe = labelConverter.transform(prediction_dataframe).drop("prediction")
+            prediction_dataframe = prediction_dataframe.withColumnRenamed("predictedLabel", "prediction")
+
         command = list()
         col_sep = False
-        command.append("prediction_dataframe.select(")
+        '''command.append("prediction_dataframe.select(")
         for element in columns:
             if not col_sep:
                 command.append('\"' + element + '\"')
@@ -1205,9 +1213,22 @@ class sparkHandler(object):
                 command.append(',')
                 command.append('\"' + element + '\"')
         command.append(', \"prediction\"')
+        if antype in ['binomial', 'multinomial']:
+            command.append(', \"probability\"')
+        command.append(").toPandas()")'''
+
+        command.append("prediction_dataframe.select(")
+        command.append('\"prediction\"')
+        if antype in ['binomial', 'multinomial']:
+            command.append(', \"probability\"')
         command.append(").toPandas()")
 
-        prediction = eval("".join(command))
+        presults = eval("".join(command))
+        prediction =predict_frame.copy()
+        prediction['prediction'] = presults.loc[:,'prediction']
+        if antype in ['binomial', 'multinomial']:
+            prediction['probability'] = presults.loc[:,'probability']
+
 
         return prediction, base_ar
 

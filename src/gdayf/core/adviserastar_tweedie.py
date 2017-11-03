@@ -507,8 +507,8 @@ class AdviserAStar(Adviser):
 
                 try:
                     if model['parameters']['maxIter']['value'] \
-                            >= scoring_metric['totalIterations'] and \
-                               scoring_metric['totalIterations'] <= max_interactions_increment:
+                            >= scoring_metric['totalIterations'][0] and \
+                               scoring_metric['totalIterations'][0] <= max_interactions_increment:
 
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['spark']
@@ -686,11 +686,11 @@ class AdviserAStar(Adviser):
                         model_aux['parameters']['regParam']['value'] = elastic['value']
                         self.safe_append(model_list, new_armetadata)
                 if self.deepness == 2:
-                    if model['parameters']['famliy']['value'] in ['gaussian', 'gamma']:
+                    if model['parameters']['family']['value'] in ['gaussian', 'gamma']:
                         linklist = ['log', 'inverse']
-                    elif model['parameters']['famliy']['value'] in ['poisson']:
+                    elif model['parameters']['family']['value'] in ['poisson']:
                         linklist = ['log', 'sqrt']
-                    elif model['parameters']['famliy']['value'] in ['poisson', 'tweedie']:
+                    elif model['parameters']['family']['value'] in ['poisson', 'tweedie']:
                         linklist = []
                     for linkin in linklist:
                         new_armetadata = armetadata.copy_template()

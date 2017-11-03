@@ -782,7 +782,7 @@ class H2OHandler(object):
                     self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
                 valid_frame = get_frame('valid_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
+                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'training_frame(' + str(training_frame.nrows) +
                                        ') validating_frame(' + str(valid_frame.nrows) + ')')
             else:
@@ -791,7 +791,7 @@ class H2OHandler(object):
                                        'training_frame(' + str(training_frame.nrows) + ')')
             if "test_frame" in kwargs.keys():
                 test_frame = get_frame('test_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
+                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'test_frame (' + str(test_frame.nrows) + ')')
         else:
             if training_pframe.count(axis=0).all() >  \
