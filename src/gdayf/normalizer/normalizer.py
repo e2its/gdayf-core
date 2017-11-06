@@ -1,6 +1,7 @@
 ## @package gdayf.normalizer.normalizer
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from collections import OrderedDict
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
@@ -35,25 +36,12 @@ class Normalizer (object):
             norms = list()
             normoption = NormalizationSet()
             if df_type == 'pandas':
-                '''Modified 11/09/2017
-                for description in columns:
-                    col = description['name']
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["col_analysis"],
-                                           description['name'] + ' - ' + description['type'])
-                    if objective_column is not None and col == objective_column:
-                        norm_aux = self.define_minimal_norm(dataframe_metadata, an_objective, objective_column)
-                        if norm_aux is not None:
-                            norms.append(norm_aux)
-                        if description['type'] == "object" and self._config['base_normalization_enabled']:
-                            normoption.set_base()
-                            norms.append({col: normoption.copy()})
-                '''
                 for description in columns:
                     col = description['name']
                     if col != objective_column:
-                        if description['type'] == "object" and self._config['base_normalization_enabled']:
+                        '''if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
-                            norms.append({col: normoption.copy()})
+                            norms.append({col: normoption.copy()})'''
                         if int(description['missed']) > 0 and \
                            (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
                             if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
@@ -71,9 +59,6 @@ class Normalizer (object):
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
-                        if int(description['cardinality']) == 1:
-                            normoption.set_ignore_column()
-                            norms.append({col: normoption.copy()})
                         if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
                             normoption.set_stdmean(description['mean'], description['std'])
                             norms.append({col: normoption.copy()})
@@ -87,6 +72,40 @@ class Normalizer (object):
                             norms.append({col: normoption.copy()})
 
                 self._logging.log_exec('gDayF', "Normalizer", self._labels["norm_set_establish"], norms)
+                if len(norms) != 0:
+                    return norms.copy()
+                else:
+                    return None
+            else:
+                return None
+
+    ## Method oriented to specificate ignored_columns
+    # @param dataframe_metadata DFMetadata()
+    # @param objective_column string indicating objective column
+    # @return None if nothing to DO or Normalization_sets orderdict() on other way
+    def define_ignored_columns(self, dataframe_metadata, objective_column):
+        if not self._config['non_minimal_normalizations_enabled']:
+            return None
+        else:
+            df_type = dataframe_metadata['type']
+            rowcount = dataframe_metadata['rowcount']
+            # cols = dataframe_metadata['cols']
+            columns = dataframe_metadata['columns']
+            norms = list()
+            normoption = NormalizationSet()
+            if df_type == 'pandas':
+                for description in columns:
+                    col = description['name']
+                    if col != objective_column:
+                        if int(description['cardinality']) == 1:
+                            normoption.set_ignore_column()
+                            norms.append({col: normoption.copy()})
+                        elif self._config['datetime_columns_management'] is not None \
+                                and self._config['datetime_columns_management'] \
+                                and description['type'] == 'datetime64[ns]':
+                            normoption.set_ignore_column()
+                            norms.append({col: normoption.copy()})
+                self._logging.log_exec('gDayF', "Normalizer", self._labels["ignored_set_establish"], norms)
                 if len(norms) != 0:
                     return norms.copy()
                 else:
@@ -134,6 +153,14 @@ class Normalizer (object):
                 normoption = NormalizationSet()
                 normoption.set_drop_missing()
                 norms.append({objective_column: normoption.copy()})
+
+                columns = dataframe_metadata['columns']
+                for description in columns:
+                    col = description['name']
+                    if col != objective_column:
+                        if description['type'] == "object" and self._config['base_normalization_enabled']:
+                            normoption.set_base()
+                            norms.append({col: normoption.copy()})
                 return norms.copy()
 
     ## Method oriented to filter stdmean operations on non standardize algorithms
@@ -205,6 +232,13 @@ class Normalizer (object):
                         dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
                         self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'])
+                        if dataframe[col].dtype == '<M8[ns]':
+                            dataframe = self.normalizeDateTime(dataframe=dataframe, date_column=col)
+                            if self._config['datetime_columns_management'] is not None \
+                                    and self._config['datetime_columns_management']['enable']:
+                                self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
+                                                       col + ' - ' + str(self._config['datetime_columns_management']
+                                                                         ['filter']))
                     elif norms['class'] == 'drop_missing':
                         try:
                             dataframe = self.normalizeDropMissing(dataframe, col)
@@ -212,7 +246,7 @@ class Normalizer (object):
                                                    col + ' - ' + norms['class'])
                         except KeyError:
                             self._logging.log_info('gDayF', "Normalizer", self._labels["excluding"],
-                                                   col + ' - ' + norms['class'])
+                                               col + ' - ' + norms['class'])
                     elif norms['class'] == 'stdmean':
                         dataframe.loc[:, col] = self.normalizeStdMean(dataframe.loc[:, col],
                                                                       norms['objective']['mean'],
@@ -459,5 +493,32 @@ class Normalizer (object):
                     offset = b * x
                     dataframe.loc[index, col] = minimal + offset
         return dataframe.copy()
+
+    ## Internal method oriented to manage date_time conversions to pattern
+    # @param self object pointer
+    # @param dataframe full column dataframe to be expanded
+    # @param date_column Date_Column name to be transformed
+    # @return dataframe
+    def normalizeDateTime(self, dataframe, date_column=None):
+        datetime_columns_management = self._config['datetime_columns_management']
+        if date_column is not None:
+            if datetime_columns_management is not None and datetime_columns_management['enable']:
+                    for element in datetime_columns_management['filter']:
+                        try:
+                            if element not in ['weekday', 'weeknumber']:
+                                dataframe[date_column + '_' + element] = dataframe.loc[:, date_column]\
+                                    .transform(lambda x: eval('x.' + element))
+                            elif element == 'weekday':
+                                dataframe[date_column + '_' + element] = dataframe.loc[:, date_column]\
+                                    .transform(lambda x: x.isoweekday())
+                            elif element == 'weeknumber':
+                                dataframe[date_column + '_' + element] = dataframe.loc[:, date_column]\
+                                    .transform(lambda x: x.isocalendar()[1])
+                        except AttributeError:
+                            print('TRC: invalid configuration:' + element)
+                            pass
+        return dataframe.copy()
+
+
 
 

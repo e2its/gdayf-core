@@ -4,6 +4,7 @@
 
 from gdayf.metrics.metricmetadata import MetricMetadata
 import time
+from numpy import isnan
 
 
 ## Class Base for Regression metricts as OrderedDict
@@ -55,4 +56,6 @@ class RegressionMetricMetadata(MetricMetadata):
                 self['RMSE'] = evaluator.evaluate(data, {evaluator.metricName: "rmse"})
                 self['MAE'] = evaluator.evaluate(data, {evaluator.metricName: "mae"})
                 self['scoring_time'] = int(time.time() - start)
+                if isnan(self['RMSE']):
+                    self['RMSE'] = 1e+16
 

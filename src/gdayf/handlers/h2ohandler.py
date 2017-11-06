@@ -752,6 +752,11 @@ class H2OHandler(object):
             self.execute_normalization(dataframe=training_pframe, base_ns=base_ns, model_id=modelid,
                                        filtering=filtering, exist_objective=True)
 
+        if base_ar['round'] == 1:
+            aux_ns = Normalizer().define_ignored_columns(data_normalized, objective_column)
+            if aux_ns is not None:
+                base_ns.extend(aux_ns)
+
         df_metadata = data_initial
         if not norm_executed:
             data_normalized = None
@@ -907,11 +912,7 @@ class H2OHandler(object):
         try:
             eval(train_command)
             final_ar_model['status'] = 'Executed'
-            # Generating aditional model parameters Model_ID
-            final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = ParameterMetadata()
-            final_ar_model['model_parameters']['h2o']['parameters']['model_id'].set_value(value=model_id,
-                                                                                          seleccionable=False,
-                                                                                          type="String")
+
         except OSError as execution_error:
             aborted = True
             self._logging.log_error(analysis_id, self._h2o_session.session_id, self._labels["abort"],
@@ -923,7 +924,11 @@ class H2OHandler(object):
             except KeyError:
                 H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id, None))
 
-
+        # Generating aditional model parameters Model_ID
+        final_ar_model['model_parameters']['h2o']['parameters']['model_id'] = ParameterMetadata()
+        final_ar_model['model_parameters']['h2o']['parameters']['model_id'].set_value(value=model_id,
+                                                                                      seleccionable=False,
+                                                                                      type="String")
         final_ar_model['execution_seconds'] = time.time() - start
         self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["tmodel"], model_id)
         self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["exec_time"],

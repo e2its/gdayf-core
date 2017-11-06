@@ -638,6 +638,11 @@ class sparkHandler(object):
                 base_ns.extend(aux_norm)
                 norm_executed = norm_executed | aux_norm_executed
 
+        if base_ar['round'] == 1:
+            aux_ns = Normalizer().define_ignored_columns(data_normalized, objective_column)
+            if aux_ns is not None:
+                base_ns.extend(aux_ns)
+
         df_metadata = data_initial
         if not norm_executed:
             data_normalized = None
@@ -739,8 +744,13 @@ class sparkHandler(object):
                     column_chain.append(element[0])
         del norm
         ''' Packaging Features '''
+
         try:
             column_chain.remove(objective_column)
+            # Remove ignored_columns
+            for column in ignored_columns:
+                column_chain.remove(column)
+
         except ValueError:
             pass
         transformation_chain.append(VectorAssembler().setInputCols(column_chain).setOutputCol('features'))
@@ -903,7 +913,9 @@ class sparkHandler(object):
 
             final_ar_model['status'] = self._labels['success_op']
 
-        except IllegalArgumentException as execution_error:
+        except Exception as execution_error:
+            for handler in self._logging.logger.handlers:
+                handler.flush()
             # Generating aditional model parameters Model_ID
             final_ar_model['execution_seconds'] = time.time() - start
             aborted = True
@@ -940,6 +952,7 @@ class sparkHandler(object):
             final_ar_model['metrics']['execution']['test']['RMSE'] = 1e+16
             final_ar_model['metrics']['execution']['test']['tot_withinss'] = 1e+16
             final_ar_model['metrics']['execution']['test']['betweenss'] = 1e+16
+
         finally:
             generate_json_path(final_ar_model, user)
             self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)

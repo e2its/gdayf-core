@@ -15,7 +15,7 @@
         "save_model": "NATIVE",
         "autosaved": true,
         "tolerance": 0.05,
-        "enabled" : false,
+        "enabled" : true,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -3734,7 +3734,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -3882,7 +3882,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4536,6 +4536,12 @@
         ],
         "propagate": true
       },
+      "gdayf.handlers.sparkhandler": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
       "gdayf.handlers": {
         "handlers": [
           "info"
@@ -4646,7 +4652,12 @@
     "clustering_standardize_enabled" : false,
     "standardize_enabled" : true,
     "std_threshold" : 0.1,
-    "special_spark_naive_offset" : 2.0
+    "special_spark_naive_offset" : 2.0,
+    "datetime_columns_management": {
+      "enable": true,
+      "filter": ["day","month","year","weekday","weeknumber","hour", "minute","second", "microsecond"],
+      "ignore_original": true
+    }
   },
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",

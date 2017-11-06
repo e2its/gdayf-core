@@ -100,6 +100,7 @@
       "normalizer" : {
         "norm_set_establish" : ":Establishing dataframe normalization recommendations:",
         "ignored_list": ":Establishing column's exclusion over missing values threshold or const_columns:",
+        "ignored_set_establish": ":Establishing dataframe ignored_columns recommendations:",
         "start_data_norm": ":Starting Dataframe Normalizations on dataframe (row, cols):",
         "applying": ":Applying Normalization:",
         "excluding": ":Excluding Normalization on model (Not convenient):",
