@@ -10,13 +10,13 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                          amode=FAST_PARANOIAC, metric='test_accuracy', deep_impact=5)
+                                                          amode=FAST, metric='test_accuracy', deep_impact=1)
 
-        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
+        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy', accuracy=True)
 
-        controller.save_models(recomendations, mode=BEST_3)
+        '''controller.save_models(recomendations, mode=BEST_3)'''
         controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
-        controller.remove_models(recomendations, mode=ALL)
+        controller.remove_models(recomendations, mode=BEST_3)
 
         #Prediction
         source_data = list()
@@ -32,15 +32,14 @@ if __name__ == "__main__":
 
         # Save Pojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'pojo')
+        result = controller.get_external_model(recomendations[0], 'pojo')
         print(result)
 
         # Save Mojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'mojo')
+        result = controller.get_external_model(recomendations[0], 'mojo')
         print(result)
 
-        controller.remove_models(recomendations, mode=ALL)
         controller.clean_handlers()
     del controller
 

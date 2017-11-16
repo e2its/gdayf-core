@@ -1,6 +1,7 @@
 ## @package gdayf.normalizer.normalizer
 import numpy as np
 import pandas as pd
+from datetime import datetime
 from collections import OrderedDict
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
@@ -28,33 +29,19 @@ class Normalizer (object):
         if not self._config['non_minimal_normalizations_enabled']:
             return None
         else:
-            type = dataframe_metadata['type']
-            print(dataframe_metadata['type'])
+            df_type = dataframe_metadata['type']
             rowcount = dataframe_metadata['rowcount']
-            cols = dataframe_metadata['cols']
+            #cols = dataframe_metadata['cols']
             columns = dataframe_metadata['columns']
             norms = list()
             normoption = NormalizationSet()
-            if type == 'pandas':
-                '''Modified 11/09/2017
-                for description in columns:
-                    col = description['name']
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["col_analysis"],
-                                           description['name'] + ' - ' + description['type'])
-                    if objective_column is not None and col == objective_column:
-                        norm_aux = self.define_minimal_norm(dataframe_metadata, an_objective, objective_column)
-                        if norm_aux is not None:
-                            norms.append(norm_aux)
-                        if description['type'] == "object" and self._config['base_normalization_enabled']:
-                            normoption.set_base()
-                            norms.append({col: normoption.copy()})
-                '''
+            if df_type == 'pandas':
                 for description in columns:
                     col = description['name']
                     if col != objective_column:
-                        if description['type'] == "object" and self._config['base_normalization_enabled']:
+                        '''if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
-                            norms.append({col: normoption.copy()})
+                            norms.append({col: normoption.copy()})'''
                         if int(description['missed']) > 0 and \
                            (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
                             if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
@@ -70,9 +57,6 @@ class Normalizer (object):
                                 normoption.set_mean_missing_values(objective_column, full=True)
                                 norms.append({col: normoption.copy()})
                         elif int(description['missed']) > 0:
-                            normoption.set_ignore_column()
-                            norms.append({col: normoption.copy()})
-                        if int(description['cardinality']) == 1:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
                         if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
@@ -95,44 +79,88 @@ class Normalizer (object):
             else:
                 return None
 
+    ## Method oriented to specificate ignored_columns
+    # @param dataframe_metadata DFMetadata()
+    # @param objective_column string indicating objective column
+    # @return None if nothing to DO or Normalization_sets orderdict() on other way
+    def define_ignored_columns(self, dataframe_metadata, objective_column):
+        if not self._config['non_minimal_normalizations_enabled']:
+            return None
+        else:
+            df_type = dataframe_metadata['type']
+            rowcount = dataframe_metadata['rowcount']
+            # cols = dataframe_metadata['cols']
+            columns = dataframe_metadata['columns']
+            norms = list()
+            normoption = NormalizationSet()
+            if df_type == 'pandas':
+                for description in columns:
+                    col = description['name']
+                    if col != objective_column:
+                        if int(description['cardinality']) == 1:
+                            normoption.set_ignore_column()
+                            norms.append({col: normoption.copy()})
+                        elif self._config['datetime_columns_management'] is not None \
+                                and self._config['datetime_columns_management'] \
+                                and description['type'] == 'datetime64[ns]':
+                            normoption.set_ignore_column()
+                            norms.append({col: normoption.copy()})
+                self._logging.log_exec('gDayF', "Normalizer", self._labels["ignored_set_establish"], norms)
+                if len(norms) != 0:
+                    return norms.copy()
+                else:
+                    return None
+            else:
+                return None
+
     ## Method oriented to specificate minimal data_normalizations
+    # @param dataframe_metadata DFMetadata()
+    # @param an_objective ATypesMetadata
+    # @param objective_column string indicating objective column
+    # @return [None] if nothing to DO or Normalization_sets orderdict() on other way
+    def define_special_spark_naive_norm(self, dataframe_metadata):
+        df_type = dataframe_metadata['type']
+        if df_type == 'pandas':
+            norms = list()
+            normoption = NormalizationSet()
+            columns = dataframe_metadata['columns']
+            norms = list()
+            for description in columns:
+                col = description['name']
+                if float(description['min']) < 0.0:
+                    normoption.set_offset(offset=abs(float(description['min']))
+                                                 * self._config['special_spark_naive_offset'])
+                    norms.append({col: normoption.copy()})
+
+            return norms.copy()
+        else:
+            return None
+
+    ## Method oriented to specificate special data_normalizations non negative
     # @param dataframe_metadata DFMetadata()
     # @param an_objective ATypesMetadata
     # @param objective_column string indicating objective column
     # @return None if nothing to DO or Normalization_sets orderdict() on other way
     def define_minimal_norm(self, dataframe_metadata, an_objective, objective_column):
-        type = dataframe_metadata['type']
+        df_type = dataframe_metadata['type']
         if not self._config['minimal_normalizations_enabled']:
             return [None]
         elif objective_column is None:
             return [None]
-
-            '''
-            columns = dataframe_metadata['columns']
-            norms = list()
-            
-            normoption = NormalizationSet()
-            if type == 'pandas':
-                for description in columns:
-                    col = description['name']
-                    if an_objective[0]['type'] in ['anomalies'] and \
-                                    description['mean'] != 0.0 and \
-                                    description['std'] != 1.0:
-                        normoption.set_stdmean(mean=description['mean'], std=description['std'])
-                        norms.append({col: normoption.copy()})
-                
-                if len(norms) == 0:
-                    return [None]
-                else:
-                    return norms.copy()
-            else:
-                return [None]'''
         else:
-            if type == 'pandas':
+            if df_type == 'pandas':
                 norms = list()
                 normoption = NormalizationSet()
                 normoption.set_drop_missing()
                 norms.append({objective_column: normoption.copy()})
+
+                columns = dataframe_metadata['columns']
+                for description in columns:
+                    col = description['name']
+                    if col != objective_column:
+                        if description['type'] == "object" and self._config['base_normalization_enabled']:
+                            normoption.set_base()
+                            norms.append({col: normoption.copy()})
                 return norms.copy()
 
     ## Method oriented to filter stdmean operations on non standardize algorithms
@@ -146,7 +174,7 @@ class Normalizer (object):
                 col = list(norm_set.keys())[0]
                 norms = norm_set.get(col)
                 if norms['class'] == 'stdmean' and model_id in NO_STANDARDIZE:
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["excluding"],
+                    self._logging.log_info('gDayF', "Normalizer", self._labels["excluding"],
                                            col + ' - ' + norms['class'])
                 else:
                     filter_normalized.append(norm_set)
@@ -193,60 +221,75 @@ class Normalizer (object):
     # @param normalizemd OrderedDict() compatible structure
     # @return dataframe
     def normalizeDataFrame(self, df, normalizemd):
-        self._logging.log_exec('gDayF', "Normalizer", self._labels["start_data_norm"])
+        self._logging.log_info('gDayF', "Normalizer", self._labels["start_data_norm"], str(df.shape))
         if isinstance(df, pd.DataFrame):
             dataframe = df.copy()
             for norm_set in normalizemd:
                 if norm_set is not None:
                     col = list(norm_set.keys())[0]
                     norms = norm_set.get(col)
-                #for col, norms in normalizemd['columns'].items():
                     if norms['class'] == 'base':
                         dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'])
+                        if dataframe[col].dtype == '<M8[ns]':
+                            dataframe = self.normalizeDateTime(dataframe=dataframe, date_column=col)
+                            if self._config['datetime_columns_management'] is not None \
+                                    and self._config['datetime_columns_management']['enable']:
+                                self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
+                                                       col + ' - ' + str(self._config['datetime_columns_management']
+                                                                         ['filter']))
                     elif norms['class'] == 'drop_missing':
                         try:
                             dataframe = self.normalizeDropMissing(dataframe, col)
-                            self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                            self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                    col + ' - ' + norms['class'])
                         except KeyError:
-                            self._logging.log_exec('gDayF', "Normalizer", self._labels["excluding"],
-                                                   col + ' - ' + norms['class'])
+                            self._logging.log_info('gDayF', "Normalizer", self._labels["excluding"],
+                                               col + ' - ' + norms['class'])
                     elif norms['class'] == 'stdmean':
                         dataframe.loc[:, col] = self.normalizeStdMean(dataframe.loc[:, col],
                                                                       norms['objective']['mean'],
                                                                       norms['objective']['std']
                                                                       )
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                str(norms['objective']['mean']) + ',' +
                                                str(norms['objective']['std']) + ' ) ')
                     elif norms['class'] == 'working_range':
                         dataframe.loc[:, col] = self.normalizeWorkingRange(dataframe.loc[:, col],
                                                                            norms['objective']['minval'],
-                                                                           norms['objective']['maxval'])
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                                                                           norms['objective']['maxval'],
+                                                                           norms['objective']['minrange'],
+                                                                           norms['objective']['maxrange']
+                                                                           )
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                str(norms['objective']['minval']) + ',' +
                                                str(norms['objective']['maxval']) + ' ) ')
+                    elif norms['class'] == 'offset':
+                        dataframe.loc[:, col] = self.normalizeOffset(dataframe.loc[:, col],
+                                                                     norms['objective']['offset'])
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
+                                               col + ' - ' + norms['class'] + ' ( ' +
+                                               str(norms['objective']['offset']) + ' )')
                     elif norms['class'] == 'discretize':
                         dataframe.loc[:, col] = self.normalizeDiscretize(dataframe.loc[:, col],
                                                                          norms['objective']['buckets_number'],
                                                                          norms['objective']['fixed_size'])
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                str(norms['objective']['buckets_number']) + ',' +
                                                str(norms['objective']['fixed_size']) + ' ) ')
                     elif norms['class'] == 'aggregation':
                         dataframe.loc[:, col] = self.normalizeAgregation(dataframe.loc[:, col],
                                                                          norms['objective']['bucket_ratio'])
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                str(norms['objective']['bucket_ratio']) + ' ) ')
                     elif norms['class'] == 'fixed_missing_values':
                         dataframe.loc[:, col] = self.fixedMissingValues(dataframe.loc[:, col], norms['objective']['value'])
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                str(norms['objective']['value']) + ' ) ')
                     elif norms['class'] == 'mean_missing_values':
@@ -255,7 +298,7 @@ class Normalizer (object):
                                                            norms['objective']['objective_column'],
                                                            norms['objective']['full']
                                                )
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                norms['objective']['objective_column'] + ',' +
                                                str(norms['objective']['full']) + ' ) ')
@@ -263,7 +306,7 @@ class Normalizer (object):
                         dataframe = self.progressiveMissingValues(dataframe,
                                                                   col,
                                                                   norms['objective']['objective_column'])
-                        self._logging.log_exec('gDayF', "Normalizer", self._labels["applying"],
+                        self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                norms['objective']['objective_column'] + ' ) ')
                     elif norms['class'] == 'ignore_column':
@@ -271,7 +314,7 @@ class Normalizer (object):
                     #elif norms['class'] == 'binary_encoding':
                     #self.normalizeBinaryEncoding(dataframe[col])
                 else:
-                    self._logging.log_exec('gDayF', "Normalizer", self._labels["nothing_to_do"])
+                    self._logging.log_info('gDayF', "Normalizer", self._labels["nothing_to_do"])
             return dataframe
         else:
             return df
@@ -286,7 +329,7 @@ class Normalizer (object):
                 for col, value in elements.items():
                     if value['class'] == 'ignore_column':
                         ignored_list.append(col)
-        self._logging.log_exec('gDayF', "Normalizer", self._labels["ignored_list"], ignored_list)
+        self._logging.log_info('gDayF', "Normalizer", self._labels["ignored_list"], ignored_list)
         return ignored_list.copy()
 
     ## Internal method oriented to manage drop NaN values from dataset
@@ -317,11 +360,24 @@ class Normalizer (object):
     # @param minval
     # @param maxval
     # @return dataframe
-    def normalizeWorkingRange(self, dataframe, minval=0, maxval=1):
+    def normalizeWorkingRange(self, dataframe, minval=-1.0, maxval=1.0, minrange = -1.0, maxrange = 1.0):
         assert(maxval > minval)
         if dataframe.dtype != np.object:
-            dataframe = (maxval - minval) * ((dataframe - dataframe.min()) /
-                                             (dataframe.max() - dataframe.min())) + minval
+            if dataframe.dtype != np.object:
+                convert_factor = (maxrange - minrange) / (maxval - minval)
+                dataframe = dataframe.astype(np.float16)
+                dataframe = dataframe.apply(lambda x: (x-minval) * convert_factor + minrange)
+            return dataframe.copy()
+
+    ## Internal method oriented to manage Working range normalizations on a [closed, closed] interval
+    # @param self object pointer
+    # @param dataframe single column dataframe
+    # @param minval
+    # @param maxval
+    # @return dataframe
+    def normalizeOffset(self, dataframe, offset=0):
+        if dataframe.dtype != np.object:
+            dataframe = offset + dataframe
         return dataframe.copy()
 
     ## Internal method oriented to manage bucket ratio normalizations head - tail
@@ -437,5 +493,32 @@ class Normalizer (object):
                     offset = b * x
                     dataframe.loc[index, col] = minimal + offset
         return dataframe.copy()
+
+    ## Internal method oriented to manage date_time conversions to pattern
+    # @param self object pointer
+    # @param dataframe full column dataframe to be expanded
+    # @param date_column Date_Column name to be transformed
+    # @return dataframe
+    def normalizeDateTime(self, dataframe, date_column=None):
+        datetime_columns_management = self._config['datetime_columns_management']
+        if date_column is not None:
+            if datetime_columns_management is not None and datetime_columns_management['enable']:
+                    for element in datetime_columns_management['filter']:
+                        try:
+                            if element not in ['weekday', 'weeknumber']:
+                                dataframe[date_column + '_' + element] = dataframe.loc[:, date_column]\
+                                    .transform(lambda x: eval('x.' + element))
+                            elif element == 'weekday':
+                                dataframe[date_column + '_' + element] = dataframe.loc[:, date_column]\
+                                    .transform(lambda x: x.isoweekday())
+                            elif element == 'weeknumber':
+                                dataframe[date_column + '_' + element] = dataframe.loc[:, date_column]\
+                                    .transform(lambda x: x.isocalendar()[1])
+                        except AttributeError:
+                            print('TRC: invalid configuration:' + element)
+                            pass
+        return dataframe.copy()
+
+
 
 

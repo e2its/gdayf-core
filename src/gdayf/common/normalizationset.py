@@ -45,12 +45,20 @@ class NormalizationSet (OrderedDict):
         self['objective']['buckets_number'] = buckets_number
         self['objective']['fixed_size'] = fixed_size
 
-    def set_working_range(self, minval=-1.0, maxval=1.0):
+    def set_working_range(self, minval=-1.0, maxval=1.0, minrange = -1.0, maxrange = 1.0):
         self.reset()
         self['type'] = "normalization"
         self['class'] = "working_range"
         self['objective']['minval'] = minval
         self['objective']['maxval'] = maxval
+        self['objective']['minval'] = minrange
+        self['objective']['maxval'] = maxrange
+
+    def set_offset(self, offset=0):
+        self.reset()
+        self['type'] = "normalization"
+        self['class'] = "offset"
+        self['objective']['offset'] = offset
 
     def set_aggregation(self, bucket_ratio=0.25):
         self.reset()

@@ -5,6 +5,8 @@
 from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
+from collections import OrderedDict
+from pandas import DataFrame
 from json import dumps
 from copy import deepcopy
 from numpy.random import rand
@@ -35,7 +37,7 @@ def hash_key(hash_type, filename):
 # @param orient split (default) as usual DayF uses
 # @return pandas.dataframe
 def decode_json_to_dataframe(json_string, orient='split'):
-    return read_json(json_string, orient=orient)
+        return read_json(json_string, orient=orient)
 
 
 ## Function oriented compare two normalizations_sets based on hash_key(json transformations)
@@ -75,9 +77,3 @@ def pandas_split_data(df, train_perc=0.9):
     train = df[df.train == 1].drop('train', axis=1)
     test = df[df.train == 0].drop('train', axis=1)
     return train, test
-
-## Function oriented to extract ArMetadata from json and generate ArMetadata List with all Analysis Data
-# @param path path pointed to analysis storage fs
-# @return ArMetadata List
-def get_arlist_from_path (path):
-    pass

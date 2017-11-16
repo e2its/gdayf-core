@@ -11,6 +11,8 @@ from gdayf.conf.loadconfig import LoadConfig
 from gdayf.models.atypesmetadata import ATypesMetadata
 from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
+from gdayf.models.sparkframeworkmetadata import sparkFrameworkMetadata
+from gdayf.models.sparkmodelmetadata import sparkModelMetadata
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.common.constants import FTYPES
@@ -104,10 +106,11 @@ class Adviser(object):
             for indexer in range(0, aux_loop_controller):
                 try:
                     model = self.analysis_recommendation_order[indexer]
-                    model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models and len(best_models) < self._config['adviser_L2_wide']:
-                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                        best_models.append(model_type)
+                    if model['status'] == 'Executed':
+                        model_type = model['model_parameters'][get_model_fw(model)]['model']
+                        if model_type not in best_models and len(best_models) < self._config['adviser_L2_wide']:
+                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            best_models.append(model_type)
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     register it as evaluated and seleted'''
@@ -124,11 +127,12 @@ class Adviser(object):
             for indexer in range(0, aux_loop_controller):
                 try:
                     model = self.analysis_recommendation_order[indexer]
-                    model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models and len(best_models) < self._config['adviser_normal_wide']:
-                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                        #print("Trace:%s-%s" % (model_type, best_models))
-                        best_models.append(model_type)
+                    if model['status'] == 'Executed':
+                        model_type = model['model_parameters'][get_model_fw(model)]['model']
+                        if model_type not in best_models and len(best_models) < self._config['adviser_normal_wide']:
+                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            #print("Trace:%s-%s" % (model_type, best_models))
+                            best_models.append(model_type)
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     register it as evaluated and seleted'''
@@ -166,7 +170,8 @@ class Adviser(object):
             fw_model_list = list()
             for indexer in range(0, 1):
                 try:
-                    fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                    if self.analysis_recommendation_order[indexer]['status'] == 'Executed':
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
                 except TypeError:
                     pass
             # if fw_model_list is not None:
@@ -199,12 +204,13 @@ class Adviser(object):
                 try:
                     # Modified 31/08/2017
                     model = self.analysis_recommendation_order[indexer]
-                    model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models:
-                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                        #print("Trace:%s-%s" % (model_type, best_models))
-                        best_models.append(model_type)
-                        # End - Modified 31/08/2017
+                    if model['status'] == 'Executed':
+                        model_type = model['model_parameters'][get_model_fw(model)]['model']
+                        if model_type not in best_models:
+                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            #print("Trace:%s-%s" % (model_type, best_models))
+                            best_models.append(model_type)
+                            # End - Modified 31/08/2017
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     pass and look for next best model on this type'''
@@ -238,12 +244,13 @@ class Adviser(object):
                 try:
                     # Modified 31/08/2017
                     model = self.analysis_recommendation_order[indexer]
-                    model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models:
-                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                        #print("Trace:%s-%s" % (model_type, best_models))
-                        best_models.append(model_type)
-                        # End - Modified 31/08/2017
+                    if model['status'] == 'Executed':
+                        model_type = model['model_parameters'][get_model_fw(model)]['model']
+                        if model_type not in best_models:
+                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            #print("Trace:%s-%s" % (model_type, best_models))
+                            best_models.append(model_type)
+                            # End - Modified 31/08/2017
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     pass and look for next best model on this type'''
@@ -278,12 +285,13 @@ class Adviser(object):
                 try:
                     # Modified 31/08/2017
                     model = self.analysis_recommendation_order[indexer]
-                    model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models:
-                        #print("Trace:%s-%s"%(model_type, best_models))
-                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                        best_models.append(model_type)
-                        # End - Modified 31/08/2017
+                    if model['status'] == 'Executed':
+                        model_type = model['model_parameters'][get_model_fw(model)]['model']
+                        if model_type not in best_models:
+                            #print("Trace:%s-%s"%(model_type, best_models))
+                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            best_models.append(model_type)
+                            # End - Modified 31/08/2017
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     pass and look for next best model on this type'''
@@ -318,12 +326,13 @@ class Adviser(object):
                 try:
                     # Modified 31/08/2017
                     model = self.analysis_recommendation_order[indexer]
-                    model_type = model['model_parameters'][get_model_fw(model)]['model']
-                    if model_type not in best_models:
-                        #print("Trace:%s-%s"%(model_type, best_models))
-                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                        best_models.append(model_type)
-                        # End - Modified 31/08/2017
+                    if model['status'] == 'Executed':
+                        model_type = model['model_parameters'][get_model_fw(model)]['model']
+                        if model_type not in best_models:
+                            #print("Trace:%s-%s"%(model_type, best_models))
+                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            best_models.append(model_type)
+                            # End - Modified 31/08/2017
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
                     pass and look for next best model on this type'''
@@ -468,7 +477,7 @@ class Adviser(object):
         for _ , pvalue in base.items():
             if variabilizations > pvalue['base'] and increment < pvalue['increment']:
                 increment = pvalue['increment']
-        self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
+        self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
                                increment)
         return increment
 
@@ -492,6 +501,16 @@ class Adviser(object):
                                 model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
                                 wfw.models.append(model)
                                 model_list.append((fw, model, None))
+            if fw == 'spark' and fw_value['conf']['enabled']:
+                wfw = sparkFrameworkMetadata(defaultframeworks)
+                for each_base_model in wfw.get_default():
+                    if each_base_model['enabled']:
+                        for each_type in each_base_model['types']:
+                            if each_type['active'] and each_type['type'] == atype[0]['type']:
+                                modelbase = sparkModelMetadata()
+                                model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
+                                wfw.models.append(model)
+                                model_list.append((fw, model, None))
         return model_list
 
     ## Method oriented to select applicability of models over min_rows_limit
@@ -507,13 +526,13 @@ class Adviser(object):
             fw = model_list[iterator][0]
             model = model_list[iterator][1]
             if fw_config[fw]['conf']['min_rows_enabled'] and (nrows < model['min_rows_applicability']):
-                self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'rows < ' +
                                        str(model['min_rows_applicability']))
                 exclude_model.append(model_list[iterator])
             if fw_config[fw]['conf']['max_cols_enabled'] and model['max_cols_applicability'] is not None \
                     and(ncols > model['max_cols_applicability']):
-                self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'cols > ' +
                                        str(model['max_cols_applicability']))
                 exclude_model.append(model_list[iterator])
@@ -531,10 +550,10 @@ class Adviser(object):
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['train']), \
-                   10e+308, \
+                   1e+16, \
                    1.0
         except KeyError:
-            return 0.0, 10e+8, 1.0
+            return 0.0, 1e+16, 1.0
 
     ##Method get test accuracy for generic model
     # @param model
@@ -543,14 +562,14 @@ class Adviser(object):
     def get_test_accuracy(model):
         try:
             return float(model['metrics']['accuracy']['test']),\
-                   1/float(model['metrics']['execution']['train']['RMSE']),\
+                   1/float(model['metrics']['execution']['test']['RMSE']),\
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['test']), \
-                   10e+308, \
+                   1e+16, \
                    1.0
         except KeyError:
-            return 0.0, 10e+8, 1.0
+            return 0.0, 1e+16, 1.0
 
     ##Method get averaged train and test  accuracy for generic model
     # @param model
@@ -563,10 +582,10 @@ class Adviser(object):
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['combined']), \
-                   10e+308, \
+                   1e+16, \
                    1.0
         except KeyError:
-            return 0.0, 10e+308, 1.0
+            return 0.0, 1e+16, 1.0
 
     ##Method get rmse for generic model
     # @param model
@@ -579,7 +598,7 @@ class Adviser(object):
                    0.0
         except ZeroDivisionError:
             return float(model['metrics']['execution']['train']['RMSE']),\
-                   10e+308, \
+                   1e+16, \
                    0.0
         except KeyError:
             return 10e+308, 0.0, 0.0
@@ -596,10 +615,14 @@ class Adviser(object):
                    0.0
         except ZeroDivisionError:
             return float(model['metrics']['execution']['train']['tot_withinss']), \
-                   10e+308, \
+                   1e+16, \
+                   0.0
+        except TypeError:
+            return float(model['metrics']['execution']['train']['tot_withinss']), \
+                   1e+16, \
                    0.0
         except KeyError:
-            return 10e+308, 0.0, 0.0
+            return 1e+16, 0.0, 0.0
 
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
@@ -672,8 +695,8 @@ class Adviser(object):
         if not self.is_executed(vector):
             model_list.append(model)
             self.analyzed_models.append(vector)
-            self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["new_vector"], str(vector))
+            self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["new_vector"], str(vector))
         else:
             self.excluded_models.append(vector)
-            self._logging.log_exec(self.analysis_id, 'AdviserAStar', self._labels["exc_vector"], str(vector))
+            self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_vector"], str(vector))
 

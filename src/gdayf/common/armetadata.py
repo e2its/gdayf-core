@@ -104,8 +104,6 @@ def deep_ordered_copy(armetadata):
                     ))
             else:
                 new_model[key] = None
-
-
     return new_model
 
 

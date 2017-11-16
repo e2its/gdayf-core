@@ -32,7 +32,7 @@ if __name__ == '__main__':
     print(dataframe.loc[:,'CO2_Comedor_Sensor'].max())
     print(dataframe.loc[:,'CO2_Comedor_Sensor'].min())
     '''
-    #StdMean
+    ''''#StdMean
     print(dataframe.loc[:, 'CO2_Comedor_Sensor'])
     print('Mean: '+ str(dataframe.loc[:,'CO2_Comedor_Sensor'].mean()))
     print('STD: ' + str(dataframe.loc[:, 'CO2_Comedor_Sensor'].std()))
@@ -42,8 +42,17 @@ if __name__ == '__main__':
                                                                    )
     print(dataframe.loc[:, 'CO2_Comedor_Sensor'])
     print('Mean: '+ str(dataframe.loc[:,'CO2_Comedor_Sensor'].mean()))
-    print('STD: ' + str(dataframe.loc[:, 'CO2_Comedor_Sensor'].std()))
+    print('STD: ' + str(dataframe.loc[:, 'CO2_Comedor_Sensor'].std()))'''
     print(dataframe.shape[0])
+    dataframe.loc[:, 'CO2_Comedor_Sensor'] = norm.normalizeWorkingRange(dataframe.loc[:, 'CO2_Comedor_Sensor'],
+                                                                   dataframe.loc[:, 'CO2_Comedor_Sensor'].min(),
+                                                                   dataframe.loc[:, 'CO2_Comedor_Sensor'].max(),
+                                                                   -100,
+                                                                    100)
+    print(dataframe.loc[:, 'CO2_Comedor_Sensor'])
+    print('min: '+ str(dataframe.loc[:,'CO2_Comedor_Sensor'].min()))
+    print('max: ' + str(dataframe.loc[:, 'CO2_Comedor_Sensor'].max()))
+    #print(dataframe.shape[0])
 '''
     # DropMissing
     dataframe = norm.normalizeDropMissing(dataframe,objective_col)

@@ -24,14 +24,8 @@ class MetricMetadata(OrderedDict):
         self['MAE'] = None
         self['scoring_time'] = None
 
-    ## Method pop disable OrderedDict().pop method
-    # compatibility with OrderdDict().pop
-    def pop(self, key, default=None):
-        return 1
-    ## Method constructor
-    # compatibility with OrderdDict().popitem
-    def popitem(self, last=True):
-        return 1
+
+
 
 
 

@@ -35,7 +35,7 @@ class StorageMetadata (list):
             fs['value'] = value
             fs['hash_type'] = hash_type
 
-            if fstype == 'localfs' and path.exists(value):
+            if fstype == 'localfs' and path.exists(value) and not path.isdir(value):
                 fs['hash_value'] = hash_key(hash_type=hash_type, filename=fs['value'])
             else:
                 fs['hash_value'] = None
@@ -103,7 +103,6 @@ def generate_json_path(armetadata, user='guest'):
             json_storage.append(value=json_path, fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
         else:
-            print(user)
             json_storage.append(value=user, fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
 

@@ -4,6 +4,11 @@
 
 from collections import OrderedDict
 from gdayf.metrics.metricmetadata import MetricMetadata
+from pandas import DataFrame
+import numpy as np
+import time
+from pyspark.mllib.evaluation import MulticlassMetrics
+from gdayf.conf.loadconfig import LoadLabels
 
 
 ##Class Base for Binomial metricts as OrderedDict
@@ -48,11 +53,12 @@ class BinomialMetricMetadata(MetricMetadata):
                     try:
                         self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))
                     except TypeError as texecution_error:
-                        print(repr(texecution_error))
+                        print('Trace: ' + repr(texecution_error))
                 elif parameter in ['cm']:
                     for each_parameter, __ in self['cm'].items():
                         try:
@@ -60,11 +66,12 @@ class BinomialMetricMetadata(MetricMetadata):
                                 perf_metrics.confusion_matrix(
                                     metrics=each_parameter).table.as_data_frame().to_json(orient='split')
                         except KeyError as kexecution_error:
-                            print(repr(kexecution_error))
+                            pass
+                            #print('Trace: ' + repr(kexecution_error))
                         except AttributeError as aexecution_error:
-                            print(repr(aexecution_error))
+                            print('Trace: ' + repr(aexecution_error))
                         except TypeError as texecution_error:
-                            print(repr(texecution_error))
+                            print('Trace: ' + repr(texecution_error))
                         except ValueError as vexecution_error:
                             print(repr(vexecution_error))
                 elif parameter in ['thresholds_and_metric_scores']:
@@ -73,6 +80,39 @@ class BinomialMetricMetadata(MetricMetadata):
                     try:
                         self[parameter] = perf_metrics._metric_json[parameter]
                     except KeyError as kexecution_error:
-                        print(repr(kexecution_error))
+                        pass
+                        #print('Trace: ' + repr(kexecution_error))
                     except AttributeError as aexecution_error:
-                        print(repr(aexecution_error))
+                        print('Trace: ' + repr(aexecution_error))
+
+    ## Method to load Binomial metrics from Spark BinaryClassificationEvaluator class
+    # @param self objetct pointer
+    # @param evaluator BinaryClassificationEvaluator instance
+    # @param objective_column  string
+    # @param data as Apache Spark DataFrame
+    def set_sparkmetrics(self, evaluator, data, objective_column):
+
+        start = time.time()
+        if evaluator is not None and data is not None:
+                self['AUC'] = evaluator.evaluate(data,  {evaluator.metricName: "areaUnderROC"})
+                self['AUPR'] = evaluator.evaluate(data, {evaluator.metricName: "areaUnderPR"})
+                self['nobs'] = data.count()
+                self['model_category'] = 'Binomial'
+                self['max_criteria_and_metric_scores'] = None
+                self['RMSE']= 10e+308
+
+                #Generating ConfusionMatrix
+                tp = data.select("prediction", data[objective_column].cast('float'))\
+                    .toDF("prediction", objective_column).rdd.map(tuple)
+                metrics = MulticlassMetrics(tp)
+                pdf = DataFrame(data=np.array(metrics.confusionMatrix().values).reshape((2, 2)),
+                                columns=['0', '1'])
+                pdf['total'] = pdf.sum(axis=1)
+                index = pdf.index.tolist()
+                index.append('total')
+                pdf = pdf.append(pdf.sum(axis=0), ignore_index=True)
+                pdf.index = index
+                self['cm'] = pdf.to_json(orient='split')
+
+                self['scoring_time'] = int(time.time() - start)
+
