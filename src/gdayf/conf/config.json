@@ -113,12 +113,12 @@
             },
             "effort":{
               "ntrees": {
-                "value": 20,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               },
               "max_depth": {
-                "value": 10,
+                "value": 5,
                 "seleccionable": true,
                 "type": "int"
               },
@@ -2862,7 +2862,7 @@
             },
             "stopping":{
               "tol": {
-                "value": 1e-06,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -2990,7 +2990,7 @@
             },
             "stopping":{
               "tol": {
-                "value": 1e-06,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -4094,7 +4094,7 @@
             },
             "stopping":{
               "tol": {
-                "value": 1e-06,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -4237,7 +4237,7 @@
             },
             "stopping":{
               "tol": {
-                "value": 1e-06,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -4462,7 +4462,7 @@
             },
             "stopping":{
               "tol": {
-                "value": 1e-04,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -4662,7 +4662,7 @@
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
-    "adviser_L2_wide": 3,
+    "adviser_L2_wide": 4,
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{

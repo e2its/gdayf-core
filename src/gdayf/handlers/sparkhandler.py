@@ -773,6 +773,9 @@ class sparkHandler(object):
         #print('TRC:' +  model_command)
 
         modeldef = eval(model_command)
+        self._logging.log_exec(analysis_id, self._spark_session.sparkContext.applicationId,
+                               self._labels["gmodel"], model_command)
+
         transformation_chain.append(modeldef)
         pipeline = Pipeline(stages=transformation_chain)
         grid = ParamGridBuilder().build()
