@@ -14,9 +14,9 @@ if __name__ == "__main__":
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy', accuracy=True)
 
-        controller.save_models(recomendations, mode=EACH_BEST)
+        '''controller.save_models(recomendations, mode=EACH_BEST)'''
         controller.reconstruct_execution_tree(recomendations, metric='test_accuracy')
-        controller.remove_models(recomendations, mode=ALL)
+        controller.remove_models(recomendations, mode=BEST_3)
 
         #Prediction
         source_data = list()
@@ -32,11 +32,11 @@ if __name__ == "__main__":
 
         # Save Pojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'pojo')
+        result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'mojo')
+        result = controller.get_external_model(recomendations[0], 'mojo')
 
         controller.clean_handlers()
     del controller

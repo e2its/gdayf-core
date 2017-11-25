@@ -30,11 +30,11 @@ if __name__ == "__main__":
 
         # Save Pojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'pojo')
+        result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
         #controller = Controller()
-        result = controller.get_java_model(recomendations[0], 'mojo')
+        result = controller.get_external_model(recomendations[0], 'mojo')
 
         controller.clean_handlers()
     del controller
