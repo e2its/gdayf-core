@@ -19,11 +19,11 @@ if __name__ == "__main__":
                                                           amode=FAST, metric='combined', deep_impact=4)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined', accuracy=True)
-        controller.save_models(recomendations, mode=EACH_BEST)
+        #controller.save_models(recomendations, mode=EACH_BEST)
         execution_tree = controller.reconstruct_execution_tree(arlist=None, metric='combined', store=False,
                                                                user=controller.user_id,
                                                                experiment=recomendations[0]['model_id'])
-        controller.remove_models(recomendations, mode=ALL)
+        controller.remove_models(recomendations, mode=EACH_BEST)
 
         # Prediction
         source_data = list()
@@ -38,11 +38,11 @@ if __name__ == "__main__":
         # pprint(prediction_frame)
 
         # Save Pojo
-        result = controller.get_java_model(recomendations[0], 'pojo')
+        result = controller.get_external_model(recomendations[0], 'pojo')
         print(result)
 
         # Save Mojo
-        result = controller.get_java_model(recomendations[0], 'mojo')
+        result = controller.get_external_model(recomendations[0], 'mojo')
         print(result)
 
         controller.clean_handlers()
