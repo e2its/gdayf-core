@@ -430,9 +430,7 @@ class H2OHandler(object):
         if antype == 'regression' and prediccion.type('predict') == base_type:
             fmin = eval("lambda x: x - " + str(tolerance/2))
             fmax = eval("lambda x: x + " + str(tolerance/2))
-            success = dataframe[objective].apply(fmin) <= \
-                       prediccion['predict'] <= \
-                       dataframe[objective].apply(fmax)
+            success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
             accuracy = "Valid"
         elif antype == 'regression':
             accuracy = 0.0
@@ -462,14 +460,17 @@ class H2OHandler(object):
     # @return float accuracy of model, prediction_dataframe
     def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
         accuracy = -1.0
-        dataframe_cols = dataframe.columns
+        dataframe_cols = odataframe.columns
         prediction_dataframe = self._model_base.predict(dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = odataframe.cbind(prediction_dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediction_columns = prediccion.columns
         for element in dataframe_cols:
-            prediction_columns.remove(element)
+            try:
+                prediction_columns.remove(element)
+            except ValueError:
+                pass
         predictor_col = prediction_columns[0]
 
         if objective in dataframe.columns:
