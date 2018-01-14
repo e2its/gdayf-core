@@ -24,7 +24,7 @@ class Normalizer (object):
     # @param dataframe_metadata DFMetadata()
     # @param an_objective ATypesMetadata
     # @param objective_column string indicating objective column
-    # @return None if nothing to DO or Normalization_sets orderdict() on other way
+    # @return None if nothing to DO or Normalization_sets OrderedDict() on other way
     def define_normalizations(self, dataframe_metadata, an_objective, objective_column):
         if not self._config['non_minimal_normalizations_enabled']:
             return None

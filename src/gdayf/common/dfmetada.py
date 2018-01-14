@@ -1,4 +1,6 @@
 ## @package gdayf.common.dfmetada
+# Define all objects, functions and structured related to Data Analysis of input data
+# on OrderedDict format
 
 from json import dumps, loads
 from collections import OrderedDict
@@ -8,25 +10,33 @@ from copy import deepcopy
 from pandas import cut, value_counts, qcut
 from hashlib import md5 as md5
 from numpy import isnan
-
 import operator
 
 
+## Class DFMetadata manage the Data Analysis results structs on OrderedDict format and exportable to json
 class DFMetada(OrderedDict):
+
+    ## The constructor
+    # Generate an empty DFMetada class with all elements initialized to correct types
     def __init__(self):
         OrderedDict.__init__(self)
         self._config = LoadConfig().get_config()["dfmetadata"]
         self['type'] = None
         self['rowcount'] = None
         self['cols'] = None
-        self['timeformat'] = 'dd-mm-yyyy HH:mm:ss:ms'
+        self['timeformat'] = None
         self['columns'] = list()
 
+    ## Get dataframe on pandas format and return and equivalent DFmetadata object
+    # @param self object pointer
+    # @param dataframe pandas type Dataframe
+    # @param typedf Dataframe type (for registry use)
+    # @return self object pointer
     def getDataFrameMetadata(self, dataframe, typedf):
         self['type'] = '%s' % typedf
         self['rowcount'] = dataframe.shape[0] - 1
         self['cols'] = dataframe.shape[1]
-        self['timeformat'] = 'dd-mm-yyyy HH:mm:ss:ms'
+        self['timeformat'] = None
         for col in dataframe.columns:
             summary = dataframe[col].describe()
             auxdict = OrderedDict()
@@ -45,14 +55,15 @@ class DFMetada(OrderedDict):
                 dataframe[col].isnull().values.ravel().sum())
             auxdict['cardinality'] = str(int(dataframe.loc[:, col].value_counts().describe()['count']))
             auxdict['histogram'] = OrderedDict()
-            if int(auxdict['cardinality']) <= 40:
+            cardinality_limit = self._config["cardinality_limit"]
+            if int(auxdict['cardinality']) <= cardinality_limit:
                 hist = dataframe.loc[:, col].value_counts().to_dict()
                 for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                     auxdict['histogram'][str(tupla[0])] = str(tupla[1])
                 del hist
             else:
                 try:
-                    hist = cut(dataframe.loc[:, col], 40).value_counts().to_dict()
+                    hist = cut(dataframe.loc[:, col], cardinality_limit).value_counts().to_dict()
                     for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
                         auxdict['histogram'][str(tupla[0])] = str(tupla[1])
                     del hist

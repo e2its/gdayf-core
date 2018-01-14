@@ -30,7 +30,7 @@ import bson
 from  bson.codec_options import CodecOptions
 from hashlib import md5
 
-## Core class oriented to mange the comunication and execution messages pass for all components on system
+## Core class oriented to manage the comunication and execution messages pass for all components on system
 # orchestrating the execution of actions activities (train and prediction) on specific frameworks
 class Controller(object):
 
