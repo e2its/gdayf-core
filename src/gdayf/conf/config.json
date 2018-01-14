@@ -4753,6 +4753,7 @@
       }
     }
   },
+  "dfmetadata":{"correlation_threshold": 0.7},
   "common": {
     "version" : "1.0.0",
     "test_frame_ratio" : 0.9

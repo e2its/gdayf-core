@@ -3,15 +3,19 @@
 from json import dumps, loads
 from collections import OrderedDict
 from gdayf.common.constants import DTYPES
+from gdayf.conf.loadconfig import LoadConfig
 from copy import deepcopy
 from pandas import cut, value_counts, qcut
 from hashlib import md5 as md5
+from numpy import isnan
+
 import operator
 
 
 class DFMetada(OrderedDict):
     def __init__(self):
         OrderedDict.__init__(self)
+        self._config = LoadConfig().get_config()["dfmetadata"]
         self['type'] = None
         self['rowcount'] = None
         self['cols'] = None
@@ -72,7 +76,8 @@ class DFMetada(OrderedDict):
         self['correlation'] = dataframe.corr().to_dict()
         for key, value in deepcopy(self['correlation']).items():
             for subkey, subvalue in value.items():
-                if (0.7 >= subvalue >= -0.7) or (key == subkey):
+                if (self._config['correlation_threshold'] >= subvalue >= -self._config['correlation_threshold']) \
+                        or key == subkey or isnan(subvalue):
                     self['correlation'][key].pop(subkey)
         return self
 
