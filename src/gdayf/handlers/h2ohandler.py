@@ -390,7 +390,9 @@ class H2OHandler(object):
     # @param self object pointer
     # @return json_pandas_dataframe structure orient=split
     def _generate_model_metrics(self):
-        return self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split')
+        #Change 27/01/2018 sprint 6
+        return json.loads(self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split'),
+                          object_pairs_hook=OrderedDict)
 
     ## Generate variable importance metrics
     # @param self object pointer
@@ -412,7 +414,9 @@ class H2OHandler(object):
         if model_scoring is None:
             return None
         else:
-            return model_scoring.drop("", axis=1).to_json(orient='split')
+            #Change 27/01/2018 sprint 6
+            return json.loads(model_scoring.drop("", axis=1).to_json(orient='split'),
+                              object_pairs_hook=OrderedDict)
 
     ## Generate accuracy metrics for model
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values

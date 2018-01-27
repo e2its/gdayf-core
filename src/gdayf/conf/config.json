@@ -4663,7 +4663,7 @@
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
     "adviser_L2_wide": 4,
-    "adviser_normal_wide": 2,
+    "adviser_normal_wide": 3,
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.005
@@ -4758,7 +4758,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.0.0",
+    "version" : "1.0.1",
     "test_frame_ratio" : 0.9
   }
 }
