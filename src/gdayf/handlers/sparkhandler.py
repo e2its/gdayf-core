@@ -396,7 +396,7 @@ class sparkHandler(object):
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], LogisticRegressionModel):
-            try :
+            try:
                 summary = self._model_base.stages[-1].summary
                 result_dataframe = DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
                                        'intercept': self._model_base.stages[-1].intercept,
@@ -443,15 +443,18 @@ class sparkHandler(object):
                 isinstance(self._model_base.stages[-1], LinearRegressionModel):
             try:
                 summary = self._model_base.stages[-1].summary
-                return DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split')
+                return json.loads(DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split'),
+                                  object_pairs_hook=OrderedDict)
             except RuntimeError:
                 return None
         elif isinstance(self._model_base.stages[-1], NaiveBayesModel):
             metrics = OrderedDict()
-            metrics['pi'] = DataFrame(self._model_base.stages[-1].pi.values).to_json(orient='split')
-            metrics['theta'] = DataFrame(self._model_base.stages[-1].theta.values).to_json(orient='split')
+            metrics['pi'] = json.loads(DataFrame(self._model_base.stages[-1].pi.values).to_json(orient='split'),
+                                       object_pairs_hook=OrderedDict)
+            metrics['theta'] = json.loads(DataFrame(self._model_base.stages[-1].theta.values).to_json(orient='split'),
+                                          object_pairs_hook=OrderedDict)
 
-            return json.loads(metrics, object_pairs_hook=OrderedDict)
+            return metrics
         return None
 
     ## Generate accuracy metrics for model
@@ -487,9 +490,9 @@ class sparkHandler(object):
     def _predict_accuracy(self, objective, dataframe, tolerance=0.0):
         accuracy = -1.0
         #bug SPARK-14948
-        #prediccion = odataframe.withColumn('prediction', self._model_base.transform(dataframe).prediction)
+        #prediccion = dataframe.withColumn('prediction', self._model_base.transform(dataframe).prediction)
         prediccion = self._model_base.transform(dataframe)
-        columns = dataframe.columns
+        columns = prediccion.columns
         if objective in columns:
             accuracy = self._accuracy(objective=objective, dataframe=prediccion, tolerance=tolerance)
         return accuracy, prediccion
