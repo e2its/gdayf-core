@@ -7,6 +7,7 @@ from gdayf.metrics.metricmetadata import MetricMetadata
 from pandas import DataFrame
 import numpy as np
 import time
+import json
 from pyspark.mllib.evaluation import MulticlassMetrics
 
 
@@ -35,7 +36,9 @@ class MultinomialMetricMetadata(MetricMetadata):
             for parameter, _ in self.items():
                 if parameter in ['hit_ratio_table']:
                     try:
-                        self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                        self[parameter] = json.loads(
+                            perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split'),
+                            object_pairs_hook=OrderedDict)
                     except KeyError as kexecution_error:
                         pass
                         #print('Trace: ' + repr(kexecution_error))
@@ -46,7 +49,9 @@ class MultinomialMetricMetadata(MetricMetadata):
                 elif parameter in ['cm']:
                     try:
                         self[parameter] = \
-                            perf_metrics._metric_json[parameter]['table'].as_data_frame().to_json(orient='split')
+                            json.loads(
+                                perf_metrics._metric_json[parameter]['table'].as_data_frame().to_json(orient='split'),
+                                object_pairs_hook=OrderedDict)
                     except KeyError as kexecution_error:
                         pass
                         #print('Trace: ' + repr(kexecution_error))
@@ -92,6 +97,6 @@ class MultinomialMetricMetadata(MetricMetadata):
                 index.append('total')
                 pdf = pdf.append(pdf.sum(axis=0), ignore_index=True)
                 pdf.index = index
-                self['cm'] = pdf.to_json(orient='split')
+                self['cm'] = json.loads(pdf.to_json(orient='split'), object_pairs_hook=OrderedDict)
 
                 self['scoring_time'] = int(time.time() - start)

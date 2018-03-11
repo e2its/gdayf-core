@@ -127,7 +127,7 @@ class Normalizer (object):
             norms = list()
             for description in columns:
                 col = description['name']
-                if float(description['min']) < 0.0:
+                if description['min'] is not None and float(description['min']) < 0.0:
                     normoption.set_offset(offset=abs(float(description['min']))
                                                  * self._config['special_spark_naive_offset'])
                     norms.append({col: normoption.copy()})

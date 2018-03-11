@@ -2,12 +2,12 @@
 # Define all objects, functions and structured related to Data Analysis of input data
 # on OrderedDict format
 
-from json import dumps, loads
+from json import dumps
 from collections import OrderedDict
 from gdayf.common.constants import DTYPES
 from gdayf.conf.loadconfig import LoadConfig
 from copy import deepcopy
-from pandas import cut, value_counts, qcut
+from pandas import cut
 from hashlib import md5 as md5
 from numpy import isnan
 import operator
@@ -44,42 +44,41 @@ class DFMetada(OrderedDict):
             auxdict['type'] = str(dataframe[col].dtype)
             for comp in ['min', 'max', 'mean', 'std', '25%', '50%', '75%']:
                 try:
-                    auxdict[comp] = str(summary[comp])
+                    auxdict[comp] = float(summary[comp])
                 except KeyError:
-                    auxdict[comp] = 'NaN'
-            if typedf in DTYPES:
-                auxdict['zeros'] = str(dataframe[dataframe.loc[:, col] == 0][col].count())
+                    auxdict[comp] = None
+            if auxdict['type'] in DTYPES:
+                 auxdict['zeros'] = float(dataframe[dataframe.loc[:, col] == 0][col].count())
             else:
-                auxdict['zeros'] = 'NaN'
-            auxdict['missed'] = str(
-                dataframe[col].isnull().values.ravel().sum())
-            auxdict['cardinality'] = str(int(dataframe.loc[:, col].value_counts().describe()['count']))
+                auxdict['zeros'] = None
+            auxdict['missed'] = float(dataframe[col].isnull().values.ravel().sum())
+            auxdict['cardinality'] = float(dataframe.loc[:, col].value_counts().describe()['count'])
             auxdict['histogram'] = OrderedDict()
             cardinality_limit = self._config["cardinality_limit"]
             if int(auxdict['cardinality']) <= cardinality_limit:
                 hist = dataframe.loc[:, col].value_counts().to_dict()
                 for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
-                    auxdict['histogram'][str(tupla[0])] = str(tupla[1])
+                    auxdict['histogram'][str(tupla[0])] = float(tupla[1])
                 del hist
             else:
                 try:
                     hist = cut(dataframe.loc[:, col], cardinality_limit).value_counts().to_dict()
                     for tupla in sorted(hist.items(), key=operator.itemgetter(0)):
-                        auxdict['histogram'][str(tupla[0])] = str(tupla[1])
+                        auxdict['histogram'][str(tupla[0])] = float(tupla[1])
                     del hist
                 except TypeError:
                     auxHist = dataframe[col].value_counts()
-                    auxdict['histogram']['max'] = str(auxHist.max())
-                    auxdict['histogram']['min'] = str(auxHist.min())
-                    auxdict['histogram']['mean'] = str(auxHist.mean())
-                    auxdict['histogram']['std'] = str(auxHist.std())
+                    auxdict['histogram']['max'] = float(auxHist.max())
+                    auxdict['histogram']['min'] = float(auxHist.min())
+                    auxdict['histogram']['mean'] = float(auxHist.mean())
+                    auxdict['histogram']['std'] = float(auxHist.std())
                     del auxHist
                 except ValueError:
                     auxHist = dataframe[col].value_counts()
-                    auxdict['histogram']['max'] = str(auxHist.max())
-                    auxdict['histogram']['min'] = str(auxHist.min())
-                    auxdict['histogram']['mean'] = str(auxHist.mean())
-                    auxdict['histogram']['std'] = str(auxHist.std())
+                    auxdict['histogram']['max'] = float(auxHist.max())
+                    auxdict['histogram']['min'] = float(auxHist.min())
+                    auxdict['histogram']['mean'] = float(auxHist.mean())
+                    auxdict['histogram']['std'] = float(auxHist.std())
                     del auxHist
 
             auxdict['distribution'] = 'Not implemented yet'
@@ -117,14 +116,12 @@ if __name__ == "__main__":
     from pandas import concat
     import operator
     source_data = list()
-    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
-    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
-    source_data.append("CODE/h2o-bk/datasets/")
+    source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
+    source_data.append("ARM-Metric-test.csv")
 
-    pd_train_dataset = concat([inputHandlerCSV().inputCSV(''.join(source_data) + "football.train2.csv"),
-                               inputHandlerCSV().inputCSV(''.join(source_data) + "football.valid2.csv")],
-                              axis=0)
+    pd_train_dataset = inputHandlerCSV().inputCSV(''.join(source_data))
 
     m = DFMetada()
+    print(OrderedDict(m.getDataFrameMetadata(pd_train_dataset, 'pandas')))
     print(dumps(m.getDataFrameMetadata(pd_train_dataset, 'pandas'), indent=4))
 
