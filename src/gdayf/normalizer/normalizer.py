@@ -418,7 +418,7 @@ class Normalizer (object):
     # @param std standard deviation value to be normalized
     # @return dataframe
     def normalizeStdMean(self, dataframe, mean, std):
-        if dataframe.dtype != np.object:
+        if dataframe.dtype != np.object and dataframe.dtype != "datetime64[ns]":
             dataframe = dataframe.astype(np.float16)
             dataframe = dataframe.apply(lambda x: x - float(mean))
             dataframe = dataframe.apply(lambda x: x / float(std))

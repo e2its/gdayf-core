@@ -450,8 +450,12 @@ class Controller(object):
                 self._logging.log_info(analysis_id, 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['train']['RMSE'])
             if metric in CLUSTERING_METRICS:
-                self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
+                try:
+                    self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
                                        model['metrics']['execution']['train']['k'])
+                except KeyError:
+                    self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
+                                       "0")
                 self._logging.log_info(analysis_id, 'controller', self._labels["ctmetric_order"],
                                        model['metrics']['execution']['train']['tot_withinss'])
                 self._logging.log_info(analysis_id, 'controller', self._labels["cbmetric_order"],

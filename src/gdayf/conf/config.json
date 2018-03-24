@@ -4649,7 +4649,7 @@
     "manage_on_train_errors" : true,
     "base_normalization_enabled": true,
     "exclusion_missing_threshold": 0.3,
-    "clustering_standardize_enabled" : false,
+    "clustering_standardize_enabled" : true,
     "standardize_enabled" : true,
     "std_threshold" : 0.1,
     "special_spark_naive_offset" : 2.0,
