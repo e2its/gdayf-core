@@ -39,9 +39,6 @@ class Normalizer (object):
                 for description in columns:
                     col = description['name']
                     if col != objective_column:
-                        '''if description['type'] == "object" and self._config['base_normalization_enabled']:
-                            normoption.set_base()
-                            norms.append({col: normoption.copy()})'''
                         if int(description['missed']) > 0 and \
                            (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
                             if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
@@ -146,7 +143,15 @@ class Normalizer (object):
         if not self._config['minimal_normalizations_enabled']:
             return [None]
         elif objective_column is None:
-            return [None]
+            norms = list()
+            normoption = NormalizationSet()
+            columns = dataframe_metadata['columns']
+            for description in columns:
+                col = description['name']
+                if description['type'] == "object" and self._config['base_normalization_enabled']:
+                    normoption.set_base()
+                    norms.append({col: normoption.copy()})
+            return norms.copy()
         else:
             if df_type == 'pandas':
                 norms = list()
@@ -298,6 +303,8 @@ class Normalizer (object):
                                                            norms['objective']['objective_column'],
                                                            norms['objective']['full']
                                                )
+                        if norms['objective']['objective_column'] is None:
+                            norms['objective']['objective_column'] = 'None'
                         self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                norms['objective']['objective_column'] + ',' +

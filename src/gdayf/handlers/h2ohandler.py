@@ -570,7 +570,7 @@ class H2OHandler(object):
 
         return anomalies
 
-    ## Generate detected anomalies on dataframe
+    ## Generate detected clustering on dataframe
     # @param self object pointer
     # @param odataframe original H2OFrame
     # @param dataframe normalized H2OFrame
@@ -584,17 +584,6 @@ class H2OHandler(object):
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = odataframe.cbind(prediction_dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
-
-        prediction_columns = prediccion.columns
-        for element in dataframe_cols:
-            prediction_columns.remove(element)
-        predictor_col = prediction_columns[0]
-
-        if objective in dataframe.columns:
-            success = prediccion[predictor_col] == prediccion[objective]
-            accuracy = "Valid"
-        if accuracy not in [0.0, -1.0]:
-            accuracy = success.sum() / dataframe.nrows
 
         return accuracy, prediccion
 
