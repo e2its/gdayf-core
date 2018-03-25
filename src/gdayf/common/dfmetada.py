@@ -107,8 +107,8 @@ def compare_dict(dict1, dict2):
     else:
         ddict1 = dumps(OrderedDict(dict1))
         ddict2 = dumps(OrderedDict(dict2))
-        print( md5(ddict1.encode('utf-8')))
-        print( md5(ddict2.encode('utf-8')))
+        #print( md5(ddict1.encode('utf-8')))
+        #print( md5(ddict2.encode('utf-8')))
         return md5(ddict1.encode('utf-8')) == md5(ddict2.encode('utf-8'))
 
 if __name__ == "__main__":

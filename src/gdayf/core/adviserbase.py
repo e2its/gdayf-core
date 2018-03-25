@@ -328,10 +328,10 @@ class Adviser(object):
                     model = self.analysis_recommendation_order[indexer]
                     if model['status'] == 'Executed':
                         model_type = model['model_parameters'][get_model_fw(model)]['model']
-                        if model_type not in best_models:
+                        #if model_type not in best_models:
                             #print("Trace:%s-%s"%(model_type, best_models))
-                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                            best_models.append(model_type)
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            #best_models.append(model_type)
                             # End - Modified 31/08/2017
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
