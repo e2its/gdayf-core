@@ -16,14 +16,13 @@ if __name__ == "__main__":
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
                                                           objective_column='Weather_Temperature',
-                                                          amode=FAST, metric='rmse', deep_impact=7)
+                                                          amode=FAST, metric='test_rmse', deep_impact=10)
 
-        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
-        '''controller.save_models(recomendations, mode=EACH_BEST)'''
-        controller.reconstruct_execution_tree(arlist=None, metric='rmse', store=True,
+        #controller.save_models(recomendations, mode=EACH_BEST)
+        controller.reconstruct_execution_tree(arlist=None, metric='test_rmse', store=True,
                                               user=controller.user_id,
                                               experiment=recomendations[0]['model_id'])
-        controller.remove_models(recomendations, mode=BEST)
+        controller.remove_models(recomendations, mode=EACH_BEST)
 
         #Prediction
         source_data = list()
@@ -40,10 +39,12 @@ if __name__ == "__main__":
             pprint(prediction_frame[['Weather_Temperature', 'prediction']])
 
         # Save Pojo
-        result = controller.get_external_model(recomendations[0], 'pojo')
+        #result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
-        result = controller.get_external_model(recomendations[0], 'mojo')
+        #result = controller.get_external_model(recomendations[0], 'mojo')
+
+        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy', accuracy=True)
 
         controller.clean_handlers()
     del controller

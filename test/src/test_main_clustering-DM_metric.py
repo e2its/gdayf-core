@@ -10,8 +10,8 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
-                                                          amode=CLUSTERING, metric='cdistance', deep_impact=5,
-                                                          k=8, estimate_k=True)
+                                                          amode=CLUSTERING, metric='cdistance', deep_impact=10,
+                                                          k=12, estimate_k=True)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='cdistance', accuracy=False)
         '''controller.save_models(recomendations, mode=EACH_BEST)'''

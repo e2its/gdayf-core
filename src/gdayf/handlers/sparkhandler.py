@@ -41,6 +41,7 @@ except ImportError as e:
 
 
 from gdayf.common.normalizationset import NormalizationSet
+from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.storagemetadata import generate_json_path
 from gdayf.common.utils import hash_key
@@ -1324,7 +1325,7 @@ def get_tolerance(columns, objective_column, tolerance=0.0):
     min_val = None
     max_val = None
     for each_column in columns:
-        if each_column["name"] == objective_column:
+        if each_column["name"] == objective_column and each_column["type"] in DTYPES:
             min_val = float(each_column["min"])
             max_val = float(each_column["max"])
     if min_val is None or max_val is None:

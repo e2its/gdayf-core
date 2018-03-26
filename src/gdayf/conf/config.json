@@ -2656,7 +2656,7 @@
                 "type": "int"
               },
               "max_iterations": {
-                "value": 100,
+                "value": 10,
                 "seleccionable": true,
                 "type": "int"
               }
@@ -2761,7 +2761,7 @@
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
-        "enabled" : true,
+        "enabled" : false,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
