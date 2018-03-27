@@ -41,6 +41,7 @@ except ImportError as e:
 
 
 from gdayf.common.normalizationset import NormalizationSet
+from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.storagemetadata import generate_json_path
 from gdayf.common.utils import hash_key
@@ -324,8 +325,9 @@ class sparkHandler(object):
 
     ## Generate model scoring_history metrics
     # @param self object pointer
-    # @return json_pandas_dataframe structure orient=split
+    # @result_dataframe = json_pandas_dataframe structure orient=split
     def _generate_scoring_history(self):
+        result_dataframe = None
         if isinstance(self._model_base.stages[-1], GBTRegressionModel) or \
                 isinstance(self._model_base.stages[-1], RandomForestRegressionModel) or \
                 isinstance(self._model_base.stages[-1], GBTClassificationModel):
@@ -333,7 +335,7 @@ class sparkHandler(object):
             for itera in range(0, len(self._model_base.stages[-1].trees)):
                 maximo = max(maximo, self._model_base.stages[-1].trees[itera].depth)
 
-            return DataFrame(data={'trees': self._model_base.stages[-1].getNumTrees,
+            result_dataframe = DataFrame(data={'trees': self._model_base.stages[-1].getNumTrees,
                                    'max_depth': maximo,
                                    'total_nodes': self._model_base.stages[-1].totalNumNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
@@ -343,24 +345,24 @@ class sparkHandler(object):
             for itera in range(0, len(self._model_base.stages[-1].trees)):
                 maximo = max(maximo, self._model_base.stages[-1].trees[itera].depth)
 
-            return DataFrame(data={'trees': self._model_base.stages[-1].getNumTrees,
+            result_dataframe = DataFrame(data={'trees': self._model_base.stages[-1].getNumTrees,
                                    'max_depth': maximo,
                                    'total_nodes': self._model_base.stages[-1].totalNumNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures,
                                    'numClasses': self._model_base.stages[-1].numClasses},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], DecisionTreeRegressionModel):
-            return DataFrame(data={'trees': 1,
+            result_dataframe = DataFrame(data={'trees': 1,
                                    'max_depth': self._model_base.stages[-1].depth,
                                    'total_nodes': self._model_base.stages[-1].numNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], NaiveBayesModel):
-            return DataFrame(data={'numFeatures': self._model_base.stages[-1].numFeatures,
+            result_dataframe = DataFrame(data={'numFeatures': self._model_base.stages[-1].numFeatures,
                                    'numClasses': self._model_base.stages[-1].numClasses},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], DecisionTreeClassificationModel):
-            return DataFrame(data={'trees': 1,
+            result_dataframe = DataFrame(data={'trees': 1,
                                    'max_depth': self._model_base.stages[-1].depth,
                                    'total_nodes': self._model_base.stages[-1].numNodes,
                                    'numFeatures': self._model_base.stages[-1].numFeatures,
@@ -368,7 +370,7 @@ class sparkHandler(object):
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], GeneralizedLinearRegressionModel):
             summary = self._model_base.stages[-1].summary
-            return DataFrame(data={'aic': summary.aic,
+            result_dataframe = DataFrame(data={'aic': summary.aic,
                                    'intercept': str(self._model_base.stages[-1].intercept),
                                    'degreesOfFreedom': summary.degreesOfFreedom,
                                    'numInstances': summary.numInstances,
@@ -380,7 +382,7 @@ class sparkHandler(object):
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], LinearRegressionModel):
             summary = self._model_base.stages[-1].summary
-            return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+            result_dataframe = DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
                                    'degreesOfFreedom': summary.degreesOfFreedom,
                                    'numInstances': summary.numInstances,
                                    'totalIterations': summary.totalIterations,
@@ -389,31 +391,37 @@ class sparkHandler(object):
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], LinearSVCModel):
-            return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+            result_dataframe = DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
                                    'intercept': self._model_base.stages[-1].intercept,
                                    'numClasses': self._model_base.stages[-1].numClasses,
                                    'numFeatures': self._model_base.stages[-1].numFeatures},
                              index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], LogisticRegressionModel):
-            try :
+            try:
                 summary = self._model_base.stages[-1].summary
-                return DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
+                result_dataframe = DataFrame(data={'coefifients': str(self._model_base.stages[-1].coefficients),
                                        'intercept': self._model_base.stages[-1].intercept,
                                        'totalIterations': summary.totalIterations,
                                        'roc': summary.roc.toPandas().to_json(orient='split'),
                                        'pr': summary.pr.toPandas().to_json(orient='split')},
                                  index=[0]).to_json(orient='split')
             except RuntimeError:
-                return DataFrame(data={'coefifientsMatrix': str(self._model_base.stages[-1].coefficientMatrix),
+                result_dataframe = DataFrame(data={'coefifientsMatrix': str(self._model_base.stages[-1].coefficientMatrix),
                                        'interceptVector': str(self._model_base.stages[-1].interceptVector)},
                                  index=[0]).to_json(orient='split')
         elif isinstance(self._model_base.stages[-1], BisectingKMeansModel) or \
                 isinstance(self._model_base.stages[-1], KMeansModel):
             summary = self._model_base.stages[-1].summary
-            return DataFrame(data={'clusterCenters': str(self._model_base.stages[-1].clusterCenters()),
+            result_dataframe = DataFrame(data={'clusterCenters': str(self._model_base.stages[-1].clusterCenters()),
                                    'clusterSizes': str(summary.clusterSizes),
                                    'k': summary.k},
                              index=[0]).to_json(orient='split')
+
+        # Change 27/01/2018 sprint 6
+        if result_dataframe is not None:
+            return json.loads(result_dataframe, object_pairs_hook=OrderedDict)
+        else:
+            return None
 
     ## Generate variable importance metrics
     # @param self object pointer
@@ -436,13 +444,17 @@ class sparkHandler(object):
                 isinstance(self._model_base.stages[-1], LinearRegressionModel):
             try:
                 summary = self._model_base.stages[-1].summary
-                return DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split')
+                return json.loads(DataFrame(summary.objectiveHistory, columns=['Metrics']).to_json(orient='split'),
+                                  object_pairs_hook=OrderedDict)
             except RuntimeError:
                 return None
         elif isinstance(self._model_base.stages[-1], NaiveBayesModel):
             metrics = OrderedDict()
-            metrics['pi'] = DataFrame(self._model_base.stages[-1].pi.values).to_json(orient='split')
-            metrics['theta'] = DataFrame(self._model_base.stages[-1].theta.values).to_json(orient='split')
+            metrics['pi'] = json.loads(DataFrame(self._model_base.stages[-1].pi.values).to_json(orient='split'),
+                                       object_pairs_hook=OrderedDict)
+            metrics['theta'] = json.loads(DataFrame(self._model_base.stages[-1].theta.values).to_json(orient='split'),
+                                          object_pairs_hook=OrderedDict)
+
             return metrics
         return None
 
@@ -479,9 +491,9 @@ class sparkHandler(object):
     def _predict_accuracy(self, objective, dataframe, tolerance=0.0):
         accuracy = -1.0
         #bug SPARK-14948
-        #prediccion = odataframe.withColumn('prediction', self._model_base.transform(dataframe).prediction)
+        #prediccion = dataframe.withColumn('prediction', self._model_base.transform(dataframe).prediction)
         prediccion = self._model_base.transform(dataframe)
-        columns = dataframe.columns
+        columns = prediccion.columns
         if objective in columns:
             accuracy = self._accuracy(objective=objective, dataframe=prediccion, tolerance=tolerance)
         return accuracy, prediccion
@@ -1313,7 +1325,7 @@ def get_tolerance(columns, objective_column, tolerance=0.0):
     min_val = None
     max_val = None
     for each_column in columns:
-        if each_column["name"] == objective_column:
+        if each_column["name"] == objective_column and each_column["type"] in DTYPES:
             min_val = float(each_column["min"])
             max_val = float(each_column["max"])
     if min_val is None or max_val is None:

@@ -33,11 +33,20 @@ def hash_key(hash_type, filename):
 
 
 ## Function oriented convert a json dataframe string structure on pandas.dataframe()
-# @param json_string containg a DataFrame table
+# @param json_string containing a DataFrame table
 # @param orient split (default) as usual DayF uses
 # @return pandas.dataframe
 def decode_json_to_dataframe(json_string, orient='split'):
         return read_json(json_string, orient=orient)
+
+
+## Function oriented convert a OrderedDict() dataframe string structure on pandas.dataframe()
+# @param ordered_dict containing a DataFrame table
+# @param orient split (default) as usual DayF uses
+# @return pandas.dataframe
+def decode_ordered_dict_to_dataframe(ordered_dict, orient='split'):
+    json_string = dumps(ordered_dict)
+    return decode_json_to_dataframe(json_string, orient='split')
 
 
 ## Function oriented compare two normalizations_sets based on hash_key(json transformations)

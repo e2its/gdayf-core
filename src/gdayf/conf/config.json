@@ -7,14 +7,14 @@
       "conf": {
         "download_dir": "downloads",
         "url": "http://127.0.0.1:54321",
-        "nthreads": 3,
+        "nthreads": 4,
         "ice_root": "/Data/Data/logs",
         "max_mem_size": "8G",
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
-        "tolerance": 0.05,
+        "tolerance": 0.01,
         "enabled" : true,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
@@ -2760,8 +2760,8 @@
         "spark.driver.memory": "2G",
         "start_spark": true,
         "save_model": "NATIVE",
-        "tolerance": 0.05,
-        "enabled" : true,
+        "tolerance": 0.01,
+        "enabled" : false,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -3340,7 +3340,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -4649,7 +4649,7 @@
     "manage_on_train_errors" : true,
     "base_normalization_enabled": true,
     "exclusion_missing_threshold": 0.3,
-    "clustering_standardize_enabled" : false,
+    "clustering_standardize_enabled" : true,
     "standardize_enabled" : true,
     "std_threshold" : 0.1,
     "special_spark_naive_offset" : 2.0,
@@ -4662,7 +4662,7 @@
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
-    "adviser_L2_wide": 4,
+    "adviser_L2_wide": 3,
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
@@ -4753,8 +4753,12 @@
       }
     }
   },
+  "dfmetadata":{
+    "correlation_threshold": 0.7,
+    "cardinality_limit": 40
+  },
   "common": {
-    "version" : "1.0.0",
+    "version" : "1.0.1",
     "test_frame_ratio" : 0.9
   }
 }

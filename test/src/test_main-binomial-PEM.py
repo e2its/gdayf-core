@@ -10,7 +10,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='ACCION',
-                                                          amode=FAST, metric='test_accuracy', deep_impact=1)
+                                                          amode=FAST, metric='test_accuracy', deep_impact=3)
 
         controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy', accuracy=True)
 

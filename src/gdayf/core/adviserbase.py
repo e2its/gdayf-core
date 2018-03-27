@@ -328,10 +328,10 @@ class Adviser(object):
                     model = self.analysis_recommendation_order[indexer]
                     if model['status'] == 'Executed':
                         model_type = model['model_parameters'][get_model_fw(model)]['model']
-                        if model_type not in best_models:
+                        #if model_type not in best_models:
                             #print("Trace:%s-%s"%(model_type, best_models))
-                            fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
-                            best_models.append(model_type)
+                        fw_model_list.extend(self.optimize_models(self.analysis_recommendation_order[indexer]))
+                            #best_models.append(model_type)
                             # End - Modified 31/08/2017
                 except TypeError:
                     ''' If all optimize_models doesn't return new models 
@@ -543,7 +543,7 @@ class Adviser(object):
     # @param model
     # @return accuracy metric, inverse rmse, objective or 0.0, 10e+8, objective if not exists
     @staticmethod
-    def get_accuracy(model):
+    def get_train_accuracy(model):
         try:
             return float(model['metrics']['accuracy']['train']),\
                    1/float(model['metrics']['execution']['train']['RMSE']),\
@@ -575,7 +575,7 @@ class Adviser(object):
     # @param model
     # @return accuracy metric, inverse rmse, objective or 0.0, 10e+308, objective if not exists
     @staticmethod
-    def get_combined(model):
+    def get_combined_accuracy(model):
         try:
             return float(model['metrics']['accuracy']['combined']),\
                    1/float(model['metrics']['execution']['train']['RMSE']),\
@@ -591,13 +591,29 @@ class Adviser(object):
     # @param model
     # @return rsme metric, inverse combined accuracy, objective or 10e+308, 0.0, objective if not exists
     @staticmethod
-    def get_rmse(model):
+    def get_train_rmse(model):
         try:
             return float(model['metrics']['execution']['train']['RMSE']),\
                    1/float(model['metrics']['accuracy']['combined']),\
                    0.0
         except ZeroDivisionError:
             return float(model['metrics']['execution']['train']['RMSE']),\
+                   1e+16, \
+                   0.0
+        except KeyError:
+            return 10e+308, 0.0, 0.0
+
+    ##Method get test rmse for generic model
+    # @param model
+    # @return rsme metric, inverse combined accuracy, objective or 10e+308, 0.0, objective if not exists
+    @staticmethod
+    def get_test_rmse(model):
+        try:
+            return float(model['metrics']['execution']['test']['RMSE']),\
+                   1/float(model['metrics']['accuracy']['combined']),\
+                   0.0
+        except ZeroDivisionError:
+            return float(model['metrics']['execution']['test']['RMSE']),\
                    1e+16, \
                    0.0
         except KeyError:
@@ -630,16 +646,18 @@ class Adviser(object):
     # @param model_list for models analyzed
     # @return (fw,model_list) (ArMetadata, normalization_set)
     def priorize_models(self, analysis_id, model_list):
-        if self.metric == 'accuracy':
-            return sorted(model_list, key=self.get_accuracy, reverse=True)
-        elif self.metric == 'rmse':
-            return sorted(model_list, key=self.get_rmse)
+        if self.metric == 'train_accuracy':
+            return sorted(model_list, key=self.get_train_accuracy, reverse=True)
         elif self.metric == 'test_accuracy':
             return sorted(model_list, key=self.get_test_accuracy, reverse=True)
-        elif self.metric == 'combined':
-            return sorted(model_list, key=self.get_combined, reverse=True)
+        elif self.metric == 'combined_accuracy':
+            return sorted(model_list, key=self.get_combined_accuracy, reverse=True)
         elif self.metric == 'cdistance':
             return sorted(model_list, key=self.get_cdistance)
+        elif self.metric == 'train_rmse':
+            return sorted(model_list, key=self.get_train_rmse)
+        elif self.metric == 'test_rmse':
+            return sorted(model_list, key=self.get_test_rmse)
         else:
             return model_list
 

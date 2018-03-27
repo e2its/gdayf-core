@@ -18,6 +18,8 @@ $totss = $tot.withinss + $betweenss
 '''
 from gdayf.metrics.metricmetadata import MetricMetadata
 from pandas import DataFrame
+from collections import OrderedDict
+import json
 import time
 
 
@@ -51,7 +53,8 @@ class ClusteringMetricMetadata(MetricMetadata):
                     if parameter == 'centroid_stats':
                         self[parameter] = perf_metrics._metric_json[parameter].as_data_frame()
                         self['k'] = int(self[parameter]['centroid'].max())
-                        self[parameter] = self[parameter].to_json(orient='split')
+                        self[parameter] = json.loads(self[parameter].to_json(orient='split'),
+                                                     object_pairs_hook=OrderedDict)
                     else:
                         self[parameter] = perf_metrics._metric_json[parameter]
             except KeyError as kexecution_error:
@@ -73,7 +76,8 @@ class ClusteringMetricMetadata(MetricMetadata):
         if model is not None and data is not None:
             self['clusterCenters'] = DataFrame(model.clusterCenters())
             self['k'] = self['clusterCenters'].shape[0]
-            self['clusterCenters'] = DataFrame(model.clusterCenters()).to_json(orient='split')
+            self['clusterCenters'] = json.loads(DataFrame(model.clusterCenters()).to_json(orient='split'),
+                                                object_pairs_hook=OrderedDict)
             self['bettweenss'] = 1e15  # Need to be implemented
             self['totss'] = 1e15  # Need to be implemented
             self['tot_withinss'] = model.computeCost(data)

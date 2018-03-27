@@ -24,7 +24,7 @@ class Normalizer (object):
     # @param dataframe_metadata DFMetadata()
     # @param an_objective ATypesMetadata
     # @param objective_column string indicating objective column
-    # @return None if nothing to DO or Normalization_sets orderdict() on other way
+    # @return None if nothing to DO or Normalization_sets OrderedDict() on other way
     def define_normalizations(self, dataframe_metadata, an_objective, objective_column):
         if not self._config['non_minimal_normalizations_enabled']:
             return None
@@ -39,9 +39,6 @@ class Normalizer (object):
                 for description in columns:
                     col = description['name']
                     if col != objective_column:
-                        '''if description['type'] == "object" and self._config['base_normalization_enabled']:
-                            normoption.set_base()
-                            norms.append({col: normoption.copy()})'''
                         if int(description['missed']) > 0 and \
                            (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
                             if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
@@ -127,7 +124,7 @@ class Normalizer (object):
             norms = list()
             for description in columns:
                 col = description['name']
-                if float(description['min']) < 0.0:
+                if description['min'] is not None and float(description['min']) < 0.0:
                     normoption.set_offset(offset=abs(float(description['min']))
                                                  * self._config['special_spark_naive_offset'])
                     norms.append({col: normoption.copy()})
@@ -146,7 +143,15 @@ class Normalizer (object):
         if not self._config['minimal_normalizations_enabled']:
             return [None]
         elif objective_column is None:
-            return [None]
+            norms = list()
+            normoption = NormalizationSet()
+            columns = dataframe_metadata['columns']
+            for description in columns:
+                col = description['name']
+                if description['type'] == "object" and self._config['base_normalization_enabled']:
+                    normoption.set_base()
+                    norms.append({col: normoption.copy()})
+            return norms.copy()
         else:
             if df_type == 'pandas':
                 norms = list()
@@ -298,6 +303,8 @@ class Normalizer (object):
                                                            norms['objective']['objective_column'],
                                                            norms['objective']['full']
                                                )
+                        if norms['objective']['objective_column'] is None:
+                            norms['objective']['objective_column'] = 'None'
                         self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'] + ' ( ' +
                                                norms['objective']['objective_column'] + ',' +
@@ -411,7 +418,7 @@ class Normalizer (object):
     # @param std standard deviation value to be normalized
     # @return dataframe
     def normalizeStdMean(self, dataframe, mean, std):
-        if dataframe.dtype != np.object:
+        if dataframe.dtype != np.object and dataframe.dtype != "datetime64[ns]":
             dataframe = dataframe.astype(np.float16)
             dataframe = dataframe.apply(lambda x: x - float(mean))
             dataframe = dataframe.apply(lambda x: x / float(std))

@@ -9,6 +9,7 @@ import numpy as np
 import time
 from pyspark.mllib.evaluation import MulticlassMetrics
 from gdayf.conf.loadconfig import LoadLabels
+import json
 
 
 ##Class Base for Binomial metricts as OrderedDict
@@ -51,7 +52,9 @@ class BinomialMetricMetadata(MetricMetadata):
             for parameter, _ in self.items():
                 if parameter in ['gains_lift_table', 'max_criteria_and_metric_scores']:
                     try:
-                        self[parameter] = perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split')
+                        self[parameter] = json.loads(
+                            perf_metrics._metric_json[parameter].as_data_frame().to_json(orient='split'),
+                            object_pairs_hook=OrderedDict)
                     except KeyError as kexecution_error:
                         pass
                         #print('Trace: ' + repr(kexecution_error))
@@ -63,8 +66,10 @@ class BinomialMetricMetadata(MetricMetadata):
                     for each_parameter, __ in self['cm'].items():
                         try:
                             self['cm'][each_parameter] = \
-                                perf_metrics.confusion_matrix(
-                                    metrics=each_parameter).table.as_data_frame().to_json(orient='split')
+                                json.loads(
+                                    perf_metrics.confusion_matrix(
+                                        metrics=each_parameter).table.as_data_frame().to_json(orient='split'),
+                                    object_pairs_hook=OrderedDict)
                         except KeyError as kexecution_error:
                             pass
                             #print('Trace: ' + repr(kexecution_error))
@@ -112,7 +117,7 @@ class BinomialMetricMetadata(MetricMetadata):
                 index.append('total')
                 pdf = pdf.append(pdf.sum(axis=0), ignore_index=True)
                 pdf.index = index
-                self['cm'] = pdf.to_json(orient='split')
+                self['cm'] = json.loads(pdf.to_json(orient='split'), object_pairs_hook=OrderedDict)
 
                 self['scoring_time'] = int(time.time() - start)
 

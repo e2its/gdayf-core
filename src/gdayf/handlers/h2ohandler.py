@@ -41,6 +41,7 @@ from h2o.estimators.deeplearning import H2OAutoEncoderEstimator
 from h2o.estimators.kmeans import H2OKMeansEstimator
 
 from gdayf.common.normalizationset import NormalizationSet
+from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.storagemetadata import generate_json_path
 from gdayf.common.utils import hash_key
@@ -390,7 +391,9 @@ class H2OHandler(object):
     # @param self object pointer
     # @return json_pandas_dataframe structure orient=split
     def _generate_model_metrics(self):
-        return self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split')
+        #Change 27/01/2018 sprint 6
+        return json.loads(self._model_base.summary().as_data_frame().drop("", axis=1).to_json(orient='split'),
+                          object_pairs_hook=OrderedDict)
 
     ## Generate variable importance metrics
     # @param self object pointer
@@ -412,7 +415,9 @@ class H2OHandler(object):
         if model_scoring is None:
             return None
         else:
-            return model_scoring.drop("", axis=1).to_json(orient='split')
+            #Change 27/01/2018 sprint 6
+            return json.loads(model_scoring.drop("", axis=1).to_json(orient='split'),
+                              object_pairs_hook=OrderedDict)
 
     ## Generate accuracy metrics for model
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
@@ -430,9 +435,7 @@ class H2OHandler(object):
         if antype == 'regression' and prediccion.type('predict') == base_type:
             fmin = eval("lambda x: x - " + str(tolerance/2))
             fmax = eval("lambda x: x + " + str(tolerance/2))
-            success = dataframe[objective].apply(fmin) <= \
-                       prediccion['predict'] <= \
-                       dataframe[objective].apply(fmax)
+            success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
             accuracy = "Valid"
         elif antype == 'regression':
             accuracy = 0.0
@@ -462,14 +465,17 @@ class H2OHandler(object):
     # @return float accuracy of model, prediction_dataframe
     def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
         accuracy = -1.0
-        dataframe_cols = dataframe.columns
+        dataframe_cols = odataframe.columns
         prediction_dataframe = self._model_base.predict(dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = odataframe.cbind(prediction_dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediction_columns = prediccion.columns
         for element in dataframe_cols:
-            prediction_columns.remove(element)
+            try:
+                prediction_columns.remove(element)
+            except ValueError:
+                pass
         predictor_col = prediction_columns[0]
 
         if objective in dataframe.columns:
@@ -564,7 +570,7 @@ class H2OHandler(object):
 
         return anomalies
 
-    ## Generate detected anomalies on dataframe
+    ## Generate detected clustering on dataframe
     # @param self object pointer
     # @param odataframe original H2OFrame
     # @param dataframe normalized H2OFrame
@@ -578,17 +584,6 @@ class H2OHandler(object):
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = odataframe.cbind(prediction_dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
-
-        prediction_columns = prediccion.columns
-        for element in dataframe_cols:
-            prediction_columns.remove(element)
-        predictor_col = prediction_columns[0]
-
-        if objective in dataframe.columns:
-            success = prediccion[predictor_col] == prediccion[objective]
-            accuracy = "Valid"
-        if accuracy not in [0.0, -1.0]:
-            accuracy = success.sum() / dataframe.nrows
 
         return accuracy, prediccion
 
@@ -792,7 +787,7 @@ class H2OHandler(object):
                                        ') validating_frame(' + str(valid_frame.nrows) + ')')
             else:
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
+                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'training_frame(' + str(training_frame.nrows) + ')')
             if "test_frame" in kwargs.keys():
                 test_frame = get_frame('test_' + analysis_id + '_' + str(train_hash_value))
@@ -1462,7 +1457,7 @@ def get_tolerance(columns, objective_column, tolerance=0.0):
     min_val = None
     max_val = None
     for each_column in columns:
-        if each_column["name"] == objective_column:
+        if each_column["name"] == objective_column and each_column["type"] in DTYPES:
             min_val = float(each_column["min"])
             max_val = float(each_column["max"])
     if min_val is None or max_val is None:

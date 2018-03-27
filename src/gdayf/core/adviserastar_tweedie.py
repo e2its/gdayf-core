@@ -3,14 +3,14 @@
 # and defined heuristic
 # Main class AdviserAStarAvg. Lets us execute analysis, make recommendations over optimizing on selected algoritms
 
-from gdayf.common.dfmetada import DFMetada
+#from gdayf.common.dfmetada import DFMetada
 from gdayf.conf.loadconfig import LoadConfig
-from gdayf.common.utils import decode_json_to_dataframe
+from gdayf.common.utils import decode_ordered_dict_to_dataframe
+#from gdayf.common.utils import decode_json_to_dataframe
 from gdayf.core.adviserbase import Adviser
 from gdayf.common.utils import get_model_fw
 from gdayf.models.parametersmetadata import ParameterMetadata
-
-from json import dumps
+#from json import dumps
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
@@ -50,9 +50,9 @@ class AdviserAStar(Adviser):
         model = armetadata['model_parameters'][get_model_fw(armetadata)]
         metric_value, _, objective = eval('self.get_' + self.metric + '(armetadata)')
         if get_model_fw(armetadata) == 'h2o' and metric_value != objective:
-            model_metric = decode_json_to_dataframe(armetadata['metrics']['model'])
+            model_metric = decode_ordered_dict_to_dataframe(armetadata['metrics']['model'])
             if model['model'] not in ['H2ONaiveBayesEstimator']:
-                scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
+                scoring_metric = decode_ordered_dict_to_dataframe(armetadata['metrics']['scoring'])
             config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['h2o']
             nfold_limit = config['nfold_limit']
             min_rows_limit = config['min_rows_limit']
@@ -445,7 +445,7 @@ class AdviserAStar(Adviser):
 
         if get_model_fw(armetadata) == 'spark' and metric_value != objective:
             try:
-                scoring_metric = decode_json_to_dataframe(armetadata['metrics']['scoring'])
+                scoring_metric = decode_ordered_dict_to_dataframe(armetadata['metrics']['scoring'])
             except ValueError:
                 print("TRACE: Not scoring: " + model)
             config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['spark']

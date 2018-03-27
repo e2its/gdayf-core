@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     source_data = list()
     source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
-    source_data.append("ARM-Metric-train.csv")
+    source_data.append("ARM-Metric-train-TS.csv")
 
     # Generating missing values
 
@@ -28,7 +28,7 @@ if __name__ == "__main__":
         # Prediction
         source_data = list()
         source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
-        source_data.append("ARM-Metric-test.csv")
+        source_data.append("ARM-Metric-test-TS.csv")
         # source_data.append("DM-Metric-missing-test-weather.csv")
 
         # Prediccion
