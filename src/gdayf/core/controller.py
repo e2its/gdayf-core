@@ -423,9 +423,8 @@ class Controller(object):
     ## Method oriented to log leaderboard against selected metrics
     # @param analysis_id
     # @param ar_list List of AR models Execution Data
-    # @param metric to execute order ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
-    # @param accuracy oriented to visualize accuracy or not
-    def log_model_list(self, analysis_id, ar_list, metric, accuracy=True):
+    # @param metric to execute order ['train_accuracy', 'train_rmse', 'test_accuracy', 'combined_accuracy', 'test_rmse', 'cdistance']
+    def log_model_list(self, analysis_id, ar_list, metric):
         best_check = True
         ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
         for model in ordered_list:
@@ -444,11 +443,13 @@ class Controller(object):
                 self._logging.log_info(analysis_id, 'controller', self._labels["norm_app"],
                                        model["normalizations_set"])
 
-            if metric in ACCURACY_METRICS or REGRESSION_METRICS:
+            if metric in ACCURACY_METRICS or metric in REGRESSION_METRICS:
                 self._logging.log_info(analysis_id, 'controller', self._labels["ametric_order"],
                                        model['metrics']['accuracy'])
                 self._logging.log_info(analysis_id, 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['train']['RMSE'])
+                self._logging.log_info(analysis_id, 'controller', self._labels["pmetric_order"],
+                                       model['metrics']['execution']['test']['RMSE'])
             if metric in CLUSTERING_METRICS:
                 try:
                     self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
@@ -460,6 +461,43 @@ class Controller(object):
                                        model['metrics']['execution']['train']['tot_withinss'])
                 self._logging.log_info(analysis_id, 'controller', self._labels["cbmetric_order"],
                                        model['metrics']['execution']['train']['betweenss'])
+
+    ## Method oriented to log leaderboard against selected metrics on dataframe
+    # @param analysis_id
+    # @param ar_list List of AR models Execution Data
+    # @param metric to execute order ['train_accuracy', 'train_rmse', 'test_accuracy', 'combined_accuracy', 'test_rmse', 'cdistance']
+
+    def table_model_list(self, analysis_id, ar_list, metric):
+        dataframe = list()
+        normal_cols = ['Model', 'Train_accuracy', 'Test_accuracy', 'Combined_accuracy', 'train_rmse', 'test_rmse']
+        cluster_cols = ['Model', 'k', 'tot_withinss', 'betweenss']
+
+        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
+        for model in ordered_list:
+            if metric in ACCURACY_METRICS or metric in REGRESSION_METRICS:
+                dataframe.append(
+                    {'Model': model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'],
+                     'Round': model['round'],
+                     'train_accuracy': model['metrics']['accuracy']['train'],
+                     'test_accuracy': model['metrics']['accuracy']['test'],
+                     'combined_accuracy': model['metrics']['accuracy']['combined'],
+                     'train_rmse': model['metrics']['execution']['train']['RMSE'],
+                     'test_rmse': model['metrics']['execution']['test']['RMSE']}
+                )
+            if metric in CLUSTERING_METRICS:
+                try:
+                    aux = model['metrics']['execution']['train']['k']
+                except KeyError:
+                    aux = 0
+
+                dataframe.append(
+                    {'Model': model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'],
+                     'Round': model['round'],
+                     'k': aux,
+                     'tot_withinss':model['metrics']['execution']['train']['tot_withinss'],
+                     'betweenss':model['metrics']['execution']['train']['betweenss']}
+                )
+        return DataFrame(dataframe)
 
     ## Method leading and controlling analysis's executions on specific analysis
     # @param self object pointer
@@ -513,7 +551,6 @@ class Controller(object):
 
         adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=list_ar_metadata)
 
-
         while adviser.next_analysis_list is not None:
 
             for each_model in adviser.next_analysis_list:
@@ -542,7 +579,6 @@ class Controller(object):
                                                                             model_list=
                                                                             adviser.analysis_recommendation_order)
             adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=adviser.analysis_recommendation_order)
-
 
         self._logging.log_info(adviser.analysis_id, 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))

@@ -11,11 +11,11 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
-                                                          amode=ANOMALIES, metric='rmse', deep_impact=7)
+                                                          amode=ANOMALIES, metric='train_rmse', deep_impact=7)
 
-        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='rmse', accuracy=True)
+        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='train_rmse', accuracy=True)
         '''controller.save_models(recomendations, mode=BEST)'''
-        controller.reconstruct_execution_tree(recomendations, metric='rmse')
+        controller.reconstruct_execution_tree(recomendations, metric='train_rmse')
         controller.remove_models(recomendations, mode=BEST)
 
         #Prediction

@@ -16,11 +16,11 @@ if __name__ == "__main__":
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
                                                           objective_column='ATYPE',
-                                                          amode=FAST, metric='combined', deep_impact=3)
+                                                          amode=FAST, metric='combined_accuracy', deep_impact=3)
 
-        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined', accuracy=True)
+        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined_accuracy', accuracy=True)
         #controller.save_models(recomendations, mode=EACH_BEST)
-        execution_tree = controller.reconstruct_execution_tree(arlist=None, metric='combined', store=False,
+        execution_tree = controller.reconstruct_execution_tree(arlist=None, metric='combined_accuracy', store=False,
                                                                user=controller.user_id,
                                                                experiment=recomendations[0]['model_id'])
         controller.remove_models(recomendations, mode=EACH_BEST)
