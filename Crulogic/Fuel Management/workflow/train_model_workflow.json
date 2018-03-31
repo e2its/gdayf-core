@@ -1,0 +1,100 @@
+{
+  "Clustering": {
+    "model" : null,
+    "parameters": {
+      "amode": "CLUSTERING",
+      "objective_column": null,
+      "metric": "cdistance",
+      "deep_impact": 2,
+      "k": 4,
+      "estimate_k": true
+    },
+    "data": {
+      "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
+      "filtered_data": null,
+      "for_each": null
+    },
+    "Next": {
+      "Regression_25": {
+        "model" : null,
+        "parameters": {
+          "amode": "POC",
+          "objective_column": "Weather_Temperature",
+          "metric": "test_rmse",
+          "deep_impact": 2
+        },
+        "data": {
+          "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
+          "filtered_data": {"column" :"Weather_Temperature",
+                            "quantile": 0.25},
+          "for_each": "Clustering"
+        },
+        "Next": null
+      },
+      "Autoencoder_25": {
+        "model" : null,
+        "parameters": {
+          "amode": "ANOMALIES",
+          "objective_column": null,
+          "metric": "train_rmse",
+          "deep_impact": 2
+        },
+        "data": {
+          "filtered_columns": null,
+          "filtered_data": {"column" :"Weather_Temperature",
+                            "quantile": 0.25},
+          "for_each": "Clustering"
+        },
+        "Next": null
+      }
+    }
+  },
+  "Regression_Weather_Temperature":{
+    "model" : null,
+    "parameters": {
+      "amode":"POC",
+      "objective_column": "Weather_Temperature",
+      "metric": "test_rmse",
+      "deep_impact":2
+    },
+    "data":{
+      "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
+      "filtered_data": null,
+      "for_each":null
+    },
+    "Next":{
+      "Regression_Temperature_Habitacion_Sensor":{
+        "model" : null,
+        "parameters": {
+          "amode":"POC",
+          "objective_column": "Temperature_Habitacion_Sensor",
+          "metric": "test_rmse",
+          "deep_impact":2
+        },
+        "data":{
+          "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature","CO2_Habitacion_Sensor"],
+          "filtered_data": null,
+          "for_each":null
+        },
+        "Next":{
+          "Regression_CO2_Habitacion_Sensor":{
+            "model" : null,
+            "parameters": {
+              "amode":"POC",
+              "objective_column": "CO2_Habitacion_Sensor",
+              "metric": "test_rmse",
+              "deep_impact":2
+            },
+            "data":{
+              "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature",
+                "Temperature_Habitacion_Sensor","Regression_Temperature_Habitacion_Sensor"],
+              "filtered_data": null,
+              "for_each":null
+            },
+            "Next":null
+          }
+        }
+      }
+    }
+  }
+}

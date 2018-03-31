@@ -540,7 +540,8 @@ class H2OHandler(object):
                                        difference[col] < (anomalies_thresholds['columns'][col]['min'] * min)]
             self._frame_list.append(temp_anomalies.frame_id)
             if temp_anomalies.nrows > 0:
-                anomalies['columns'][col] = temp_anomalies.as_data_frame(use_pandas=True)
+                anomalies['columns'][col] = json.loads(temp_anomalies.as_data_frame(use_pandas=True)
+                                                       .to_json(orient='split'), object_pairs_hook=OrderedDict)
 
         anomalies['global_mse'] = OrderedDict()
         if anomalies_thresholds['global_mse']['max'] < 0:
@@ -564,7 +565,8 @@ class H2OHandler(object):
                                    anomalyframe['Reconstruction.MSE'] < (anomalies_thresholds['global_mse']['min'] *min)]
         self._frame_list.append(temp_anomalies.frame_id)
         if temp_anomalies.nrows > 0:
-            anomalies['global_mse'] = temp_anomalies.as_data_frame(use_pandas=True)
+            anomalies['global_mse'] = json.loads(temp_anomalies.as_data_frame(use_pandas=True).
+                                                 to_json(orient='split'), object_pairs_hook=OrderedDict)
 
         H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
 

@@ -1,6 +1,7 @@
 if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
+    from gdayf.handlers.inputhandler import inputHandlerCSV
     from gdayf.common.constants import *
     from pandas import set_option
 
@@ -10,13 +11,13 @@ if __name__ == "__main__":
 
     #Generating missing values
 
-
+    pd_dataset = inputHandlerCSV().inputCSV(filename=''.join(source_data))
     #Analysis
     controller = Controller()
     if controller.config_checks():
-        status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
+        status, recomendations = controller.exec_analysis(datapath=pd_dataset,
                                                           objective_column='Weather_Temperature',
-                                                          amode=FAST, metric='test_rmse', deep_impact=4)
+                                                          amode=POC, metric='test_rmse', deep_impact=2)
 
         #controller.save_models(recomendations, mode=EACH_BEST)
         controller.reconstruct_execution_tree(arlist=None, metric='test_rmse', store=True,

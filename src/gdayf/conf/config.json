@@ -4548,6 +4548,18 @@
         ],
         "propagate": false
       },
+      "gdayf.workflow.workflow": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.workflow": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
       "gdayf.normalizer.normalizer": {
         "handlers": [
           "error"
@@ -4759,6 +4771,7 @@
   },
   "common": {
     "version" : "1.0.1",
-    "test_frame_ratio" : 0.9
+    "test_frame_ratio" : 0.9,
+    "workflow_execution_dir": "workflow"
   }
 }

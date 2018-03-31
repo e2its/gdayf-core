@@ -357,7 +357,7 @@ class PersistenceHandler(object):
                 execution_list.append(element)
             for element in execution_list:
                 element.pop('_id')
-            print(execution_list)
+            #print(execution_list)
         except PyMongoError as pexecution_error:
             print(repr(pexecution_error))
         finally:

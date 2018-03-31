@@ -298,10 +298,10 @@ class Controller(object):
     # @param datapath String Path indicating file to be analyzed or DataFrame
     # @param objective_column string indicating objective column
     # @param amode Analysis mode of execution [0,1,2,3,4,5,6]
-    # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
+    # @param metric to evalute models ['train_accuracy', 'train_rmse', 'test_accuracy', 'combined_accuracy', 'test_rmse', 'cdistance']
     # @param deep_impact  deep analysis
     # @return status, adviser.analysis_recommendation_order
-    def exec_analysis(self, datapath, objective_column, amode=POC, metric='combined', deep_impact=3, **kwargs):
+    def exec_analysis(self, datapath, objective_column, amode=POC, metric='test_accuracy', deep_impact=3, **kwargs):
         # Clustering variables
         k = None
         estimate_k = False
@@ -475,15 +475,30 @@ class Controller(object):
         ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
         for model in ordered_list:
             if metric in ACCURACY_METRICS or metric in REGRESSION_METRICS:
-                dataframe.append(
-                    {'Model': model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'],
-                     'Round': model['round'],
-                     'train_accuracy': model['metrics']['accuracy']['train'],
-                     'test_accuracy': model['metrics']['accuracy']['test'],
-                     'combined_accuracy': model['metrics']['accuracy']['combined'],
-                     'train_rmse': model['metrics']['execution']['train']['RMSE'],
-                     'test_rmse': model['metrics']['execution']['test']['RMSE']}
-                )
+                try:
+                    dataframe.append(
+                        {'Model': model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'],
+                         'Round': model['round'],
+                         'train_accuracy': model['metrics']['accuracy']['train'],
+                         'test_accuracy': model['metrics']['accuracy']['test'],
+                         'combined_accuracy': model['metrics']['accuracy']['combined'],
+                         'train_rmse': model['metrics']['execution']['train']['RMSE'],
+                         'test_rmse': model['metrics']['execution']['test']['RMSE'],
+                         'path': model['json_path'][0]['value']
+                         }
+                    )
+                except KeyError:
+                    dataframe.append(
+                        {'Model': model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'],
+                         'Round': model['round'],
+                         'train_accuracy': model['metrics']['accuracy']['train'],
+                         'test_accuracy': model['metrics']['accuracy']['test'],
+                         'combined_accuracy': model['metrics']['accuracy']['combined'],
+                         'train_rmse': model['metrics']['execution']['train']['RMSE'],
+                         'path': model['json_path'][0]['value']
+                         }
+                    )
+
             if metric in CLUSTERING_METRICS:
                 try:
                     aux = model['metrics']['execution']['train']['k']
@@ -495,7 +510,9 @@ class Controller(object):
                      'Round': model['round'],
                      'k': aux,
                      'tot_withinss':model['metrics']['execution']['train']['tot_withinss'],
-                     'betweenss':model['metrics']['execution']['train']['betweenss']}
+                     'betweenss':model['metrics']['execution']['train']['betweenss'],
+                     'path': model['json_path'][0]['value']
+                     }
                 )
         return DataFrame(dataframe)
 

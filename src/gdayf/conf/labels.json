@@ -106,6 +106,17 @@
         "excluding": ":Excluding Normalization on model (Not convenient):",
         "nothing_to_do": ":Nothing to Do:",
         "col_analysis": ":Column Basic Description:"
+      },
+      "workflow":{
+        "input_param":":Input Descriptor:",
+        "key_error_fc" : "Failed removing filtered columns operation. Full Column operation used:",
+        "key_error_fd" : "Failed establishing filtered data operation. Full Row operation used:",
+        "failed_input": "Invalid DataPath descriptor:",
+        "failed_json": "Invalid json storage configuration :",
+        "failed_var": "Variable not in columns",
+        "variables_desc": "Variables in the model:",
+        "desc_operation": "Execute operation:",
+        "anomalies_operation": "Anomalies Pattern:"
       }
     },
     "ui":{
