@@ -26,7 +26,7 @@
           "amode": "POC",
           "objective_column": "Weather_Temperature",
           "metric": "test_rmse",
-          "deep_impact": 2
+          "deep_impact": 5
         },
         "data": {
           "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
@@ -47,7 +47,7 @@
           "amode": "ANOMALIES",
           "objective_column": null,
           "metric": "train_rmse",
-          "deep_impact": 2
+          "deep_impact": 5
         },
         "data": {
           "filtered_columns": null,
@@ -65,7 +65,7 @@
       "amode":"POC",
       "objective_column": "Weather_Temperature",
       "metric": "test_rmse",
-      "deep_impact":2
+      "deep_impact":5
     },
     "data":{
       "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
@@ -79,7 +79,7 @@
           "amode":"POC",
           "objective_column": "Temperature_Habitacion_Sensor",
           "metric": "test_rmse",
-          "deep_impact":2
+          "deep_impact": 5
         },
         "data":{
           "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature","CO2_Habitacion_Sensor"],
@@ -93,7 +93,7 @@
               "amode":"POC",
               "objective_column": "CO2_Habitacion_Sensor",
               "metric": "test_rmse",
-              "deep_impact":2
+              "deep_impact": 5
             },
             "data":{
               "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature",

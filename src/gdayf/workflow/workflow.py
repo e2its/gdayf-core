@@ -16,6 +16,7 @@ from json import load,dumps,loads
 from collections import OrderedDict
 from pandas import DataFrame, set_option, read_json
 from time import time
+from pathlib import Path
 
 ## Core class oriented to manage pipeline of workflows execution
 # orchestrating the execution of actions activities
@@ -26,6 +27,7 @@ class Workflow(object):
         self._labels = LoadLabels().get_config()['messages']['workflow']
         self._logging = LogsHandler()
         self.user_id = user_id
+        self.timestamp = str(time())
 
     ## Method leading train workflow executions
     # @param self object pointer
@@ -96,11 +98,12 @@ class Workflow(object):
                             model_id = recomendations[0]['model_id']
                             print(controller.table_model_list(model_id, recomendations,
                                                               metric=eval(fe_parameters['metric'])))
+                            filename = self.storage_path('train', wkey + '_' + str(each) + '_' + 'train_performance'
+                                                         , 'xls')
                             controller.table_model_list(model_id, recomendations,
                                                         metric=eval(fe_parameters['metric']))\
-                                .to_excel(self.storage_path('train', wkey + '_' + str(each) + '_' + 'train_performance' \
-                                                            + str(time())),
-                                          index=False, sheet_name='performance')
+                                .to_excel(filename, index=False, sheet_name='performance')
+                            self.replicate_file('train',filename=filename)
 
                             prediction_frame = controller.exec_prediction(datapath=aux_dataset,
                                                                           model_file=recomendations[0]['json_path'][0]['value'])
@@ -113,9 +116,11 @@ class Workflow(object):
                                 self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"])
                             print(prediction_frame)
                             try:
-                                prediction_frame.to_excel(self.storage_path('train', wkey + '_' \
-                                                                          + str(each) + '_' + 'prediction'),
-                                                          index=False, sheet_name='train_prediction' + str(time()))
+                                filename = self.storage_path('train', wkey + '_'
+                                                             + str(each) + '_' + 'prediction', 'xls')
+                                prediction_frame.to_excel(filename, index=False, sheet_name='train_prediction')
+                                self.replicate_file('train',filename=filename)
+
                             except AttributeError:
                                 self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
                                                        prediction_frame)
@@ -150,10 +155,13 @@ class Workflow(object):
                         model_id = recomendations[0]['model_id']
                         print(controller.table_model_list(model_id, recomendations,
                                                           metric=eval(wvalue['parameters']['metric'])))
+
+                        filename = self.storage_path('train', wkey + '_' + 'train_performance', 'xls')
                         controller.table_model_list(model_id, recomendations,
                                                     metric=eval(wvalue['parameters']['metric'])) \
-                            .to_excel(self.storage_path('train', wkey + '_' + 'train_performance' + str(time())),
-                                      index=False, sheet_name="performace")
+                            .to_excel(filename, index=False, sheet_name="performace")
+                        self.replicate_file('train', filename=filename)
+
                         prediction_frame = controller.exec_prediction(datapath=aux_dataset,
                                                                       model_file=recomendations[0]['json_path'][0][
                                                                           'value'])
@@ -163,8 +171,10 @@ class Workflow(object):
                             prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
 
                         print(prediction_frame)
-                        prediction_frame.to_excel(self.storage_path('train', wkey + '_' + 'prediction' + str(time())),
-                                                  index=False, sheet_name="train_prediction")
+                        filename = self.storage_path('train', wkey + '_' + 'prediction', 'xls')
+                        prediction_frame.to_excel(filename, index=False, sheet_name="train_prediction")
+                        self.replicate_file('train', filename=filename)
+
                         if wvalue['Next'] is not None:
                             self.train_workflow(prediction_frame, wvalue['Next'])
 
@@ -226,20 +236,23 @@ class Workflow(object):
                             print(prediction_frame)
                             try:
                                 if isinstance(prediction_frame, DataFrame):
-                                    prediction_frame.to_excel(self.storage_path('predict', wkey + '_'
-                                                        + str(each) + '_' + 'prediction_'+ str(time()), 'xls'),
-                                                        index=False, sheet_name="prediction")
+                                    filename = self.storage_path('predict', wkey + '_'
+                                                        + str(each) + '_' + 'prediction', 'xls')
+                                    prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
+                                    self.replicate_file('predict',filename=filename)
                                 else:
                                     for ikey, ivalue in prediction_frame['columns'].items():
                                         ppDF = decode_ordered_dict_to_dataframe(ivalue)
                                         if isinstance(ppDF, DataFrame):
-                                            ppDF.to_excel(self.storage_path('predict', wkey + '_'
-                                                          + str(each) + '_' + 'prediction_' + ikey + '_'
-                                                          + str(time()), 'xls'),
-                                                          index=False, sheet_name="prediction")
-                                    with open(self.storage_path('predict', wkey + '_'
-                                              + str(each) + '_' + 'prediction_' + str(time()), 'json'), 'w') as f:
+                                            filename = self.storage_path('predict', wkey + '_'
+                                                          + str(each) + '_' + 'prediction_' + ikey, 'xls')
+                                            ppDF.to_excel(filename, index=False, sheet_name="prediction")
+                                            self.replicate_file('predict', filename=filename)
+                                    filename = self.storage_path('predict', wkey + '_'
+                                              + str(each) + '_' + 'prediction', 'json')
+                                    with open(filename, 'w') as f:
                                         f.write(dumps(prediction_frame['global_mse']))
+                                    self.replicate_file('predict',filename=filename)
                             except AttributeError:
                                 self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
                                                        prediction_frame)
@@ -255,20 +268,22 @@ class Workflow(object):
 
                         print(prediction_frame)
                         if isinstance(prediction_frame, DataFrame):
-                            prediction_frame.to_excel(self.storage_path('predict', wkey + '_'
-                                                      + 'prediction_' + str(time()),'xls'),
-                                                      index=False, sheet_name="prediction")
+                            filename = self.storage_path('predict', wkey + '_prediction', 'xls')
+                            prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
+                            self.replicate_file('predict', filename=filename)
                         else:
                             for ikey, ivalue in prediction_frame['columns'].items():
                                 ppDF = decode_ordered_dict_to_dataframe(ivalue)
                                 if isinstance(ppDF, DataFrame):
-                                    ppDF.to_excel(self.storage_path('predict', wkey + '_'
-                                                  + '_' + 'prediction_' + ikey + '_' + str(time()), 'xls'),
-                                                  index=False, sheet_name="prediction")
+                                    filename = self.storage_path('predict', wkey + '_'
+                                                  + '_' + 'prediction_' + ikey, 'xls')
+                                    ppDF.to_excel(filename, index=False, sheet_name="prediction")
+                                    self.replicate_file('predict',filename=filename)
 
-                            with open(self.storage_path('predict', wkey + '_'
-                                      + 'prediction_' + str(time()), 'json'), 'w') as f:
+                            filename = self.storage_path('predict', wkey + '_prediction', 'json')
+                            with open(filename, 'w') as f:
                                 f.write(dumps(prediction_frame))
+                            self.replicate_file('predict', filename=filename)
                         if wvalue['Next'] is not None:
                             self.predict_workflow(prediction_frame, wvalue['Next'])
 
@@ -314,6 +329,8 @@ class Workflow(object):
                 source_data.append('/')
                 source_data.append(mode)
                 source_data.append('/')
+                source_data.append(self.timestamp)
+                source_data.append('/')
 
                 PersistenceHandler().mkdir(type=each_storage_type['type'],
                                            path=''.join(source_data),
@@ -323,3 +340,40 @@ class Workflow(object):
 
                 return ''.join(source_data)
         return None
+
+    ## Method replicate files from primery to others
+    # @param mode ['train','predict']
+    # @param filename filename
+    # @param filetype file type
+    # @return  None if no localfs primary path found . Abosulute path if true
+    def replicate_file(self, mode, filename):
+        load_storage = StorageMetadata().get_json_path()
+        persistence = PersistenceHandler()
+        for each_storage_type in load_storage:
+            if each_storage_type['type'] in ['localfs', 'hdfs']:
+                source_data = list()
+                primary_path = self._config['storage'][each_storage_type['type']]['value']
+                source_data.append(primary_path)
+                source_data.append('/')
+                source_data.append(self.user_id)
+                source_data.append('/')
+                source_data.append(self._config['common']['workflow_execution_dir'])
+                source_data.append('/')
+                source_data.append(mode)
+                source_data.append('/')
+                source_data.append(self.timestamp)
+                source_data.append('/')
+
+                '''if each_storage_type['type'] == 'hdfs':
+                    source_data = self._config['storage'][each_storage_type['type']]['uri'] + ''.join(source_data)'''
+                each_storage_type['value'] = ''.join(source_data)
+
+                persistence.mkdir(type=each_storage_type['type'], path=each_storage_type['value'],
+                                  grants=self._config['storage']['grants'])
+                each_storage_type['value'] = each_storage_type['value'] + Path(filename).name
+
+        persistence.store_file(storage_json=load_storage, filename=filename)
+        del persistence
+
+
+
