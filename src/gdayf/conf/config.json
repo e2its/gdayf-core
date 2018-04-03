@@ -4772,6 +4772,7 @@
   "common": {
     "version" : "1.0.1",
     "test_frame_ratio" : 0.9,
-    "workflow_execution_dir": "workflow"
+    "workflow_execution_dir": "workflow",
+    "minimal_test_split": 200
   }
 }

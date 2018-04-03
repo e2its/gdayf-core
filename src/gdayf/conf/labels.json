@@ -116,7 +116,8 @@
         "failed_var": "Variable not in columns",
         "variables_desc": "Variables in the model:",
         "desc_operation": "Execute operation:",
-        "anomalies_operation": "Anomalies Pattern:"
+        "anomalies_operation": "Anomalies Pattern:",
+        "nothing_to_do": "Invalid mode: Nothing to do with Mode:"
       }
     },
     "ui":{

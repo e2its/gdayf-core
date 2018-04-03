@@ -1,8 +1,9 @@
 {
   "Clustering": {
-    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_41800_3800_11_1522696664.2225022/spark/train/1522696664.2385745/json/BisectingKMeans_1522696701.0130556.json.gz",
+    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_83688_3804_22_1522788641.163463/h2o/train/1522788641.1717994/json/H2OKMeansEstimator_1522788649.8056595.json.gz",
     "parameters": {
       "amode": "CLUSTERING",
+      "mode" : "predict",
       "objective_column": null,
       "metric": "cdistance",
       "deep_impact": 4,
@@ -17,13 +18,14 @@
     "Next": {
       "Regression_25": {
         "model" :  {
-          "0" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_4692_391_12_1522530960.0854204/h2o/train/1522530960.0935466/json/H2ORandomForestEstimator_1522530985.248108.json.gz",
-          "1" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_4728_394_12_1522530922.8278663/h2o/train/1522530922.8351614/json/H2ORandomForestEstimator_1522530946.9677596.json.gz",
-          "2" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_1128_94_12_1522530999.2906418/h2o/train/1522530999.3438432/json/H2ORandomForestEstimator_1522531022.182443.json.gz",
-          "3" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_1056_88_12_1522531033.4139423/h2o/train/1522531033.4243503/json/H2ORandomForestEstimator_1522531063.1923628.json.gz"
+          "0" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_67114_2918_23_1522790797.8258865/h2o/train/1522790797.833797/json/H2OGradientBoostingEstimator_1522790975.4394248.json.gz",
+          "1" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_253_11_23_1522791097.5115252/h2o/train/1522791097.5206547/json/H2ONaiveBayesEstimator_1522791107.8782241.json.gz",
+          "2" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_437_19_23_1522791002.0893567/h2o/train/1522791002.0981789/json/H2OGeneralizedLinearEstimator_1522791004.9851296.json.gz",
+          "3" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_115_5_23_1522791152.6483033/h2o/train/1522791152.6577516/json/H2OGeneralizedLinearEstimator_1522791180.681427.json.gz"
         },
         "parameters": {
-          "amode": "FAST_PARANOIAC",
+          "amode": "FAST",
+          "mode" : "predict",
           "objective_column": "Weather_Temperature",
           "metric": "test_rmse",
           "deep_impact": 4
@@ -31,22 +33,24 @@
         "data": {
           "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
           "filtered_data": {"column" :"Weather_Temperature",
-                            "quantile": 0.25},
+                            "quantile": 0.75},
           "for_each": "Clustering"
         },
         "Next": null
       },
       "Autoencoder_25": {
         "model" : {
-          "0" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_4692_391_12_1522531102.9722192/h2o/train/1522531102.980247/json/H2OAutoEncoderEstimator_1522531119.7309604.json.gz",
-          "1" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_4728_394_12_1522531066.7577887/h2o/train/1522531066.7667568/json/H2OAutoEncoderEstimator_1522531083.8579009.json.gz",
-          "2" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_1128_94_12_1522531138.0240884/h2o/train/1522531138.0328124/json/H2OAutoEncoderEstimator_1522531165.2056043.json.gz",
-          "3" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_1056_88_12_1522531171.1547093/h2o/train/1522531171.1630473/json/H2OAutoEncoderEstimator_1522531176.1990898.json.gz"
+          "0" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_24175_967_25_1522788681.3483737/h2o/train/1522788681.355489/json/H2OAutoEncoderEstimator_1522788707.5722373.json.gz",
+          "1" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_125_5_25_1522788855.5383995/h2o/train/1522788855.5460203/json/H2OAutoEncoderEstimator_1522788901.3289027.json.gz",
+          "2" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_325_13_25_1522788777.7569773/h2o/train/1522788777.7654/json/H2OAutoEncoderEstimator_1522788820.4553936.json.gz",
+          "3" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_50_2_25_1522788931.0987122/h2o/train/1522788931.1073527/json/H2OAutoEncoderEstimator_1522788992.187667.json.gz"
         },
         "parameters": {
           "amode": "ANOMALIES",
+          "mode" : "predict",
+
           "objective_column": null,
-          "metric": "train_rmse",
+          "metric": "predict_rmse",
           "deep_impact": 4
         },
         "data": {
@@ -60,9 +64,10 @@
     }
   },
   "Regression_Weather_Temperature":{
-    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_83688_3804_22_1522707642.7730753/h2o/train/1522707642.8078299/json/H2ORandomForestEstimator_1522707819.061976.json.gz",
+    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_83688_3804_22_1522788344.4650106/h2o/train/1522788344.471614/json/H2ORandomForestEstimator_1522788452.0160859.json.gz",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
+      "mode" : "predict",
       "objective_column": "Weather_Temperature",
       "metric": "test_rmse",
       "deep_impact":4
@@ -74,9 +79,10 @@
     },
     "Next":{
       "Regression_Temperature_Habitacion_Sensor":{
-        "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_109533_3777_29_1522530808.1406846/h2o/train/1522530808.1472316/json/H2ORandomForestEstimator_1522530852.7799273.json.gz",
+        "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_83688_3804_22_1522788460.7374344/h2o/train/1522788460.7449453/json/H2ORandomForestEstimator_1522788546.8848069.json.gz",
         "parameters": {
-          "amode":"FAST_PARANOIAC",
+          "amode":"FAST",
+          "mode" : "predict",
           "objective_column": "Temperature_Habitacion_Sensor",
           "metric": "test_rmse",
           "deep_impact": 4
@@ -88,9 +94,10 @@
         },
         "Next":{
           "Regression_CO2_Habitacion_Sensor":{
-            "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_108837_3753_29_1522530859.747473/h2o/train/1522530859.7549152/json/H2ORandomForestEstimator_1522530893.8350632.json.gz",
+            "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_83688_3804_22_1522788556.5341895/h2o/train/1522788556.541867/json/H2ORandomForestEstimator_1522788623.922621.json.gz",
             "parameters": {
-              "amode":"FAST_PARANOIAC",
+              "amode":"FAST",
+              "mode" : "predict",
               "objective_column": "CO2_Habitacion_Sensor",
               "metric": "test_rmse",
               "deep_impact": 4

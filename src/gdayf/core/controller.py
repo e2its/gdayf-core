@@ -28,6 +28,7 @@ from pymongo import  MongoClient
 from pymongo.errors import *
 import bson
 from  bson.codec_options import CodecOptions
+from copy import deepcopy
 from hashlib import md5
 
 ## Core class oriented to manage the comunication and execution messages pass for all components on system
@@ -245,9 +246,15 @@ class Controller(object):
         fw = get_model_fw(base_ar)
 
         self.init_handler(fw)
-        prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
+
+        prediction_frame = None
+        try:
+            prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
                                                                         base_ar=base_ar,
                                                                         user=self.user_id)
+        except TypeError:
+            self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
+
         self.clean_handler(fw)
 
         self._logging.log_info('gDayF', 'controller', self._labels["pred_end"])
@@ -354,7 +361,10 @@ class Controller(object):
             return self._labels['failed_input'], None
 
         pd_test_dataset = None
-        if metric == 'combined' or 'test_accuracy':
+        ''' Changed 05/04/2018
+        if metric == 'combined_accuracy' or 'test_accuracy':'''
+        if self._config['common']['minimal_test_split'] < len(pd_dataset.index) \
+                and (metric in ACCURACY_METRICS or metric in REGRESSION_METRICS):
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset,
                                                             train_perc=self._config['common']['test_frame_ratio'])
 
@@ -390,8 +400,9 @@ class Controller(object):
                                                                                          user=self.user_id)
                 else:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                         training_frame=pd_dataset,
+                                                                                         training_pframe=pd_dataset,
                                                                                          base_ar=each_model,
+                                                                                         test_frame=pd_dataset,
                                                                                          filtering='STANDARDIZE',
                                                                                          user=self.user_id)
 
@@ -556,7 +567,8 @@ class Controller(object):
             return self._labels['failed_input'], None
 
         pd_test_dataset = None
-        if metric == 'combined' or 'test_accuracy':
+        if self._config['common']['minimal_test_split'] > len(pd_dataset.index) \
+                and (metric in ACCURACY_METRICS or metric in REGRESSION_METRICS):
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
