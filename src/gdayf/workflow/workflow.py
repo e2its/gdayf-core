@@ -109,9 +109,9 @@ class Workflow(object):
                                                                           model_file=recomendations[0]['json_path'][0]['value'])
                             try:
                                 if 'predict' in prediction_frame.columns.values:
-                                    prediction_frame.rename(columns={"predict": wkey})
+                                    prediction_frame.rename(columns={"predict": wkey}, inplace=True)
                                 elif 'prediction' in prediction_frame.columns.values:
-                                    prediction_frame.rename(columns={"prediction": wkey})
+                                    prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
                             except AttributeError:
                                 self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"])
                             print(prediction_frame)
@@ -228,9 +228,9 @@ class Workflow(object):
                                                                           model_file=wvalue["model"][str(each)])
                             try:
                                 if 'predict' in prediction_frame.columns.values:
-                                    prediction_frame.rename(columns={"predict": wkey})
+                                    prediction_frame.rename(columns={"predict": wkey}, inplace=True)
                                 elif 'prediction' in prediction_frame.columns.values:
-                                    prediction_frame.rename(columns={"prediction": wkey})
+                                    prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
                             except AttributeError:
                                 self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"])
                             print(prediction_frame)

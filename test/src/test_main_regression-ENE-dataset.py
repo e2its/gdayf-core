@@ -36,12 +36,12 @@ if __name__ == "__main__":
             print(prediction_frame[['Y2', 'prediction']])
 
         # Save Pojo
-        #controller = Controller()
-        #result = controller.get_external_model(recomendations[0], 'pojo')
+        controller = Controller()
+        result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
-        #controller = Controller()
-        #result = controller.get_external_model(recomendations[0], 'mojo')
+        controller = Controller()
+        result = controller.get_external_model(recomendations[0], 'mojo')
 
         set_option('display.height', 1000)
         set_option('display.max_rows', 500)

@@ -1,13 +1,13 @@
 {
   "Clustering": {
-    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_41800_3800_11_1522530904.5264244/h2o/train/1522530904.5363266/json/H2OKMeansEstimator_1522530914.3015325.json.gz",
+    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_41800_3800_11_1522696664.2225022/spark/train/1522696664.2385745/json/BisectingKMeans_1522696701.0130556.json.gz",
     "parameters": {
       "amode": "CLUSTERING",
       "objective_column": null,
       "metric": "cdistance",
-      "deep_impact": 2,
+      "deep_impact": 4,
       "k": 4,
-      "estimate_k": true
+      "estimate_k": false
     },
     "data": {
       "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
@@ -23,10 +23,10 @@
           "3" :"/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_1056_88_12_1522531033.4139423/h2o/train/1522531033.4243503/json/H2ORandomForestEstimator_1522531063.1923628.json.gz"
         },
         "parameters": {
-          "amode": "POC",
+          "amode": "FAST_PARANOIAC",
           "objective_column": "Weather_Temperature",
           "metric": "test_rmse",
-          "deep_impact": 5
+          "deep_impact": 4
         },
         "data": {
           "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
@@ -47,7 +47,7 @@
           "amode": "ANOMALIES",
           "objective_column": null,
           "metric": "train_rmse",
-          "deep_impact": 5
+          "deep_impact": 4
         },
         "data": {
           "filtered_columns": null,
@@ -60,12 +60,12 @@
     }
   },
   "Regression_Weather_Temperature":{
-    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_41800_3800_11_1522530730.0158966/h2o/train/1522530730.0228872/json/H2ORandomForestEstimator_1522530800.32573.json.gz",
+    "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_83688_3804_22_1522707642.7730753/h2o/train/1522707642.8078299/json/H2ORandomForestEstimator_1522707819.061976.json.gz",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "objective_column": "Weather_Temperature",
       "metric": "test_rmse",
-      "deep_impact":5
+      "deep_impact":4
     },
     "data":{
       "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
@@ -76,10 +76,10 @@
       "Regression_Temperature_Habitacion_Sensor":{
         "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_109533_3777_29_1522530808.1406846/h2o/train/1522530808.1472316/json/H2ORandomForestEstimator_1522530852.7799273.json.gz",
         "parameters": {
-          "amode":"POC",
+          "amode":"FAST_PARANOIAC",
           "objective_column": "Temperature_Habitacion_Sensor",
           "metric": "test_rmse",
-          "deep_impact": 5
+          "deep_impact": 4
         },
         "data":{
           "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature","CO2_Habitacion_Sensor"],
@@ -90,10 +90,10 @@
           "Regression_CO2_Habitacion_Sensor":{
             "model" : "/Data/gdayf-proof/experiments/WF_POC/WF_POC_Dataframe_108837_3753_29_1522530859.747473/h2o/train/1522530859.7549152/json/H2ORandomForestEstimator_1522530893.8350632.json.gz",
             "parameters": {
-              "amode":"POC",
+              "amode":"FAST_PARANOIAC",
               "objective_column": "CO2_Habitacion_Sensor",
               "metric": "test_rmse",
-              "deep_impact": 5
+              "deep_impact": 4
             },
             "data":{
               "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature",

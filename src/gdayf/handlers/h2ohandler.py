@@ -466,11 +466,14 @@ class H2OHandler(object):
     def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
         accuracy = -1.0
         dataframe_cols = odataframe.columns
+
         prediction_dataframe = self._model_base.predict(dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = odataframe.cbind(prediction_dataframe)
-        self._frame_list.append(prediction_dataframe.frame_id)
+        self._frame_list.append(prediccion.frame_id)
         prediction_columns = prediccion.columns
+        if dataframe.columns is not None:
+            dataframe_cols.extend(dataframe.columns)
         for element in dataframe_cols:
             try:
                 prediction_columns.remove(element)
@@ -1213,7 +1216,7 @@ class H2OHandler(object):
             npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
                                                                                               base_ns=base_ns,
                                                                                               model_id=modelid,
-                                                                                              filtering='NONE',
+                                                                                              filtering='DROP',
                                                                                               exist_objective=True)
 
         else:
@@ -1280,6 +1283,8 @@ class H2OHandler(object):
 
         start = time.time()
         if exist_objective:
+
+            ''' Bug Fixing 02/04/2018
             if predict_frame.nrows == npredict_frame.nrows:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
                                                                         antype=antype,
@@ -1287,8 +1292,11 @@ class H2OHandler(object):
             else:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame, npredict_frame,
                                                                         antype=antype,
-                                                                        tolerance=tolerance, base_type=objective_type)
+                                                                        tolerance=tolerance, base_type=objective_type)'''
 
+            accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
+                                                                    antype=antype,
+                                                                    tolerance=tolerance, base_type=objective_type)
             self._frame_list.append(prediction_dataframe.frame_id)
 
             base_ar['execution_seconds'] = time.time() - start
