@@ -56,7 +56,13 @@ class Normalizer (object):
                         elif int(description['missed']) > 0:
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
-                        if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering']:
+                        if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering'] \
+                                and description['type'] in DTYPES \
+                                and int(description['cardinality']) > 1 and description['mean'] != 0.0 and \
+                                description['std'] != 1.0 \
+                                and (
+                                float(description['std']) / (float(description['max']) - float(description['min']))) \
+                                > self._config['std_threshold']:
                             normoption.set_stdmean(description['mean'], description['std'])
                             norms.append({col: normoption.copy()})
                         if self._config['standardize_enabled'] and description['type'] in DTYPES \
@@ -419,9 +425,12 @@ class Normalizer (object):
     # @return dataframe
     def normalizeStdMean(self, dataframe, mean, std):
         if dataframe.dtype != np.object and dataframe.dtype != "datetime64[ns]":
-            dataframe = dataframe.astype(np.float16)
-            dataframe = dataframe.apply(lambda x: x - float(mean))
-            dataframe = dataframe.apply(lambda x: x / float(std))
+            try:
+                dataframe = dataframe.astype(np.float64)
+                dataframe = dataframe.apply(lambda x: x - float(mean))
+                dataframe = dataframe.apply(lambda x: x / float(std))
+            except ZeroDivisionError:
+                dataframe = dataframe.apply(lambda x: x + float(mean))
             #dataframe = preprocessing.scale(dataframe)
         return dataframe.copy()
 
@@ -487,18 +496,24 @@ class Normalizer (object):
             else:
                 index_max = nullfalse_gb.index.where(nullfalse_gb.index > row[objective_col]).min()
                 index_min = nullfalse_gb.index.where(nullfalse_gb.index < row[objective_col]).max()
-                if index_min is np.nan:
-                    dataframe.loc[index, col] = nullfalse_gb.loc[index_max, col]
-                elif index_max is np.nan:
-                    dataframe.loc[index, col] = nullfalse_gb.loc[index_min, col]
-                else:
-                    minimal = min(nullfalse_gb.loc[index_min, col], nullfalse_gb.loc[index_max, col])
-                    maximal = max(nullfalse_gb.loc[index_min, col], nullfalse_gb.loc[index_max, col])
-                    b = maximal - minimal
-                    a = index_max - index_min
-                    x = (row[objective_col] - index_min) / a
-                    offset = b * x
-                    dataframe.loc[index, col] = minimal + offset
+                try:
+                    if index_min is np.nan and index_max is np.nan \
+                       or index_min is None or index_max is None:
+                        pass
+                    if index_min is np.nan or index_min is None:
+                        dataframe.loc[index, col] = nullfalse_gb.loc[index_max, col]
+                    elif index_max is np.nan or index_max is None:
+                        dataframe.loc[index, col] = nullfalse_gb.loc[index_min, col]
+                    else:
+                        minimal = min(nullfalse_gb.loc[index_min, col], nullfalse_gb.loc[index_max, col])
+                        maximal = max(nullfalse_gb.loc[index_min, col], nullfalse_gb.loc[index_max, col])
+                        b = maximal - minimal
+                        a = index_max - index_min
+                        x = (row[objective_col] - index_min) / a
+                        offset = b * x
+                        dataframe.loc[index, col] = minimal + offset
+                except TypeError:
+                    pass
         return dataframe.copy()
 
     ## Internal method oriented to manage date_time conversions to pattern

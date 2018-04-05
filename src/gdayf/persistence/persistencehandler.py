@@ -3,7 +3,7 @@ from collections import OrderedDict
 import mmap
 from os import path as ospath, chmod, remove
 from os.path import dirname
-from shutil import rmtree
+from shutil import rmtree, copy2
 from pathlib import Path
 from gdayf.common.utils import hash_key
 from gdayf.conf.loadconfig import LoadConfig
@@ -37,31 +37,31 @@ class PersistenceHandler(object):
     def store_file(self, storage_json, filename):
         global_op = 0
 
-        try:
+        '''try:
             file = open(filename, 'rb')
             mmap_ = mmap.mmap(file.fileno(), 0, access=mmap.ACCESS_READ)
         except IOError:
-            return 1
+            return 1'''
 
         for each_storage_type in storage_json:
             if each_storage_type['type'] == 'localfs':
-                result, each_storage_type['hash_value'] = self._store_file_to_localfs(each_storage_type, mmap_)
+                result, each_storage_type['hash_value'] = self._store_file_to_localfs(each_storage_type, filename)
                 global_op += result
             elif each_storage_type['type'] == 'hdfs':
-                result, each_storage_type['hash_value'] = self._store_file_to_hdfs(each_storage_type, mmap_)
+                result, each_storage_type['hash_value'] = self._store_file_to_hdfs(each_storage_type, filename)
                 global_op += result
-        mmap_.close()
+        '''mmap_.close()'''
         return global_op
 
     ## Protected method used to store a file on ['localfs']
     # using mmap structure to manage multi-persistence features
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
-    # @param mmap mmap structure containing the file to store
+    # @param filename file to store
     # @returns status (0,1) (hash_key)
-    def _store_file_to_hdfs(self, storage_json, mmap_):
+    def _store_file_to_hdfs(self, storage_json, filename):
         try:
-            client = Client(url=storage_json['url'])
+            client = Client(url=self._config['hdfs']['url'])
         except HdfsError as hexecution_error:
             print(repr(hexecution_error))
             return 1, None
@@ -75,14 +75,18 @@ class PersistenceHandler(object):
             self._mkdir_hdfs(path=dirname(storage_json['value']),
                              grants=self._config['grants'],
                              client=client)
-            with client.write(storage_json['value'], encoding='utf-8', overwrite=True) as wfile:
+            #client.write(storage_json['value'], data=mmap_, encoding='utf-8', overwrite=True)
+            client.upload(storage_json['value'], filename, overwrite=True)
+
+            '''with client.write(storage_json['value'],overwrite=True) as wfile:
                 mmap_.seek(0)
                 iterator = 0
                 while iterator < mmap_.size():
                     wfile.write(mmap_.read())
                     wfile.flush()
                     iterator += 1
-                wfile.close()
+                wfile.close()'''
+
         except HdfsError as hexecution_error:
             print(repr(hexecution_error))
             return 1, None
@@ -95,8 +99,7 @@ class PersistenceHandler(object):
         finally:
             del client
 
-        return 0, hash_key(hash_type=storage_json['hash_type'], filename=storage_json['value'])
-
+        return 0, None
     ## Protected method used to store a file on ['hdfs']
     #Not implemented yet !!
     # using mmap structure to manage multi-persistence features
@@ -104,19 +107,20 @@ class PersistenceHandler(object):
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param mmap mmap structure containing the file to store
     # @returns status (0,1) (hash_key)
-    def _store_file_to_localfs(self, storage_json, mmap_):
+    def _store_file_to_localfs(self, storage_json, filename):
         if not ospath.exists(path=storage_json['value']):
             try:
                 self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
-                with open(storage_json['value'], 'wb') as wfile:
+                shutil.copy2(filename, storage_json['value'])
+                '''with open(storage_json['value'], 'wb') as wfile:
                     mmap_.seek(0)
                     iterator = 0
                     while iterator < mmap_.size():
                         wfile.write(mmap_.read())
                         wfile.flush()
                         iterator += 1
-                    wfile.close()
-                    chmod(storage_json['value'], int(self._config['grants'], 8))
+                    wfile.close()'''
+                chmod(storage_json['value'], int(self._config['grants'], 8))
             except IOError:
                 return 1, None
 
@@ -357,7 +361,7 @@ class PersistenceHandler(object):
                 execution_list.append(element)
             for element in execution_list:
                 element.pop('_id')
-            print(execution_list)
+            #print(execution_list)
         except PyMongoError as pexecution_error:
             print(repr(pexecution_error))
         finally:

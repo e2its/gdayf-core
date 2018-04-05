@@ -1117,7 +1117,7 @@ class sparkHandler(object):
             npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
                                                                                               base_ns=base_ns,
                                                                                               model_id=modelid,
-                                                                                              filtering='NONE',
+                                                                                              filtering='DROP',
                                                                                               exist_objective=True)
 
         else:

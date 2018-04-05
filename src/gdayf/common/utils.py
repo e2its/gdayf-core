@@ -80,7 +80,7 @@ def get_model_ns(model):
 ## Function to get pandas dataframe split without copy
 # @param df Pandas dataframe
 # @param train_perc % for train_dataframe
-# @return Dict ('trai'n df pointer, 'test' df pointer)
+# @return Dict ('train df pointer, 'test' df pointer)
 def pandas_split_data(df, train_perc=0.9):
     df['train'] = rand(len(df)) < train_perc
     train = df[df.train == 1].drop('train', axis=1)

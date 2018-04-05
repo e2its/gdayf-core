@@ -466,11 +466,14 @@ class H2OHandler(object):
     def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
         accuracy = -1.0
         dataframe_cols = odataframe.columns
+
         prediction_dataframe = self._model_base.predict(dataframe)
         self._frame_list.append(prediction_dataframe.frame_id)
         prediccion = odataframe.cbind(prediction_dataframe)
-        self._frame_list.append(prediction_dataframe.frame_id)
+        self._frame_list.append(prediccion.frame_id)
         prediction_columns = prediccion.columns
+        if dataframe.columns is not None:
+            dataframe_cols.extend(dataframe.columns)
         for element in dataframe_cols:
             try:
                 prediction_columns.remove(element)
@@ -540,7 +543,8 @@ class H2OHandler(object):
                                        difference[col] < (anomalies_thresholds['columns'][col]['min'] * min)]
             self._frame_list.append(temp_anomalies.frame_id)
             if temp_anomalies.nrows > 0:
-                anomalies['columns'][col] = temp_anomalies.as_data_frame(use_pandas=True)
+                anomalies['columns'][col] = json.loads(temp_anomalies.as_data_frame(use_pandas=True)
+                                                       .to_json(orient='split'), object_pairs_hook=OrderedDict)
 
         anomalies['global_mse'] = OrderedDict()
         if anomalies_thresholds['global_mse']['max'] < 0:
@@ -564,7 +568,8 @@ class H2OHandler(object):
                                    anomalyframe['Reconstruction.MSE'] < (anomalies_thresholds['global_mse']['min'] *min)]
         self._frame_list.append(temp_anomalies.frame_id)
         if temp_anomalies.nrows > 0:
-            anomalies['global_mse'] = temp_anomalies.as_data_frame(use_pandas=True)
+            anomalies['global_mse'] = json.loads(temp_anomalies.as_data_frame(use_pandas=True).
+                                                 to_json(orient='split'), object_pairs_hook=OrderedDict)
 
         H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
 
@@ -781,6 +786,7 @@ class H2OHandler(object):
             if training_pframe.count(axis=0).all() > \
                     self._config['frameworks']['h2o']['conf']['validation_frame_threshold']:
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
+
                 valid_frame = get_frame('valid_' + analysis_id + '_' + str(train_hash_value))
                 self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'training_frame(' + str(training_frame.nrows) +
@@ -1211,7 +1217,7 @@ class H2OHandler(object):
             npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
                                                                                               base_ns=base_ns,
                                                                                               model_id=modelid,
-                                                                                              filtering='NONE',
+                                                                                              filtering='DROP',
                                                                                               exist_objective=True)
 
         else:
@@ -1278,6 +1284,8 @@ class H2OHandler(object):
 
         start = time.time()
         if exist_objective:
+
+            ''' Bug Fixing 02/04/2018
             if predict_frame.nrows == npredict_frame.nrows:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
                                                                         antype=antype,
@@ -1285,8 +1293,11 @@ class H2OHandler(object):
             else:
                 accuracy, prediction_dataframe = self._predict_accuracy(objective_column, npredict_frame, npredict_frame,
                                                                         antype=antype,
-                                                                        tolerance=tolerance, base_type=objective_type)
+                                                                        tolerance=tolerance, base_type=objective_type)'''
 
+            accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
+                                                                    antype=antype,
+                                                                    tolerance=tolerance, base_type=objective_type)
             self._frame_list.append(prediction_dataframe.frame_id)
 
             base_ar['execution_seconds'] = time.time() - start
