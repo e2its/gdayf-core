@@ -195,7 +195,12 @@ class Workflow(object):
                     self.replicate_file('train', filename=filename)
 
                     if wf['Next'] is not None:
-                        self.workflow(prediction_frame, wf['Next'])
+                        try:
+                            self.workflow(prediction_frame, wf['Next'])
+                        except Exception as oexecution_error:
+                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"],
+                                                   str(wf['Next']))
+
 
         controller.clean_handlers()
         del controller
@@ -306,12 +311,16 @@ class Workflow(object):
                             f.write(dumps(prediction_frame))
                         self.replicate_file('predict', filename=filename)
                     if wf['Next'] is not None:
-                        self.workflow(prediction_frame, wf['Next'])
+                        try:
+                            self.workflow(prediction_frame, wf['Next'])
+                        except Exception as oexecution_error:
+                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"],
+                                                   str(wf['Next']))
 
         controller.clean_handlers()
         del controller
 
-    ## Method managing dataset load from datapath
+    ## Method managing dataset load from datapath:
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @return  None, Dataframe if no load errors, Error Message/None if load errors
     def check_path(self, datapath):

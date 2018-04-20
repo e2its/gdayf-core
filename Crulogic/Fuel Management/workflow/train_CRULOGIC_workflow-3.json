@@ -1,0 +1,321 @@
+{
+  "Clustering": {
+    "model": "",
+    "parameters": {
+      "amode": "CLUSTERING",
+      "mode": "train",
+      "objective_column": null,
+      "metric": "cdistance",
+      "deep_impact": 4,
+      "k": 4,
+      "estimate_k": false
+    },
+    "data": {
+      "filtered_columns": [
+        "Fecha","Conductores","Vehículo","DCM","TFM","CTM","AF100","AFF100","AcF","RaL","ERP","EV",
+        "RMFRO","INC","SDSP","SDSCP","AnticipacionSDS","FSDS",
+        "SSMSDS","Consumo","Consumo_ral","TFM_RAL","DistanciaCC","CTT","VM","Vmax","RMM","CI","AF","AFF","MOTOR"
+      ],
+      "filtered_data": null,
+      "for_each": null
+    },
+    "Next": {
+      "DCM_predict": {
+        "model": "",
+        "parameters": {
+          "amode": "FAST",
+          "mode": "train",
+          "objective_column": "DCM",
+          "metric": "train_rmse",
+          "deep_impact": 8
+        },
+        "data": {
+          "filtered_columns": [
+            "TFM",
+            "CTM",
+            "AF100",
+            "AFF100",
+            "AcF",
+            "RaL",
+            "ERP",
+            "EV",
+            "RMFRO",
+            "INC",
+            "SDSP",
+            "SDSCP",
+            "AnticipacionSDS",
+            "FSDS",
+            "SSMSDS",
+            "Consumo",
+            "Consumo_ral",
+            "TFM_RAL",
+            "DistanciaCC",
+            "CTT",
+            "VM",
+            "Vmax",
+            "RMM",
+            "CI",
+            "AF",
+            "AFF"
+          ],
+          "filtered_data": null,
+          "for_each": "Clustering"
+        },
+        "Next": {
+          "AF_predict": {
+            "model": "",
+            "parameters": {
+              "amode": "FAST",
+              "mode": "train",
+              "objective_column": "AF",
+              "metric": "train_rmse",
+              "deep_impact": 8
+            },
+            "data": {
+              "filtered_columns": [
+                "TFM",
+                "CTM",
+                "AF100",
+                "AFF100",
+                "AcF",
+                "RaL",
+                "ERP",
+                "EV",
+                "RMFRO",
+                "INC",
+                "SDSP",
+                "SDSCP",
+                "AnticipacionSDS",
+                "FSDS",
+                "SSMSDS",
+                "Consumo",
+                "Consumo_ral",
+                "TFM_RAL",
+                "DistanciaCC",
+                "CTT",
+                "VM",
+                "Vmax",
+                "RMM",
+                "CI",
+                "AFF"
+              ],
+              "filtered_data": null,
+              "for_each": "Clustering"
+            },
+            "Next": null
+          },
+          "AcF_predict": {
+            "model": "",
+            "parameters": {
+              "amode": "FAST",
+              "mode": "train",
+              "objective_column": "AcF",
+              "metric": "train_rmse",
+              "deep_impact": 8
+            },
+            "data": {
+              "filtered_columns": [
+                "TFM",
+                "CTM",
+                "AF100",
+                "AFF100",
+                "AF",
+                "RaL",
+                "ERP",
+                "EV",
+                "RMFRO",
+                "INC",
+                "SDSP",
+                "SDSCP",
+                "AnticipacionSDS",
+                "FSDS",
+                "SSMSDS",
+                "Consumo",
+                "Consumo_ral",
+                "TFM_RAL",
+                "DistanciaCC",
+                "CTT",
+                "VM",
+                "Vmax",
+                "RMM",
+                "CI",
+                "AFF"
+              ],
+              "filtered_data": null,
+              "for_each": "Clustering"
+            },
+            "Next": null
+          },
+          "AFF_predict": {
+            "model": "",
+            "parameters": {
+              "amode": "FAST",
+              "mode": "train",
+              "objective_column": "AFF",
+              "metric": "train_rmse",
+              "deep_impact": 8
+            },
+            "data": {
+              "filtered_columns": [
+                "TFM",
+                "CTM",
+                "AF100",
+                "AFF100",
+                "AcF",
+                "RaL",
+                "ERP",
+                "EV",
+                "RMFRO",
+                "INC",
+                "SDSP",
+                "SDSCP",
+                "AnticipacionSDS",
+                "FSDS",
+                "SSMSDS",
+                "Consumo",
+                "Consumo_ral",
+                "TFM_RAL",
+                "DistanciaCC",
+                "CTT",
+                "VM",
+                "Vmax",
+                "RMM",
+                "CI",
+                "AF"
+              ],
+              "filtered_data": null,
+              "for_each": "Clustering"
+            },
+            "Next": null
+          },
+          "CI_predict": {
+            "model": "",
+            "parameters": {
+              "amode": "FAST",
+              "mode": "train",
+              "objective_column": "CI",
+              "metric": "train_rmse",
+              "deep_impact": 8
+            },
+            "data": {
+              "filtered_columns": [
+                "TFM",
+                "CTM",
+                "AF100",
+                "AFF100",
+                "AcF",
+                "RaL",
+                "ERP",
+                "EV",
+                "RMFRO",
+                "INC",
+                "SDSP",
+                "SDSCP",
+                "AnticipacionSDS",
+                "FSDS",
+                "SSMSDS",
+                "Consumo",
+                "Consumo_ral",
+                "TFM_RAL",
+                "DistanciaCC",
+                "CTT",
+                "VM",
+                "Vmax",
+                "RMM",
+                "AFF",
+                "AF"
+              ],
+              "filtered_data": null,
+              "for_each": "Clustering"
+            },
+            "Next": null
+          },
+          "DistanciaCC_predict": {
+            "model": "",
+            "parameters": {
+              "amode": "FAST",
+              "mode": "train",
+              "objective_column": "DistanciaCC",
+              "metric": "train_rmse",
+              "deep_impact": 8
+            },
+            "data": {
+              "filtered_columns": [
+                "TFM",
+                "CTM",
+                "AF100",
+                "AFF100",
+                "AcF",
+                "RaL",
+                "ERP",
+                "EV",
+                "RMFRO",
+                "INC",
+                "SDSP",
+                "SDSCP",
+                "AnticipacionSDS",
+                "FSDS",
+                "SSMSDS",
+                "Consumo",
+                "Consumo_ral",
+                "TFM_RAL",
+                "AFF",
+                "CTT",
+                "VM",
+                "Vmax",
+                "RMM",
+                "CI",
+                "AF"
+              ],
+              "filtered_data": null,
+              "for_each": "Clustering"
+            },
+            "Next": null
+          },
+          "INC_predict": {
+            "model": "",
+            "parameters": {
+              "amode": "FAST",
+              "mode": "train",
+              "objective_column": "INC",
+              "metric": "train_rmse",
+              "deep_impact": 8
+            },
+            "data": {
+              "filtered_columns": [
+                "TFM",
+                "CTM",
+                "AF100",
+                "AFF100",
+                "AcF",
+                "RaL",
+                "ERP",
+                "EV",
+                "RMFRO",
+                "DistanciaCC",
+                "SDSP",
+                "SDSCP",
+                "AnticipacionSDS",
+                "FSDS",
+                "SSMSDS",
+                "Consumo",
+                "Consumo_ral",
+                "TFM_RAL",
+                "AFF",
+                "CTT",
+                "VM",
+                "Vmax",
+                "RMM",
+                "CI",
+                "AF"
+              ],
+              "filtered_data": null,
+              "for_each": "Clustering"
+            },
+            "Next": null
+          }
+        }
+      }
+    }
+  }
+}

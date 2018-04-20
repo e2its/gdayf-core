@@ -1,0 +1,121 @@
+{
+    "DCM_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "DCM",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "AF_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "AF",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+      "AcF_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "AcF",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "AFF_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "AFF",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "CI_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "CI",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "DistanciaCC_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "DistanciaCC",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "INC_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "INC",
+        "metric": "train_rmse",
+        "deep_impact": 4
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    }
+}
+

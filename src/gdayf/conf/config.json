@@ -14,7 +14,7 @@
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
-        "tolerance": 0.01,
+        "tolerance": 0.05,
         "enabled" : true,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
@@ -4678,7 +4678,7 @@
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.005
+        "multi_limit" : 0.00001
       },
       "h2o": {
         "nfold_limit": 8,
