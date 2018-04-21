@@ -10,7 +10,7 @@ if __name__ == "__main__":
 
     workflow_data = list()
     workflow_data.append("/Data/e2its-dayf.svn/gdayf/branches/1.1.0-mrazul/Crulogic/Fuel Management/workflow/")
-    workflow_data.append("train_CRULOGIC_workflow-4.json")
+    workflow_data.append("train_CRULOGIC_workflow-6.json")
 
-    workflow = Workflow(user_id='Crulogic_wf40')
+    workflow = Workflow(user_id='Crulogic_wf60')
     workflow.workflow(datapath=''.join(source_data), workflow=''.join(workflow_data))

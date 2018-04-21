@@ -432,13 +432,15 @@ class H2OHandler(object):
         accuracy = -1.0
         prediccion = self._model_base.predict(dataframe)
 
-        if antype == 'regression' and prediccion.type('predict') == base_type:
-            fmin = eval("lambda x: x - " + str(tolerance/2))
-            fmax = eval("lambda x: x + " + str(tolerance/2))
-            success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
-            accuracy = "Valid"
-        elif antype == 'regression':
-            accuracy = 0.0
+        #if antype == 'regression' and prediccion.type('predict') == base_type:
+        if antype == 'regression':
+            try:
+                fmin = eval("lambda x: x - " + str(tolerance/2))
+                fmax = eval("lambda x: x + " + str(tolerance/2))
+                success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
+                accuracy = "Valid"
+            except Exception:
+                accuracy = 0.0
         else:
             tolerance = 0.0
             success = prediccion[0] == dataframe[objective]
@@ -482,15 +484,17 @@ class H2OHandler(object):
         predictor_col = prediction_columns[0]
 
         if objective in dataframe.columns:
-            if antype == 'regression' and prediccion.type(predictor_col) == base_type:
-                fmin = eval("lambda x: x - " + str(tolerance/2))
-                fmax = eval("lambda x: x + " + str(tolerance/2))
-                success = prediccion[objective].apply(fmin).asnumeric() <= \
-                          prediccion[predictor_col] <= \
-                          prediccion[objective].apply(fmax).asnumeric()
-                accuracy = "Valid"
-            elif antype == 'regression':
-                accuracy = 0.0
+            #if antype == 'regression' and prediccion.type(predictor_col) == base_type:
+            if antype == 'regression':
+                try:
+                    fmin = eval("lambda x: x - " + str(tolerance/2))
+                    fmax = eval("lambda x: x + " + str(tolerance/2))
+                    success = prediccion[objective].apply(fmin).asnumeric() <= \
+                              prediccion[predictor_col] <= \
+                              prediccion[objective].apply(fmax).asnumeric()
+                    accuracy = "Valid"
+                except Exception:
+                    accuracy = 0.0
             else:
                 tolerance = 0.0
                 success = prediccion[predictor_col] == prediccion[objective]

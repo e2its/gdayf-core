@@ -6,11 +6,11 @@ if __name__ == "__main__":
 
     source_data = list()
     source_data.append("/Data/Dropbox/DayF/gDayF/Proyectos/Industria4.0/Crulogic/Confidential-Data/")
-    source_data.append("CRULOGIC_2017_CL.csv")
+    source_data.append("CRULOGIC-2017.csv")
 
     workflow_data = list()
     workflow_data.append("/Data/e2its-dayf.svn/gdayf/branches/1.1.0-mrazul/Crulogic/Fuel Management/workflow/")
-    workflow_data.append("train_CRULOGIC_workflow-4.json")
+    workflow_data.append("train_CRULOGIC_workflow-7.json")
 
-    workflow = Workflow(user_id='Crulogic_wf40')
+    workflow = Workflow(user_id='Crulogic_wf70')
     workflow.workflow(datapath=''.join(source_data), workflow=''.join(workflow_data))
