@@ -14,7 +14,7 @@
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
-        "tolerance": 0.05,
+        "tolerance": 0.01,
         "enabled" : true,
         "min_rows_enabled": false,
         "max_cols_enabled": true,
@@ -699,7 +699,7 @@
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 25000,
           "max_cols_applicability": null,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -4611,18 +4611,15 @@
     }
   },
   "storage": {
-    "localfs":
-      {"value": "/Data/gdayf-proof/experiments" , "type":"localfs",
+    "localfs": {"value": "/Data/gdayf-proof/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-    "hdfs":
-      {"value": "/gdayf-proof/experiments" , "type":"hdfs",
+    "hdfs": {"value": "/gdayf-proof/experiments" , "type":"hdfs",
         "url":"http://localhost:50070",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
       },
-    "mongoDB":
-      { "value": "gdayf-proof",
+    "mongoDB": { "value": "gdayf-proof",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
@@ -4678,7 +4675,7 @@
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.00001
+        "multi_limit" : 0.0005
       },
       "h2o": {
         "nfold_limit": 8,
