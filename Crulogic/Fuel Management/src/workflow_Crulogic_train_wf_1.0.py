@@ -5,8 +5,8 @@ if __name__ == "__main__":
     from pandas import read_csv
 
     source_data = list()
-    source_data.append("/Data/Dropbox/DayF/gDayF/Proyectos/Industria4.0/Crulogic/Confidential-Data/")
-    source_data.append("Data2017-8.csv")
+    source_data.append("/Data/Dropbox/DayF/gDayF/Proyectos/Industria4.0/Crulogic/Confidential-Data/Transformados-PDI/Crulogic-2017/")
+    source_data.append("Crulogic-17-18.csv")
 
     workflow_data = list()
     workflow_data.append("/Data/e2its-dayf.svn/gdayf/branches/1.1.0-mrazul/Crulogic/Fuel Management/workflow/")

@@ -1,6 +1,16 @@
 ## @package gdayf.conf.loadconfig
 # Define all objects, functions and structs related to load on system all configuration parameter from config.json
 
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
+
 from collections import OrderedDict
 import json
 from os import path

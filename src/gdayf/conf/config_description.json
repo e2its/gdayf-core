@@ -444,6 +444,9 @@
       "common": {
         "multi_limit": {
           "description": "% rate in decimal format to determine when apply multinomial analysis instead regression analysis"
+        },
+        "multi_limit": {
+          "description": "max cardinality in natural format to determine when apply multinomial analysis instead regression analysis"
         }
       },
       "h2o": {

@@ -1,3 +1,17 @@
+## @package gdayf.persistence.persistencehandler
+# Define all objects, functions and structures related to physically store information on persistence system
+#  on an unified way
+
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
+
 from json import dump, dumps, load, loads
 from collections import OrderedDict
 import mmap
@@ -18,9 +32,6 @@ from copy import deepcopy
 import bson
 from bson.codec_options import CodecOptions
 
-## @package gdayf.persistence.persistencehandler
-# Define all objects, functions and structures related to physically store information on persistence system
-#  on an unified way
 
 ## Class to manage trasient information between all persistence options and models on an unified way
 class PersistenceHandler(object):

@@ -1,6 +1,6 @@
 {
 
-  "Consumo_medio":{
+  "Weather_Temperature":{
     "model" : "",
     "parameters": {
       "amode":"FAST",

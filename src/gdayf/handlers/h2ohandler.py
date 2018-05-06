@@ -5,12 +5,21 @@
 # format [(Analysis_results.json, normalization_sets.json) ]
 # Analysis_results.json could contain executions models for various different model or parameters
 
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
 
 import copy
 import json
 import time
 from collections import OrderedDict as OrderedDict
-from os.path import dirname
+from os import path
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
 from pathlib import Path
@@ -22,7 +31,7 @@ from h2o import connection as connection
 from h2o import init as init
 from h2o import load_model as load_model
 from h2o import save_model as save_model
-from h2o.exceptions import H2OError
+from h2o.exceptions import H2OError, H2OServerError
 from h2o.exceptions import H2OConnectionError
 from h2o import ls as H2Olist
 from h2o import frames as H2Oframes
@@ -346,44 +355,49 @@ class H2OHandler(object):
             model_metrics = ClusteringMetricMetadata()
         else:
             model_metrics = MetricMetadata()
+        try:
+            if dataframe is not None and antype == 'anomalies':
+                result1 = self._model_base.predict(dataframe)
+                columns = list()
+                for item in self._model_base.varimp():
+                    columns.append(item[0])
+                x = list()
+                for items in dataframe.columns:
+                    if items in columns:
+                        x.append(items)
 
-        if dataframe is not None and antype == 'anomalies':
-            result1 = self._model_base.predict(dataframe)
-            columns = list()
-            for item in self._model_base.varimp():
-                columns.append(item[0])
-            x = list()
-            for items in dataframe.columns:
-                if items in columns:
-                    x.append(items)
+                difference = dataframe[x] - result1
+                anomalies_threshold = OrderedDict()
+                anomalies_threshold['global_mse'] = OrderedDict()
+                reconstruction = self._model_base.anomaly(dataframe)
+                anomalies_threshold['global_mse']['max'] = reconstruction.max()
+                anomalies_threshold['global_mse']['min'] = reconstruction.min()
 
-            difference = dataframe[x] - result1
-            anomalies_threshold = OrderedDict()
-            anomalies_threshold['global_mse'] = OrderedDict()
-            reconstruction = self._model_base.anomaly(dataframe)
-            anomalies_threshold['global_mse']['max'] = reconstruction.max()
-            anomalies_threshold['global_mse']['min'] = reconstruction.min()
+                anomalies_threshold['columns'] = OrderedDict()
+                for col in difference.columns:
+                    anomalies_threshold['columns'][col] = OrderedDict()
+                    anomalies_threshold['columns'][col]['max'] = difference[col].max()
+                    anomalies_threshold['columns'][col]['min'] = difference[col].min()
 
-            anomalies_threshold['columns'] = OrderedDict()
-            for col in difference.columns:
-                anomalies_threshold['columns'][col] = OrderedDict()
-                anomalies_threshold['columns'][col]['max'] = difference[col].max()
-                anomalies_threshold['columns'][col]['min'] = difference[col].min()
+                H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
+                return anomalies_threshold
 
-            H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
-            return anomalies_threshold
-
-        elif dataframe is not None:
-            perf_metrics = self._model_base.model_performance(dataframe)
-        else:
-            if source == 'valid':
-                perf_metrics = self._model_base.model_performance(valid=True)
-            elif source == 'xval':
-                perf_metrics = self._model_base.model_performance(xval=True)
+            elif dataframe is not None:
+                perf_metrics = self._model_base.model_performance(dataframe)
             else:
-                perf_metrics = self._model_base.model_performance(train=True)
+                if source == 'valid':
+                    perf_metrics = self._model_base.model_performance(valid=True)
+                elif source == 'xval':
+                    perf_metrics = self._model_base.model_performance(xval=True)
+                else:
+                    perf_metrics = self._model_base.model_performance(train=True)
+            model_metrics.set_h2ometrics(perf_metrics)
+        except H2OServerError:
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"],
+                                   self._labels["failed_op"])
+            raise
 
-        model_metrics.set_h2ometrics(perf_metrics)
+
         H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
         return model_metrics
 
@@ -430,29 +444,37 @@ class H2OHandler(object):
     # @return float accuracy of model
     def _accuracy(self, objective, dataframe, antype, base_type, tolerance=0.0):
         accuracy = -1.0
-        prediccion = self._model_base.predict(dataframe)
+        try:
+            prediccion = self._model_base.predict(dataframe)
 
-        #if antype == 'regression' and prediccion.type('predict') == base_type:
-        if antype == 'regression':
-            try:
-                fmin = eval("lambda x: x - " + str(tolerance/2))
-                fmax = eval("lambda x: x + " + str(tolerance/2))
-                success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
+            #if antype == 'regression' and prediccion.type('predict') == base_type:
+            if antype == 'regression':
+                try:
+                    fmin = eval("lambda x: x - " + str(tolerance/2))
+                    fmax = eval("lambda x: x + " + str(tolerance/2))
+                    success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
+                    accuracy = "Valid"
+                except Exception:
+                    accuracy = -1.0
+            else:
+                tolerance = 0.0
+                success = prediccion[0] == dataframe[objective]
                 accuracy = "Valid"
-            except Exception:
-                accuracy = 0.0
-        else:
-            tolerance = 0.0
-            success = prediccion[0] == dataframe[objective]
-            accuracy = "Valid"
-        if accuracy not in [0.0, -1.0]:
-            accuracy = success.sum() / dataframe.nrows
 
-        self._frame_list.append(prediccion.frame_id)
+            if accuracy not in [0.0, -1.0]:
+                accuracy = success.sum() / dataframe.nrows
 
-        self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["tolerance"],
-                               str(tolerance))
-        return accuracy
+            self._frame_list.append(prediccion.frame_id)
+
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["tolerance"],
+                                   str(tolerance))
+            return accuracy
+        except OSError:
+            self._logging.log_exec(self.analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+                                   self._labels["failed_op"])
+            raise
+
+
 
     ## Generate accuracy metrics for model
     #for regression assume tolerance on results equivalent to 2*tolerance % over (max - min) values
@@ -909,7 +931,7 @@ class H2OHandler(object):
                                                   hash_type=each_storage_type['hash_type'])
             self._persistence.mkdir(type=final_ar_model['log_path'][0]['type'],
                                     grants=self._config['storage']['grants'],
-                                    path=dirname(final_ar_model['log_path'][0]['value']))
+                                    path=path.dirname(final_ar_model['log_path'][0]['value']))
             connection().start_logging(final_ar_model['log_path'][0]['value'])
 
         self._model_base = eval(model_command)
@@ -949,73 +971,93 @@ class H2OHandler(object):
         final_ar_model['full_parameters_stack'] = self._generate_params()
 
         if not aborted:
-            # Generating execution metrics
-            final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
+            try:
+                # Generating execution metrics
+                final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
 
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
 
 
-            final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
-                                                                                               source='train',
-                                                                                               antype=analysis_type)
-            final_ar_model['metrics']['accuracy'] = OrderedDict()
-
-            if supervised:
-
-                final_ar_model['metrics']['accuracy']['train'] = \
-                self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance,
-                                   base_type=training_frame.type(objective_column))
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
-                                       model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
-                final_ar_model['tolerance'] = tolerance
-            else:
-
-                final_ar_model['metrics']['accuracy']['train'] = 0.0
-
-            final_ar_model['metrics']['execution']['xval'] = \
-                self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
-
-            if valid_frame is not None:
-
-                final_ar_model['metrics']['execution']['valid'] = \
-                    self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
-
-                if supervised:
-
-                    final_ar_model['metrics']['accuracy']['valid'] = \
-                        self._accuracy(objective_column, valid_frame,
-                                       antype=analysis_type, tolerance=tolerance,
-                                       base_type=valid_frame.type(objective_column))
-                else:
-
-                    final_ar_model['metrics']['accuracy']['valid'] = 0.0
-
-            if test_frame is not None:
-                final_ar_model['metrics']['execution']['test'] = self._generate_execution_metrics(dataframe=test_frame,
-                                                                                                   source=None,
+                final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
+                                                                                                   source='train',
                                                                                                    antype=analysis_type)
+                final_ar_model['metrics']['accuracy'] = OrderedDict()
+
                 if supervised:
 
-                    final_ar_model['metrics']['accuracy']['test'] = \
-                        self._accuracy(objective_column, test_frame, antype=analysis_type, tolerance=tolerance,
-                                       base_type=test_frame.type(objective_column))
-
-                    train_balance = self._config['frameworks']['h2o']['conf']['train_balance_metric']
-                    test_balance = 1 - train_balance
-                    final_ar_model['metrics']['accuracy']['combined'] = \
-                        (final_ar_model['metrics']['accuracy']['train']*train_balance +
-                         final_ar_model['metrics']['accuracy']['test']*test_balance)
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
-                                           model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['test']))
-
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_cacc"],
-                                           model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
+                    final_ar_model['metrics']['accuracy']['train'] = \
+                    self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance,
+                                       base_type=training_frame.type(objective_column))
+                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
+                                           model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
+                    final_ar_model['tolerance'] = tolerance
                 else:
 
-                    final_ar_model['metrics']['accuracy']['test'] = 0.0
-                    final_ar_model['metrics']['accuracy']['combined'] = 0.0
+                    final_ar_model['metrics']['accuracy']['train'] = 0.0
 
-            #final_ar_model['tolerance'] = tolerance
+                final_ar_model['metrics']['execution']['xval'] = \
+                    self._generate_execution_metrics(dataframe=None, source='xval', antype=analysis_type)
+
+                if valid_frame is not None:
+
+                    final_ar_model['metrics']['execution']['valid'] = \
+                        self._generate_execution_metrics(dataframe=None, source='valid', antype=analysis_type)
+
+                    if supervised:
+
+                        final_ar_model['metrics']['accuracy']['valid'] = \
+                            self._accuracy(objective_column, valid_frame,
+                                           antype=analysis_type, tolerance=tolerance,
+                                           base_type=valid_frame.type(objective_column))
+                    else:
+
+                        final_ar_model['metrics']['accuracy']['valid'] = 0.0
+
+                if test_frame is not None:
+                    final_ar_model['metrics']['execution']['test'] = self._generate_execution_metrics(dataframe=test_frame,
+                                                                                                       source=None,
+                                                                                                       antype=analysis_type)
+                    if supervised:
+
+                        final_ar_model['metrics']['accuracy']['test'] = \
+                            self._accuracy(objective_column, test_frame, antype=analysis_type, tolerance=tolerance,
+                                           base_type=test_frame.type(objective_column))
+
+                        train_balance = self._config['frameworks']['h2o']['conf']['train_balance_metric']
+                        test_balance = 1 - train_balance
+                        final_ar_model['metrics']['accuracy']['combined'] = \
+                            (final_ar_model['metrics']['accuracy']['train']*train_balance +
+                             final_ar_model['metrics']['accuracy']['test']*test_balance)
+                        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+                                               model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['test']))
+
+                        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_cacc"],
+                                               model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
+                    else:
+
+                        final_ar_model['metrics']['accuracy']['test'] = 0.0
+                        final_ar_model['metrics']['accuracy']['combined'] = 0.0
+
+                #final_ar_model['tolerance'] = tolerance
+
+            except Exception as execution_error:
+                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["abort"],
+                                       repr(execution_error))
+
+                final_ar_model['metrics'] = OrderedDict()
+                final_ar_model['metrics']['accuracy'] = OrderedDict()
+                final_ar_model['metrics']['accuracy']['train'] = -1.0
+                final_ar_model['metrics']['accuracy']['test'] = -1.0
+                final_ar_model['metrics']['accuracy']['combined'] = -1.0
+                final_ar_model['metrics']['execution'] = OrderedDict()
+                final_ar_model['metrics']['execution']['train'] = OrderedDict()
+                final_ar_model['metrics']['execution']['train']['RMSE'] = 1e+16
+                final_ar_model['metrics']['execution']['train']['tot_withinss'] = 1e+16
+                final_ar_model['metrics']['execution']['train']['betweenss'] = 1e+16
+                final_ar_model['metrics']['execution']['test'] = OrderedDict()
+                final_ar_model['metrics']['execution']['test']['RMSE'] = 1e+16
+                final_ar_model['metrics']['execution']['test']['tot_withinss'] = 1e+16
+                final_ar_model['metrics']['execution']['test']['betweenss'] = 1e+16
 
             # Generating model metrics
             final_ar_model['metrics']['model'] = self._generate_model_metrics()
@@ -1037,13 +1079,14 @@ class H2OHandler(object):
             self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gsco_metric"], model_id)
 
             final_ar_model['status'] = self._labels['success_op']
+
         else:
             final_ar_model['status'] = self._labels['failed_op']
             final_ar_model['metrics'] = OrderedDict()
             final_ar_model['metrics']['accuracy'] = OrderedDict()
-            final_ar_model['metrics']['accuracy']['train'] = 0.0
-            final_ar_model['metrics']['accuracy']['test'] = 0.0
-            final_ar_model['metrics']['accuracy']['combined'] = 0.0
+            final_ar_model['metrics']['accuracy']['train'] = -1.0
+            final_ar_model['metrics']['accuracy']['test'] = -1.0
+            final_ar_model['metrics']['accuracy']['combined'] = -1.0
             final_ar_model['metrics']['execution'] = OrderedDict()
             final_ar_model['metrics']['execution']['train'] = OrderedDict()
             final_ar_model['metrics']['execution']['train']['RMSE'] = 1e+16
@@ -1053,6 +1096,7 @@ class H2OHandler(object):
             final_ar_model['metrics']['execution']['test']['RMSE'] = 1e+16
             final_ar_model['metrics']['execution']['test']['tot_withinss'] = 1e+16
             final_ar_model['metrics']['execution']['test']['betweenss'] = 1e+16
+
 
         generate_json_path(final_ar_model, user)
         self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
@@ -1274,7 +1318,7 @@ class H2OHandler(object):
 
             self._persistence.mkdir(type=base_ar['log_path'][0]['type'],
                                     grants=self._config['storage']['grants'],
-                                    path=dirname(base_ar['log_path'][0]['value']))
+                                    path=path.dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
 
         self._logging.log_info(analysis_id, self._h2o_session.session_id,

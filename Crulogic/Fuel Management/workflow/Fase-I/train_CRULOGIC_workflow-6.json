@@ -2,7 +2,7 @@
   "DCM_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "DCM",
       "metric": "test_rmse",
@@ -10,7 +10,7 @@
     },
     "data":{
       "filtered_columns": [
-			"Fecha",
+		  
 		  "TFM",
 		  "CTM",
 		  "AF100",
@@ -39,13 +39,13 @@
 		  "AFF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
     },
     "Next":{
 	  "AF_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"FAST_PARANOIAC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "AF",
 		  "metric": "test_rmse",
@@ -53,7 +53,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -82,7 +82,7 @@
 			  "AFF"
 			  ],
 		  "filtered_data": null,
-		  "for_each":null
+		  "for_each":"CLUSTER"
 		},
 		"Next": null
 	  },
@@ -97,7 +97,7 @@
 		},
 		"data": {
 		  "filtered_columns": [
-			    "Fecha",
+			    
 				"TFM",
 				"CTM",
 				"AF100",
@@ -125,14 +125,14 @@
 				"AFF"
 			  ],
 		  "filtered_data": null,
-		  "for_each": null
+		  "for_each":"CLUSTER"
 		},
 	  "Next": null
 	  },
 	  "RaL_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"FAST_PARANOIAC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "RaL",
 		  "metric": "test_rmse",
@@ -140,7 +140,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -168,14 +168,14 @@
 			  "CI",
 			  "AF"],
 		  "filtered_data": null,
-		  "for_each":null
+		  "for_each":"CLUSTER"
 		},
 		"Next": null
 	  },
 	  "ERP_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"FAST_PARANOIAC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "ERP",
 		  "metric": "test_rmse",
@@ -183,7 +183,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -212,14 +212,14 @@
 			  "AF"
 			  ],
 		  "filtered_data": null,
-		  "for_each":null
+		  "for_each":"CLUSTER"
 		},
 		"Next": null
 	  },
 	  "DistanciaCC_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"FAST_PARANOIAC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "DistanciaCC",
 		  "metric": "test_rmse",
@@ -227,7 +227,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -256,14 +256,14 @@
 			  "AF"
 			  ],
 		  "filtered_data": null,
-		  "for_each":null
+		  "for_each":"CLUSTER"
 		},
 		"Next": null
 	  },
 	  "INC_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"FAST_PARANOIAC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "INC",
 		  "metric": "test_rmse",
@@ -271,7 +271,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -300,14 +300,14 @@
 			  "AF"
 			  ],
 		  "filtered_data": null,
-		  "for_each":null
+		  "for_each":"CLUSTER"
 		},
 		"Next": null
 	  },
-		"EV_DCM_predict":{
+      "EV_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"FAST_PARANOIAC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "EV",
 		  "metric": "test_rmse",
@@ -315,7 +315,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -344,7 +344,51 @@
 			  "AF"
 			  ],
 		  "filtered_data": null,
-		  "for_each":null
+		  "for_each":"CLUSTER"
+		},
+		"Next": null
+	  },
+		"Consumo_DCM_predict":{
+		"model" : "",
+		"parameters": {
+		  "amode":"FAST",
+		  "mode" : "train",
+		  "objective_column": "Consumo",
+		  "metric": "test_rmse",
+		  "deep_impact": 8
+		},
+		"data":{
+		  "filtered_columns": [
+
+			  "DCM",
+			  "TFM",
+			  "CTM",
+			  "AF100",
+			  "AFF100",
+			  "AcF",
+			  "RaL",
+			  "ERP",
+			  "INC",
+			  "RMFRO",
+			  "AFF",
+			  "SDSP",
+			  "SDSCP",
+			  "AnticipacionSDS",
+			  "FSDS",
+			  "SSMSDS",
+			  "EV",
+			  "Consumo_ral",
+			  "TFM_RAL",
+			  "DistanciaCC",
+			  "CTT",
+			  "VM",
+			  "Vmax",
+			  "RMM",
+			  "CI",
+			  "AF"
+			  ],
+		  "filtered_data": null,
+		  "for_each":"CLUSTER"
 		},
 		"Next": null
 	  }
@@ -353,7 +397,7 @@
   "AF_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "AF",
       "metric": "test_rmse",
@@ -361,7 +405,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -390,7 +434,7 @@
 		  "AFF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
     },
     "Next": null
   },
@@ -405,7 +449,7 @@
     },
     "data": {
       "filtered_columns": [
-		  "Fecha",
+		  
 			"TFM",
 			"CTM",
 			"AF100",
@@ -433,14 +477,14 @@
 			"AFF"
 		  ],
       "filtered_data": null,
-      "for_each": null
+      "for_each":"CLUSTER"
     },
   "Next": null
   },
   "RaL_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "RaL",
       "metric": "test_rmse",
@@ -448,7 +492,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -477,14 +521,14 @@
 		  "AF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
     },
     "Next": null
   },
   "ERP_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "ERP",
       "metric": "test_rmse",
@@ -492,7 +536,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -521,14 +565,14 @@
 		  "AF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
     },
     "Next": null
   },
   "DistanciaCC_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "DistanciaCC",
       "metric": "test_rmse",
@@ -536,7 +580,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -565,14 +609,14 @@
 		  "AF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
     },
     "Next": null
   },
   "INC_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "INC",
       "metric": "test_rmse",
@@ -580,7 +624,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -609,14 +653,14 @@
 		  "AF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
     },
     "Next": null
   },
     "EV_predict":{
     "model" : "",
     "parameters": {
-      "amode":"FAST_PARANOIAC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "EV",
       "metric": "test_rmse",
@@ -624,7 +668,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -653,7 +697,51 @@
 		  "AF"
 		  ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":"CLUSTER"
+    },
+    "Next": null
+  },
+    "Consumo_predict":{
+    "model" : "",
+    "parameters": {
+      "amode":"FAST",
+      "mode" : "train",
+      "objective_column": "Consumo",
+      "metric": "test_rmse",
+      "deep_impact": 8
+    },
+    "data":{
+      "filtered_columns": [
+		  
+		  "DCM",
+		  "TFM",
+		  "CTM",
+		  "AF100",
+		  "AFF100",
+		  "AcF",
+		  "RaL",
+		  "ERP",
+		  "INC",
+		  "RMFRO",
+		  "AFF",
+		  "SDSP",
+		  "SDSCP",
+		  "AnticipacionSDS",
+		  "FSDS",
+		  "SSMSDS",
+		  "EV",
+		  "Consumo_ral",
+		  "TFM_RAL",
+		  "DistanciaCC",
+		  "CTT",
+		  "VM",
+		  "Vmax",
+		  "RMM",
+		  "CI",
+		  "AF"
+		  ],
+      "filtered_data": null,
+      "for_each":"CLUSTER"
     },
     "Next": null
   }

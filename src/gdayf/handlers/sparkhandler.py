@@ -5,13 +5,21 @@
 # format [(Analysis_results.json, normalization_sets.json) ]
 # Analysis_results.json could contain executions models for various different model or parameters
 
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
 
 import copy
 import json
 import time
 import sys
 from collections import OrderedDict as OrderedDict
-from os.path import dirname
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
 from py4j.protocol import Py4JJavaError

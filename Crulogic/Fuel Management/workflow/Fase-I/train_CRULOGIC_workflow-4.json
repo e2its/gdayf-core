@@ -80,7 +80,7 @@
       },
       "Next": null
     },
-    "RaL":{
+    "RaL_predict":{
       "model" : "",
       "parameters": {
         "amode":"FAST",
@@ -103,6 +103,22 @@
         "amode":"FAST",
         "mode" : "train",
         "objective_column": "INC",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "Consumo_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "Consumo",
         "metric": "train_rmse",
         "deep_impact": 8
       },

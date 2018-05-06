@@ -2,15 +2,15 @@
   "DCM_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "DCM",
       "metric": "test_rmse",
-      "deep_impact":8
+      "deep_impact": 8
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "TFM",
 		  "CTM",
 		  "AF100",
@@ -36,17 +36,16 @@
 		  "RMM",
 		  "CI",
 		  "AF",
-		  "AFF",
-		  "MOTOR"
-	  ],
+		  "AFF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
     },
     "Next":{
 	  "AF_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"POC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "AF",
 		  "metric": "test_rmse",
@@ -54,7 +53,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -80,11 +79,10 @@
 			  "Vmax",
 			  "RMM",
 			  "CI",
-			  "AFF",
-			  "MOTOR"
-		  ],
+			  "AFF"
+			  ],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each":null
 		},
 		"Next": null
 	  },
@@ -99,7 +97,7 @@
 		},
 		"data": {
 		  "filtered_columns": [
-				"Fecha",
+			    
 				"TFM",
 				"CTM",
 				"AF100",
@@ -124,18 +122,17 @@
 				"Vmax",
 				"RMM",
 				"CI",
-				"AFF",
-			  	"MOTOR"
-		  ],
+				"AFF"
+			  ],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each": null
 		},
 	  "Next": null
 	  },
 	  "RaL_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"POC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "RaL",
 		  "metric": "test_rmse",
@@ -143,7 +140,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -169,18 +166,16 @@
 			  "Vmax",
 			  "RMM",
 			  "CI",
-			  "AF",
-			  "MOTOR"
-		  ],
+			  "AF"],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each":null
 		},
 		"Next": null
 	  },
 	  "ERP_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"POC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "ERP",
 		  "metric": "test_rmse",
@@ -188,7 +183,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -214,18 +209,17 @@
 			  "Vmax",
 			  "RMM",
 			  "AFF",
-			  "AF",
-			  "MOTOR"
-		  ],
+			  "AF"
+			  ],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each":null
 		},
 		"Next": null
 	  },
 	  "DistanciaCC_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"POC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "DistanciaCC",
 		  "metric": "test_rmse",
@@ -233,7 +227,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -259,18 +253,17 @@
 			  "Vmax",
 			  "RMM",
 			  "CI",
-			  "AF",
-			  "MOTOR"
-		  ],
+			  "AF"
+			  ],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each":null
 		},
 		"Next": null
 	  },
 	  "INC_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"POC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "INC",
 		  "metric": "test_rmse",
@@ -278,7 +271,7 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
@@ -304,18 +297,17 @@
 			  "Vmax",
 			  "RMM",
 			  "CI",
-			  "AF",
-			  "MOTOR"
-		  ],
+			  "AF"
+			  ],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each":null
 		},
 		"Next": null
 	  },
-		"EV_DCM_predict":{
+      "EV_DCM_predict":{
 		"model" : "",
 		"parameters": {
-		  "amode":"POC",
+		  "amode":"FAST",
 		  "mode" : "train",
 		  "objective_column": "EV",
 		  "metric": "test_rmse",
@@ -323,12 +315,12 @@
 		},
 		"data":{
 		  "filtered_columns": [
-			  "Fecha",
+			  
 			  "DCM",
 			  "TFM",
 			  "CTM",
-			  "AF100"
-			  ,"AFF100",
+			  "AF100",
+			  "AFF100",
 			  "AcF",
 			  "RaL",
 			  "ERP",
@@ -339,8 +331,8 @@
 			  "SDSCP",
 			  "AnticipacionSDS",
 			  "FSDS",
-			  "SSMSDS"
-			  ,"Consumo",
+			  "SSMSDS",
+			  "Consumo",
 			  "Consumo_ral",
 			  "TFM_RAL",
 			  "DistanciaCC",
@@ -349,11 +341,54 @@
 			  "Vmax",
 			  "RMM",
 			  "CI",
-			  "AF",
-			  "MOTOR"
-		  ],
+			  "AF"
+			  ],
 		  "filtered_data": null,
-		  "for_each":"CLUSTER"
+		  "for_each":null
+		},
+		"Next": null
+	  },
+		"Consumo_DCM_predict":{
+		"model" : "",
+		"parameters": {
+		  "amode":"FAST",
+		  "mode" : "train",
+		  "objective_column": "Consumo",
+		  "metric": "test_rmse",
+		  "deep_impact": 8
+		},
+		"data":{
+		  "filtered_columns": [
+
+			  "DCM",
+			  "TFM",
+			  "CTM",
+			  "AF100",
+			  "AFF100",
+			  "AcF",
+			  "RaL",
+			  "ERP",
+			  "INC",
+			  "RMFRO",
+			  "AFF",
+			  "SDSP",
+			  "SDSCP",
+			  "AnticipacionSDS",
+			  "FSDS",
+			  "SSMSDS",
+			  "EV",
+			  "Consumo_ral",
+			  "TFM_RAL",
+			  "DistanciaCC",
+			  "CTT",
+			  "VM",
+			  "Vmax",
+			  "RMM",
+			  "CI",
+			  "AF"
+			  ],
+		  "filtered_data": null,
+		  "for_each":null
 		},
 		"Next": null
 	  }
@@ -362,7 +397,7 @@
   "AF_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "AF",
       "metric": "test_rmse",
@@ -370,7 +405,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -396,11 +431,10 @@
 		  "Vmax",
 		  "RMM",
 		  "CI",
-		  "AFF",
-		  "MOTOR"
-	  ],
+		  "AFF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
     },
     "Next": null
   },
@@ -415,7 +449,7 @@
     },
     "data": {
       "filtered_columns": [
-			"Fecha",
+		  
 			"TFM",
 			"CTM",
 			"AF100",
@@ -440,9 +474,8 @@
 			"Vmax",
 			"RMM",
 			"CI",
-			"AFF",
-		  	"MOTOR"
-      ],
+			"AFF"
+		  ],
       "filtered_data": null,
       "for_each": null
     },
@@ -451,7 +484,7 @@
   "RaL_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "RaL",
       "metric": "test_rmse",
@@ -459,14 +492,14 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
 		  "AF100",
 		  "AFF100",
 		  "AcF",
-		  "RaL",
+		  "AFF",
 		  "ERP",
 		  "EV",
 		  "RMFRO",
@@ -485,18 +518,17 @@
 		  "Vmax",
 		  "RMM",
 		  "CI",
-		  "AF",
-		  "MOTOR"
-	  ],
+		  "AF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
     },
     "Next": null
   },
   "ERP_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "ERP",
       "metric": "test_rmse",
@@ -504,7 +536,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -530,18 +562,17 @@
 		  "Vmax",
 		  "RMM",
 		  "AFF",
-		  "AF",
-		  "MOTOR"
-	  ],
+		  "AF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
     },
     "Next": null
   },
   "DistanciaCC_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "DistanciaCC",
       "metric": "test_rmse",
@@ -549,7 +580,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -575,18 +606,17 @@
 		  "Vmax",
 		  "RMM",
 		  "CI",
-		  "AF",
-		  "MOTOR"
-	  ],
+		  "AF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
     },
     "Next": null
   },
   "INC_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "INC",
       "metric": "test_rmse",
@@ -594,7 +624,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -620,18 +650,17 @@
 		  "Vmax",
 		  "RMM",
 		  "CI",
-		  "AF",
-		  "MOTOR"
-	  ],
+		  "AF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
     },
     "Next": null
   },
     "EV_predict":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST",
       "mode" : "train",
       "objective_column": "EV",
       "metric": "test_rmse",
@@ -639,7 +668,7 @@
     },
     "data":{
       "filtered_columns": [
-		  "Fecha",
+		  
 		  "DCM",
 		  "TFM",
 		  "CTM",
@@ -665,11 +694,54 @@
 		  "Vmax",
 		  "RMM",
 		  "CI",
-		  "AF",
-		  "MOTOR"
-	  ],
+		  "AF"
+		  ],
       "filtered_data": null,
-      "for_each":"CLUSTER"
+      "for_each":null
+    },
+    "Next": null
+  },
+    "Consumo_predict":{
+    "model" : "",
+    "parameters": {
+      "amode":"FAST",
+      "mode" : "train",
+      "objective_column": "Consumo",
+      "metric": "test_rmse",
+      "deep_impact": 8
+    },
+    "data":{
+      "filtered_columns": [
+		  
+		  "DCM",
+		  "TFM",
+		  "CTM",
+		  "AF100",
+		  "AFF100",
+		  "AcF",
+		  "RaL",
+		  "ERP",
+		  "INC",
+		  "RMFRO",
+		  "AFF",
+		  "SDSP",
+		  "SDSCP",
+		  "AnticipacionSDS",
+		  "FSDS",
+		  "SSMSDS",
+		  "EV",
+		  "Consumo_ral",
+		  "TFM_RAL",
+		  "DistanciaCC",
+		  "CTT",
+		  "VM",
+		  "Vmax",
+		  "RMM",
+		  "CI",
+		  "AF"
+		  ],
+      "filtered_data": null,
+      "for_each":null
     },
     "Next": null
   }
