@@ -11,7 +11,6 @@
     "data":{
       "filtered_columns":
 	  [
-		"Avg-fuel",
 		"Engine-worktime",
 		"Braking100",
 		"Strong-braking100",
@@ -19,6 +18,7 @@
 		"idling100",
 		"Out-speed",
 		"Out-engine",
+		"Out-rpm",
 		"Rollout100",
 		"SDS",
 		"SDS-slopes",
@@ -53,14 +53,13 @@
 		"data":{
       "filtered_columns":
 	  [
-		"Avg-fuel",
 		"Engine-worktime",
-		"Braking100",
 		"Strong-braking100",
 		"Strong-Acel100",
 		"idling100",
 		"Out-speed",
 		"Out-engine",
+		"Out-rpm",
 		"Rollout100",
 		"SDS",
 		"SDS-slopes",
@@ -96,14 +95,13 @@
 		"data":{
       		"filtered_columns":
 			[
-				"Avg-fuel",
 				"Engine-worktime",
 				"Braking100",
 				"Strong-braking100",
-				"Strong-Acel100",
 				"idling100",
 				"Out-speed",
 				"Out-engine",
+				"Out-rpm",
 				"Rollout100",
 				"SDS",
 				"SDS-slopes",
@@ -139,14 +137,13 @@
 		"data":{
       "filtered_columns":
 		  [
-			"Avg-fuel",
 			"Engine-worktime",
 			"Braking100",
 			"Strong-braking100",
 			"Strong-Acel100",
-			"idling100",
 			"Out-speed",
 			"Out-engine",
+			"Out-rpm",
 			"Rollout100",
 			"SDS",
 			"SDS-slopes",
@@ -182,7 +179,6 @@
 		"data":{
 		  "filtered_columns":
 		  [
-			"Avg-fuel",
 			"Engine-worktime",
 			"Braking100",
 			"Strong-braking100",
@@ -225,7 +221,6 @@
 		"data":{
 			"filtered_columns":
 				[
-				"Avg-fuel",
 				"Engine-worktime",
 				"Braking100",
 				"Strong-braking100",
@@ -233,6 +228,7 @@
 				"idling100",
 				"Out-speed",
 				"Out-engine",
+				"Out-rpm",
 				"Rollout100",
 				"SDS",
 				"SDS-slopes",
@@ -243,7 +239,6 @@
 				"Fuel-idling",
 				"idling-time",
 				"Distance-remol",
-				"Cruise-Control",
 				"Avg-speed",
 				"Max-speed",
 				"Max-rpm",
@@ -268,7 +263,6 @@
 		"data":{
 		  "filtered_columns":
 		  [
-				"Avg-fuel",
 				"Engine-worktime",
 				"Braking100",
 				"Strong-braking100",
@@ -276,7 +270,7 @@
 				"idling100",
 				"Out-speed",
 				"Out-engine",
-				"Rollout100",
+				"Out-rpm",
 				"SDS",
 				"SDS-slopes",
 				"SDS-Anticipation",
@@ -311,14 +305,13 @@
 		"data":{
 			"filtered_columns":
 			[
-				"Avg-fuel",
 				"Engine-worktime",
 				"Braking100",
 				"Strong-braking100",
 				"Strong-Acel100",
 				"idling100",
-				"Out-speed",
 				"Out-engine",
+				"Out-rpm",
 				"Rollout100",
 				"SDS",
 				"SDS-slopes",
@@ -354,14 +347,13 @@
 		"data":{
       		"filtered_columns":
 			[
-				"Avg-fuel",
 				"Engine-worktime",
 				"Braking100",
 				"Strong-braking100",
 				"Strong-Acel100",
 				"idling100",
 				"Out-speed",
-				"Out-engine",
+				"Out-rpm",
 				"Rollout100",
 				"SDS",
 				"SDS-slopes",
