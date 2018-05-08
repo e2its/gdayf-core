@@ -444,6 +444,9 @@
       "common": {
         "multi_limit": {
           "description": "% rate in decimal format to determine when apply multinomial analysis instead regression analysis"
+        },
+        "multi_limit": {
+          "description": "max cardinality in natural format to determine when apply multinomial analysis instead regression analysis"
         }
       },
       "h2o": {
@@ -653,9 +656,9 @@
     },
     "test_frame_ratio": {
           "description": "% split in decimal mode for test Dataframe"
-        },
+    },
     "workflow_execution_dir": {
-          "description": "relative path for workflow csv dataset",
+          "description": "relative path for workflow csv dataset"
         },
     "minimal_test_split": {
       "description": "Minimal amount of data to establish a primary dataframe split on test"

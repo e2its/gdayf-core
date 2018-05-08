@@ -94,7 +94,8 @@
         "new_vector": "Generating new Model with Vector Params: ",
         "exc_vector": "Excluding Executed Model with Vector Params: ",
         "inc_application": "Applying increment based on data size: ",
-        "exc_applicability": "Excluding Model based on applicability limits: "
+        "exc_applicability": "Excluding Model based on applicability limits: ",
+        "failed_op" : "Aborted"
       },
       "persistence" : {},
       "normalizer" : {
@@ -117,7 +118,8 @@
         "variables_desc": "Variables in the model:",
         "desc_operation": "Execute operation:",
         "anomalies_operation": "Anomalies Pattern:",
-        "nothing_to_do": "Invalid mode: Nothing to do with Mode:"
+        "nothing_to_do": "Invalid mode: Nothing to do with Mode:",
+        "failed_wf": "Failed WF execution"
       }
     },
     "ui":{

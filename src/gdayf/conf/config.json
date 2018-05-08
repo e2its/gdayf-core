@@ -7,16 +7,16 @@
       "conf": {
         "download_dir": "downloads",
         "url": "http://127.0.0.1:54321",
-        "nthreads": 4,
+        "nthreads": 6,
         "ice_root": "/Data/Data/logs",
-        "max_mem_size": "8G",
+        "max_mem_size": "12G",
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
         "tolerance": 0.01,
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
@@ -699,7 +699,7 @@
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 25000,
           "max_cols_applicability": null,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -2756,13 +2756,13 @@
         "master": "local",
         "nthreads": 4,
         "spark_warehouse_dir": "/Data/Data/spark_warehouse",
-        "spark.executor.memory": "6G",
+        "spark.executor.memory": "8G",
         "spark.driver.memory": "2G",
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
         "enabled" : false,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
@@ -4611,18 +4611,15 @@
     }
   },
   "storage": {
-    "localfs":
-      {"value": "/Data/gdayf-proof/experiments" , "type":"localfs",
+    "localfs": {"value": "/Data/gdayf-proof/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-    "hdfs":
-      {"value": "/gdayf-proof/experiments" , "type":"hdfs",
+    "hdfs": {"value": "/gdayf-proof/experiments" , "type":"hdfs",
         "url":"http://localhost:50070",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
       },
-    "mongoDB":
-      { "value": "gdayf-proof",
+    "mongoDB": { "value": "gdayf-proof",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
@@ -4678,7 +4675,8 @@
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.005
+        "multi_limit" : 0.001,
+        "multi_cardinality_limit": 15
       },
       "h2o": {
         "nfold_limit": 8,

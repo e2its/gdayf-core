@@ -1,6 +1,17 @@
 ## @package gdayf.models.modelmetadata
 # Define Base Model methods and members
 #  on an unified way. Base for all Models
+
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
+
 import copy
 from gdayf.conf.loadconfig import LoadConfig
 from collections import OrderedDict

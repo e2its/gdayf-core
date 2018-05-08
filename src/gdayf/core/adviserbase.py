@@ -3,6 +3,16 @@
 # and defined heuristic
 # Main class Adviser. Lets us execute analysis, make recommendations over optimizing on selected algoritms
 
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
+
 from gdayf.models.frameworkmetadata import FrameworkMetadata
 from gdayf.common.armetadata import ArMetadata
 from copy import deepcopy
@@ -25,6 +35,7 @@ from time import time
 from hashlib import md5 as md5
 from json import dumps
 from copy import deepcopy
+from numpy import isnan
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
@@ -457,10 +468,11 @@ class Adviser(object):
             if each_column['name'] == objective_column:
                 if int(each_column['cardinality']) == 2:
                     return ATypesMetadata(binomial=True)
-                if each_column['type'] not in FTYPES:
+                if each_column['type'] not in DTYPES:
                     if int(each_column['cardinality']) > 2:
                         return ATypesMetadata(multinomial=True)
-                elif int(each_column['cardinality']) <= (dataframe_metadata['rowcount']*config['multi_limit']):
+                elif int(each_column['cardinality']) <= (dataframe_metadata['rowcount']*config['multi_limit'])\
+                        and int(each_column['cardinality']) <= config['multi_cardinality_limit']:
                     return ATypesMetadata(multinomial=True)
                 else:
                     return ATypesMetadata(regression=True)
@@ -550,10 +562,12 @@ class Adviser(object):
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['train']), \
-                   1e+16, \
+                   -1.0, \
                    1.0
         except KeyError:
-            return 0.0, 1e+16, 1.0
+            return -1.0, -1.0, 1.0
+        except Exception:
+            return -1.0, -1.0, 1.0
 
     ##Method get test accuracy for generic model
     # @param model
@@ -566,10 +580,12 @@ class Adviser(object):
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['test']), \
-                   1e+16, \
+                   -1.0, \
                    1.0
         except KeyError:
-            return 0.0, 1e+16, 1.0
+            return -1.0, -1.0, 1.0
+        except Exception:
+            return -1.0, -1.0, 1.0
 
     ##Method get averaged train and test  accuracy for generic model
     # @param model
@@ -582,42 +598,56 @@ class Adviser(object):
                    1.0
         except ZeroDivisionError:
             return float(model['metrics']['accuracy']['combined']), \
-                   1e+16, \
+                   -1.0, \
                    1.0
         except KeyError:
-            return 0.0, 1e+16, 1.0
+            return -1.0, -1.0, 1.0
+        except Exception:
+            return -1.0, -1.0, 1.0
 
     ##Method get rmse for generic model
     # @param model
     # @return rsme metric, inverse combined accuracy, objective or 10e+308, 0.0, objective if not exists
     @staticmethod
     def get_train_rmse(model):
+        if str(float(model['metrics']['execution']['train']['RMSE'])).lower() == 'nan':
+            rmse = 1e+16
+        else:
+            rmse = float(model['metrics']['execution']['train']['RMSE'])
         try:
-            return float(model['metrics']['execution']['train']['RMSE']),\
+            return rmse,\
                    1/float(model['metrics']['accuracy']['combined']),\
                    0.0
         except ZeroDivisionError:
-            return float(model['metrics']['execution']['train']['RMSE']),\
+            return rmse,\
                    1e+16, \
                    0.0
         except KeyError:
-            return 10e+308, 0.0, 0.0
+            return 1e+16, 1e+16, 0.0
+        except Exception:
+            return 1e+16, 1e+16, 0.0
 
     ##Method get test rmse for generic model
     # @param model
     # @return rsme metric, inverse combined accuracy, objective or 10e+308, 0.0, objective if not exists
     @staticmethod
     def get_test_rmse(model):
+        if str(float(model['metrics']['execution']['test']['RMSE'])).lower() == 'nan':
+            rmse = 1e+16
+        else:
+            rmse = float(model['metrics']['execution']['test']['RMSE'])
         try:
-            return float(model['metrics']['execution']['test']['RMSE']),\
+            return rmse,\
                    1/float(model['metrics']['accuracy']['combined']),\
                    0.0
         except ZeroDivisionError:
-            return float(model['metrics']['execution']['test']['RMSE']),\
+            return rmse,\
                    1e+16, \
                    0.0
         except KeyError:
-            return 10e+308, 0.0, 0.0
+            return 1e+16, 1e+16, 0.0
+        except Exception:
+            return 1e+16, 1e+16, 0.0
 
     ##Method get clustering distance for generic model
     # @param model
@@ -638,7 +668,7 @@ class Adviser(object):
                    1e+16, \
                    0.0
         except KeyError:
-            return 1e+16, 0.0, 0.0
+            return 1e+16, 1e+16, 0.0
 
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)

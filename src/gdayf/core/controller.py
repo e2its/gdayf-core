@@ -2,6 +2,16 @@
 # Define all objects, functions and structured related to manage and execute actions over DayF core
 # and expose API to users
 
+'''
+Copyright (C) e2its - All Rights Reserved
+ * Unauthorized copying of this file, via any medium is strictly prohibited
+ * Proprietary and confidential
+ *
+ * This file is part of gDayF project.
+ *
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+'''
+
 from gdayf.handlers.h2ohandler import H2OHandler
 from gdayf.handlers.sparkhandler import sparkHandler
 from gdayf.handlers.inputhandler import inputHandlerCSV
