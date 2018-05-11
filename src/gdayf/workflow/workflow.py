@@ -44,25 +44,31 @@ class Workflow(object):
     # @param self object pointer
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param workflow String Path indicating train workflow definition path
+    # @param workflow_id Workflow_file_name + workflow_timestamp execution
+    # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
     # @param prefix value
 
-    def workflow(self, datapath, workflow, prefix=None):
+    def workflow(self, datapath, workflow, prefix=None, workflow_id='default', save_models=EACH_BEST):
 
         if isinstance(workflow, str):
             file = open(workflow, 'r')
             wf = load(file, object_hook=OrderedDict)
+            if workflow_id == 'default':
+                workflow_id = Path(workflow).stem + '_' + self.timestamp
         else:
             wf = workflow
+            if workflow_id == 'default':
+                workflow_id = workflow_id + '_' + self.timestamp
 
         for wkey, wvalue in wf.items():
             if prefix is None:
                 prefix = xstr(wvalue['parameters']['objective_column'])
             if wvalue['parameters']['mode'] == "train":
                 self.train_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
-                                    prefix=prefix)
+                                    prefix=prefix, workflow_id=workflow_id, save_models=save_models)
             elif wvalue['parameters']['mode'] == "predict":
                 self.predict_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
-                                      prefix=prefix)
+                                      prefix=prefix, workflow_id=workflow_id, save_models=save_models)
             else:
                 self._logging.log_info('gDayF', "Workflow", self._labels["nothing_to_do"])
 
@@ -71,9 +77,11 @@ class Workflow(object):
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param wkey Step name
     # @param workflow String Path indicating train workflow definition path
+    # @param workflow_id Workflow_file_name + workflow_timestamp execution
     # @param prefix value
+    # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
 
-    def train_workflow(self, datapath, wkey, workflow, prefix='main'):
+    def train_workflow(self, datapath, wkey, workflow, prefix='main', workflow_id='default', save_models=EACH_BEST):
         set_option('display.height', 1000)
         set_option('display.max_rows', 500)
         set_option('display.max_columns', 500)
@@ -86,7 +94,7 @@ class Workflow(object):
         if dataset is None:
             return error
 
-        controller = Controller(user_id=self.user_id)
+        controller = Controller(user_id=self.user_id, workflow_id=workflow_id)
         if controller.config_checks():
             variables = dataset.columns.tolist()
 
@@ -135,16 +143,19 @@ class Workflow(object):
                         self._logging.log_info('gDayF', "Workflow", self._labels["desc_operation"],
                                                ''.join(source_parameters))
                         status, recomendations = eval(''.join(source_parameters))
+                        controller.remove_models(recomendations, mode=save_models)
+                        controller.reconstruct_execution_tree(recomendations, metric=fe_parameters['metric'], store=True)
+
 
                         model_id = recomendations[0]['model_id']
                         print(controller.table_model_list(model_id, recomendations,
                                                           metric=eval(fe_parameters['metric'])))
                         filename = self.storage_path('train', wkey + '_' + str(pfix) + '_' + 'train_performance'
-                                                     , 'xls')
+                                                     , 'xls', workflow_id)
                         controller.table_model_list(model_id, recomendations,
                                                     metric=eval(fe_parameters['metric']))\
                             .to_excel(filename, index=False, sheet_name='performance')
-                        self.replicate_file('train',filename=filename)
+                        self.replicate_file('train', filename=filename, workflow_id=workflow_id)
 
                         prediction_frame = controller.exec_prediction(datapath=aux_dataset,
                                                                       model_file=recomendations[0]['json_path'][0]['value'])
@@ -158,15 +169,15 @@ class Workflow(object):
                         print(prediction_frame)
                         try:
                             filename = self.storage_path('train', wkey + '_'
-                                                         + str(pfix) + '_' + 'prediction', 'xls')
+                                                         + str(pfix) + '_' + 'prediction', 'xls', workflow_id)
                             prediction_frame.to_excel(filename, index=False, sheet_name='train_prediction')
-                            self.replicate_file('train', filename=filename)
+                            self.replicate_file('train', filename=filename, workflow_id=workflow_id)
 
                         except AttributeError:
                             self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
                                                    prediction_frame)
                         if fe_next is not None:
-                            self.workflow(prediction_frame, fe_next, pfix)
+                            self.workflow(prediction_frame, fe_next, pfix, workflow_id, save_models=save_models)
             else:
                 aux_dataset = dataset
 
@@ -193,16 +204,19 @@ class Workflow(object):
                     self._logging.log_info('gDayF', "Workflow", self._labels["desc_operation"],
                                            ''.join(source_parameters))
                     status, recomendations = eval(''.join(source_parameters))
+                    controller.remove_models(recomendations, mode=save_models)
+                    controller.reconstruct_execution_tree(recomendations, metric=wf['parameters']['metric'], store=True)
+
                     model_id = recomendations[0]['model_id']
                     print(controller.table_model_list(model_id, recomendations,
                                                       metric=eval(wf['parameters']['metric'])))
 
                     filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
-                                                 + 'train_performance', 'xls')
+                                                 + 'train_performance', 'xls', workflow_id)
                     controller.table_model_list(model_id, recomendations,
                                                 metric=eval(wf['parameters']['metric'])) \
                         .to_excel(filename, index=False, sheet_name="performace")
-                    self.replicate_file('train', filename=filename)
+                    self.replicate_file('train', filename=filename, workflow_id=workflow_id)
 
                     prediction_frame = controller.exec_prediction(datapath=aux_dataset,
                                                                   model_file=recomendations[0]['json_path'][0][
@@ -214,13 +228,13 @@ class Workflow(object):
 
                     print(prediction_frame)
                     filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
-                                                 + 'prediction', 'xls')
+                                                 + 'prediction', 'xls', workflow_id)
                     prediction_frame.to_excel(filename, index=False, sheet_name="train_prediction")
-                    self.replicate_file('train', filename=filename)
+                    self.replicate_file('train', filename=filename, workflow_id=workflow_id)
 
                     if wf['Next'] is not None:
                         try:
-                            self.workflow(prediction_frame, wf['Next'], pfix)
+                            self.workflow(prediction_frame, wf['Next'], pfix, workflow_id, save_models=save_models)
                         except Exception as oexecution_error:
                             self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"],
                                                    str(wf['Next']))
@@ -233,9 +247,11 @@ class Workflow(object):
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param wkey Step name
     # @param workflow String Path indicating test workflow definition path
+    # @param workflow_id Workflow_file_name + workflow_timestamp execution
+    # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
     # @param prefix value
 
-    def predict_workflow(self, datapath, wkey, workflow, prefix='main'):
+    def predict_workflow(self, datapath, wkey, workflow, prefix='main', workflow_id='default', save_models=EACH_BEST):
         set_option('display.height', 1000)
         set_option('display.max_rows', 500)
         set_option('display.max_columns', 500)
@@ -251,7 +267,7 @@ class Workflow(object):
         else:
             wf = workflow
         pfix = xstr(prefix)
-        controller = Controller(user_id=self.user_id)
+        controller = Controller(user_id=self.user_id, workflow_id=workflow_id)
         if controller.config_checks():
             variables = dataset.columns.tolist()
 
@@ -296,27 +312,27 @@ class Workflow(object):
                         try:
                             if isinstance(prediction_frame, DataFrame):
                                 filename = self.storage_path('predict', wkey + '_'
-                                                    + str(pfix) + '_' + 'prediction', 'xls')
+                                                    + str(pfix) + '_' + 'prediction', 'xls', workflow_id)
                                 prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
-                                self.replicate_file('predict',filename=filename)
+                                self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
                             else:
                                 for ikey, ivalue in prediction_frame['columns'].items():
                                     ppDF = decode_ordered_dict_to_dataframe(ivalue)
                                     if isinstance(ppDF, DataFrame):
                                         filename = self.storage_path('predict', wkey + '_'
-                                                      + str(pfix) + '_' + 'prediction_' + ikey, 'xls')
+                                                      + str(pfix) + '_' + 'prediction_' + ikey, 'xls', workflow_id)
                                         ppDF.to_excel(filename, index=False, sheet_name="prediction")
-                                        self.replicate_file('predict', filename=filename)
+                                        self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
                                 filename = self.storage_path('predict', wkey + '_'
-                                          + str(each) + '_' + 'prediction', 'json')
+                                          + str(each) + '_' + 'prediction', 'json', workflow_id)
                                 with open(filename, 'w') as f:
                                     f.write(dumps(prediction_frame['global_mse']))
-                                self.replicate_file('predict', filename=filename)
+                                self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
                         except AttributeError:
                             self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
                                                    prediction_frame)
                         if fe_next is not None:
-                            self.workflow(prediction_frame, fe_next, prefix=pfix)
+                            self.workflow(prediction_frame, fe_next, pfix, workflow_id, save_models=save_models)
                 else:
                     aux_dataset = dataset
 
@@ -328,26 +344,27 @@ class Workflow(object):
 
                     print(prediction_frame)
                     if isinstance(prediction_frame, DataFrame):
-                        filename = self.storage_path('predict', wkey + '_prediction', 'xls')
+                        filename = self.storage_path('predict', wkey + '_prediction', 'xls', workflow_id)
                         prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
-                        self.replicate_file('predict', filename=filename)
+                        self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
                     else:
                         for ikey, ivalue in prediction_frame['columns'].items():
                             ppDF = decode_ordered_dict_to_dataframe(ivalue)
                             if isinstance(ppDF, DataFrame):
                                 filename = self.storage_path('predict', wkey + '_'
-                                                             + str(pfix) + '_' + 'prediction_' + ikey, 'xls')
+                                                             + str(pfix) + '_' + 'prediction_' + ikey, 'xls',
+                                                             workflow_id)
                                 ppDF.to_excel(filename, index=False, sheet_name="prediction")
-                                self.replicate_file('predict', filename=filename)
+                                self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
 
                         filename = self.storage_path('predict', wkey + '_'
-                                                     + str(pfix) + '_' + '_prediction', 'json')
+                                                     + str(pfix) + '_' + '_prediction', 'json', workflow_id)
                         with open(filename, 'w') as f:
                             f.write(dumps(prediction_frame))
-                        self.replicate_file('predict', filename=filename)
+                        self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
                     if wf['Next'] is not None:
                         try:
-                            self.workflow(prediction_frame, wf['Next'], prefix=pfix)
+                            self.workflow(prediction_frame, wf['Next'], pfix, workflow_id, save_models=save_models)
                         except Exception as oexecution_error:
                             self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"],
                                                    str(wf['Next']))
@@ -378,8 +395,9 @@ class Workflow(object):
     # @param mode ['train','predict']
     # @param filename filename
     # @param filetype file type
+    # @param workflow_id Workflow_file_name + workflow_timestamp execution
     # @return  None if no localfs primary path found . Abosulute path if true
-    def storage_path(self, mode, filename, filetype):
+    def storage_path(self, mode, filename, filetype, workflow_id):
         load_storage = StorageMetadata()
 
         for each_storage_type in load_storage.get_load_path():
@@ -390,11 +408,11 @@ class Workflow(object):
                 source_data.append('/')
                 source_data.append(self.user_id)
                 source_data.append('/')
-                source_data.append(self._config['common']['workflow_execution_dir'])
+                source_data.append(workflow_id)
+                source_data.append('/')
+                source_data.append(self._config['common']['workflow_summary_dir'])
                 source_data.append('/')
                 source_data.append(mode)
-                source_data.append('/')
-                source_data.append(self.timestamp)
                 source_data.append('/')
 
                 PersistenceHandler().mkdir(type=each_storage_type['type'],
@@ -409,8 +427,9 @@ class Workflow(object):
     ## Method replicate files from primery to others
     # @param mode ['train','predict']
     # @param filename filename
+    # @param workflow_id Workflow_file_name + workflow_timestamp execution
     # @return  None if no localfs primary path found . Abosulute path if true
-    def replicate_file(self, mode, filename):
+    def replicate_file(self, mode, filename, workflow_id):
         load_storage = StorageMetadata().get_json_path()
         persistence = PersistenceHandler()
         for each_storage_type in load_storage:
@@ -421,11 +440,11 @@ class Workflow(object):
                 source_data.append('/')
                 source_data.append(self.user_id)
                 source_data.append('/')
-                source_data.append(self._config['common']['workflow_execution_dir'])
+                source_data.append(workflow_id)
+                source_data.append('/')
+                source_data.append(self._config['common']['workflow_summary_dir'])
                 source_data.append('/')
                 source_data.append(mode)
-                source_data.append('/')
-                source_data.append(self.timestamp)
                 source_data.append('/')
 
                 '''if each_storage_type['type'] == 'hdfs':

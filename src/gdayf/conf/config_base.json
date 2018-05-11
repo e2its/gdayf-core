@@ -4611,15 +4611,15 @@
     }
   },
   "storage": {
-    "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
+    "localfs": {"value": "/Data/gdayf-proof/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
-    "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
+    "hdfs": {"value": "/gdayf-proof/experiments" , "type":"hdfs",
         "url":"http://localhost:50070",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
       },
-    "mongoDB": { "value": "gdayf-v1",
+    "mongoDB": { "value": "gdayf-proof",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
@@ -4676,7 +4676,7 @@
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.001,
-        "multi_cardinality_limit": 10
+        "multi_cardinality_limit": 15
       },
       "h2o": {
         "nfold_limit": 8,
@@ -4770,8 +4770,7 @@
   "common": {
     "version" : "1.1.2",
     "test_frame_ratio" : 0.9,
-    "workflow_summary_dir": "summary",
-    "execution_tree_dir": "execution_tree",
+    "workflow_summary_dir": "workflow",
     "minimal_test_split": 200
   }
 }

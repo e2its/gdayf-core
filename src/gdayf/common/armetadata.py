@@ -35,6 +35,8 @@ class ArMetadata (OrderedDict):
         self['version'] = None
         self['type'] = type_
         self['objective_column'] = None
+        self['workflow_id'] = None
+        self['user_id'] = None
         self['timestamp'] = None
         self['round'] = 1
         self['execution_seconds'] = 0
@@ -66,6 +68,8 @@ class ArMetadata (OrderedDict):
         new_model = ArMetadata()
         new_model['model_id'] = deepcopy(self['model_id'])
         new_model['version'] = deepcopy(self['version'])
+        new_model['workflow_id'] = deepcopy(self['workflow_id'])
+        new_model['user_id'] = deepcopy(self['user_id'])
         new_model['type'] = deepcopy(self['type'])
         new_model['objective_column'] = deepcopy(self['objective_column'])
         new_model['timestamp'] = deepcopy(self['timestamp'])

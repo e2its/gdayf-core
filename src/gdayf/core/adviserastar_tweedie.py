@@ -35,9 +35,13 @@ class AdviserAStar(Adviser):
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     # @param dataframe_name dataframe_name or id
     # @param hash_dataframe MD5 hash value
-    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe=''):
+    # @param workflow_id Workflow identifier
+    # @param user_id user identifier
+    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe='',
+                 workflow_id='', user_id='guest'):
         super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
-                                           dataframe_name=dataframe_name, hash_dataframe=hash_dataframe)
+                                           dataframe_name=dataframe_name, hash_dataframe=hash_dataframe,
+                                           workflow_id=workflow_id, user_id=user_id)
 
     ## Method manging generation of possible optimized models
 

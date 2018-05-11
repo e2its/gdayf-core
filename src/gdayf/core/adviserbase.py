@@ -51,7 +51,10 @@ class Adviser(object):
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     # @param dataframe_name dataframe_name or id
     # @param hash_dataframe MD5 hash value
-    def __init__(self, analysis_id, deep_impact=5, metric='accuracy', dataframe_name='', hash_dataframe=''):
+    # @param workflow_id Workflow identifier
+    # @param user_id user identifier
+    def __init__(self, analysis_id, deep_impact=5, metric='accuracy', dataframe_name='', hash_dataframe='',
+                 workflow_id='', user_id ='guest'):
         self._labels = LoadLabels().get_config()['messages']['adviser']
         self._config = LoadConfig().get_config()['optimizer']
         self._logging = LogsHandler()
@@ -66,6 +69,8 @@ class Adviser(object):
         self.metric = metric
         self.dataframe_name = dataframe_name
         self.hash_dataframe = hash_dataframe
+        self.workflow_id = workflow_id
+        self.user_id = user_id
 
     ## Main method oriented to execute smart analysis
     # @param self object pointer
@@ -374,6 +379,8 @@ class Adviser(object):
 
             ar_structure['model_id'] = self.analysis_id
             ar_structure['version'] = version
+            ar_structure['user_id'] = self.user_id
+            ar_structure['workflow_id'] = ar_metadata['workflow_id']
             ar_structure['objective_column'] = ar_metadata['objective_column']
             ar_structure['timestamp'] = self.timestamp
             ar_structure['normalizations_set'] = ar_metadata['normalizations_set']
@@ -435,6 +442,8 @@ class Adviser(object):
             ar_structure = ArMetadata()
             ar_structure['model_id'] = self.analysis_id
             ar_structure['version'] = version
+            ar_structure['user_id'] = self.user_id
+            ar_structure['workflow_id'] = self.workflow_id
             ar_structure['objective_column'] = objective_column
             ar_structure['timestamp'] = self.timestamp
             ar_structure['normalizations_set'] = norm_sets

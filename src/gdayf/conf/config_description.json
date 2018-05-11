@@ -657,9 +657,12 @@
     "test_frame_ratio": {
           "description": "% split in decimal mode for test Dataframe"
     },
-    "workflow_execution_dir": {
-          "description": "relative path for workflow csv dataset"
+    "workflow_summary_dir": {
+          "description": "relative path for workflow csv summary dataset"
         },
+    "execution_tree_dir": {
+      "description": "relative path for execution tree json"
+    },
     "minimal_test_split": {
       "description": "Minimal amount of data to establish a primary dataframe split on test"
     }

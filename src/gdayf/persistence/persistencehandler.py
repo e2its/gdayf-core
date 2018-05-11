@@ -16,7 +16,7 @@ from json import dump, dumps, load, loads
 from collections import OrderedDict
 import mmap
 from os import path as ospath, chmod, remove
-from os.path import dirname
+from os import path
 from shutil import rmtree, copy2
 from pathlib import Path
 from gdayf.common.utils import hash_key
@@ -83,7 +83,7 @@ class PersistenceHandler(object):
             print(repr(oexecution_error))
             return 1, None
         try:
-            self._mkdir_hdfs(path=dirname(storage_json['value']),
+            self._mkdir_hdfs(path=path.dirname(storage_json['value']),
                              grants=self._config['grants'],
                              client=client)
             #client.write(storage_json['value'], data=mmap_, encoding='utf-8', overwrite=True)
@@ -121,8 +121,8 @@ class PersistenceHandler(object):
     def _store_file_to_localfs(self, storage_json, filename):
         if not ospath.exists(path=storage_json['value']):
             try:
-                self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
-                shutil.copy2(filename, storage_json['value'])
+                self._mkdir_localfs(path=path.dirname(storage_json['value']), grants=int(self._config['grants'], 8))
+                copy2(filename, storage_json['value'])
                 '''with open(storage_json['value'], 'wb') as wfile:
                     mmap_.seek(0)
                     iterator = 0
@@ -246,7 +246,7 @@ class PersistenceHandler(object):
         compress = LoadConfig().get_config()['persistence']['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
-            self._mkdir_localfs(path=dirname(storage_json['value']), grants=int(self._config['grants'], 8))
+            self._mkdir_localfs(path=path.dirname(storage_json['value']), grants=int(self._config['grants'], 8))
             if compress:
                 file = gzip.GzipFile(storage_json['value'], 'w')
                 json_str = dumps(ar_json, indent=4)
@@ -277,7 +277,7 @@ class PersistenceHandler(object):
         compress = LoadConfig().get_config()['persistence']['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
-            self._mkdir_hdfs(path=dirname(storage_json['value']),
+            self._mkdir_hdfs(path=path.dirname(storage_json['value']),
                              grants=self._config['grants'],
                              client=client)
             if compress:

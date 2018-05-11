@@ -46,7 +46,7 @@ from hashlib import md5
 class Controller(object):
 
     ## Constructor
-    def __init__(self, user_id='PoC_gDayF'):
+    def __init__(self, user_id='PoC_gDayF', workflow_id='default'):
         self._config = LoadConfig().get_config()
         self._labels = LoadLabels().get_config()['messages']['controller']
         self._logging = LogsHandler()
@@ -56,6 +56,11 @@ class Controller(object):
         self.adviser = importlib.import_module(self._config['optimizer']['adviser_classpath'])
         self._logging.log_info('gDayF', "Controller", self._labels["loading_adviser"],
                                self._config['optimizer']['adviser_classpath'])
+        self.timestamp = str(time())
+        if workflow_id == 'default':
+            self.workflow_id = workflow_id + '_' + self.timestamp
+        else:
+            self.workflow_id = workflow_id
 
     ## Method leading configurations coherence checks
     # @param self object pointer
@@ -383,7 +388,9 @@ class Controller(object):
         adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath + '_' + str(time()),
                                             metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
-                                            hash_dataframe=hash_dataframe)
+                                            hash_dataframe=hash_dataframe,
+                                            workflow_id=self.workflow_id,
+                                            user_id=self.user_id)
 
         adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
 
@@ -586,7 +593,9 @@ class Controller(object):
         adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath + '_' + str(time()),
                                             metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
-                                            hash_dataframe=hash_dataframe)
+                                            hash_dataframe=hash_dataframe,
+                                            workflow_id=self.workflow_id,
+                                            user_id=self.user_id)
 
         adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=list_ar_metadata)
 
@@ -644,7 +653,7 @@ class Controller(object):
     def get_external_model(self, armetadata, type='pojo'):
         fw = get_model_fw(armetadata)
         self.init_handler(fw)
-        results = self.model_handler[fw]['handler'].get_external_model(armetadata, type, user=self.user_id)
+        results = self.model_handler[fw]['handler'].get_external_model(armetadata, type)
         self.clean_handler(fw)
         return results
 
@@ -730,13 +739,13 @@ class Controller(object):
     # @param experiment analysys_id for mongoDB recovery
     # @param user user_id for mongoDB recovery
     # @return OrderedDict() with execution tree data Analysis
-    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None, user='guest'):
+    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None):
         if (arlist is None or len(arlist) == 0) and experiment is None:
             self._logging.log_critical('gDayF', 'controller', self._labels["failed_model"])
             return None
-        elif experiment is not None and user != 'guest':
+        elif experiment is not None and self.user_id != 'guest':
             analysis_id = experiment
-            new_arlist = PersistenceHandler().recover_experiment_mongoDB(analysis_id=experiment, user=user)
+            new_arlist = PersistenceHandler().recover_experiment_mongoDB(analysis_id=experiment, user=self.user_id)
         else:
             analysis_id = arlist[0]['model_id']
             new_arlist = arlist
@@ -794,9 +803,10 @@ class Controller(object):
             datafile.append('/')
             datafile.append(self.user_id)
             datafile.append('/')
-            datafile.append(analysis_id)
+            datafile.append(self.workflow_id)
             datafile.append('/')
-            datafile.append('Execution_tree_')
+            datafile.append(self._config['common']['execution_tree_dir'])
+            datafile.append('/')
             datafile.append(analysis_id)
             datafile.append('.json')
 
@@ -815,7 +825,8 @@ class Controller(object):
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
     # @return OrderedDict() with execution tree data Analysis
     def priorize_list(self, analysis_id, arlist, metric):
-        adviser = self.adviser.AdviserAStar(analysis_id=analysis_id, metric=metric)
+        adviser = self.adviser.AdviserAStar(analysis_id=analysis_id, metric=metric,
+                                            workflow_id=self.workflow_id, user_id=self.user_id)
         ordered_list = adviser.priorize_models(adviser.analysis_id, arlist)
         del adviser
         return ordered_list

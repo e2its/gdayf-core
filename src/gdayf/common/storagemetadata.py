@@ -75,8 +75,8 @@ class StorageMetadata (list):
 
 ## Function to Generate json StorageMetadata for Armetadata
 # @param armetadata structure to be stored
-# @param user user_id
-def generate_json_path(armetadata, user='guest'):
+
+def generate_json_path(armetadata):
     config = LoadConfig().get_config()
     fw = get_model_fw(armetadata)
 
@@ -89,7 +89,9 @@ def generate_json_path(armetadata, user='guest'):
             source_data = list()
             source_data.append(primary_path)
             source_data.append('/')
-            source_data.append(user)
+            source_data.append(armetadata['user_id'])
+            source_data.append('/')
+            source_data.append(armetadata['workflow_id'])
             source_data.append('/')
             source_data.append(armetadata['model_id'])
             source_data.append('/')
@@ -113,7 +115,7 @@ def generate_json_path(armetadata, user='guest'):
             json_storage.append(value=json_path, fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
         else:
-            json_storage.append(value=user, fstype=each_storage_type['type'],
+            json_storage.append(value=armetadata['user_id'], fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
 
     armetadata['json_path'] = json_storage

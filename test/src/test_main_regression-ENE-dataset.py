@@ -11,10 +11,10 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                                                          amode=FAST, metric='train_rmse', deep_impact=4)
+                                                          amode=FAST, metric='test_rmse', deep_impact=4)
 
         '''controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='train_rmse')
-        controller.save_models(recomendations, mode=EACH_BEST)'''
+        controller.save_models(recomendations, mode=BEST)'''
         controller.reconstruct_execution_tree(metric='train_rmse', store=True,
                                               experiment=recomendations[0]['model_id'],
                                               user=controller.user_id)

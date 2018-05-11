@@ -189,10 +189,9 @@ class sparkHandler(object):
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @param type ['pojo', 'mojo']
-    # @param user user_id
     # @return download_path, MD5 hash_key
     # Not implemented
-    def get_external_model(self, ar_metadata, type, user):
+    def get_external_model(self, ar_metadata, type):
         return False
 
     ## Load a model in sparkCluster from disk
@@ -606,16 +605,11 @@ class sparkHandler(object):
         assert isinstance(base_ar, ArMetadata)
 
         filtering = 'NONE'
-        user = 'guest'
 
         for pname, pvalue in kwargs.items():
             if pname == 'filtering':
                 assert isinstance(pvalue, str)
                 filtering = pvalue
-            if pname == 'user':
-                user = str(pvalue)
-
-
 
         # python train parameters effective
         self.analysis_id = analysis_id
@@ -977,7 +971,7 @@ class sparkHandler(object):
             final_ar_model['metrics']['execution']['test']['betweenss'] = 1e+16
 
         finally:
-            generate_json_path(final_ar_model, user)
+            generate_json_path(final_ar_model)
             self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
             self._logging.log_info(analysis_id,
@@ -987,7 +981,7 @@ class sparkHandler(object):
                                    self._spark_session.sparkContext.applicationId,
                                    self._labels["end"], model_id)
             if not aborted:
-                self.store_model(final_ar_model, user=user)
+                self.store_model(final_ar_model)
 
             for handler in self._logging.logger.handlers:
                 handler.flush()
@@ -995,9 +989,8 @@ class sparkHandler(object):
 
     ## Method to save model to persistence layer from armetadata
     # @param armetadata structure to be stored
-    # @param user user_id
     # return saved_model (True/False)
-    def store_model(self, armetadata, user='guest'):
+    def store_model(self, armetadata):
         saved_model = False
 
         fw = get_model_fw(armetadata)
@@ -1013,7 +1006,9 @@ class sparkHandler(object):
             primary_path = self._config['storage'][each_storage_type['type']]['value']
             source_data.append(primary_path)
             source_data.append('/')
-            source_data.append(user)
+            source_data.append(armetadata['user_id'])
+            source_data.append('/')
+            source_data.append(armetadata['workflow_id'])
             source_data.append('/')
             source_data.append(armetadata['model_id'])
             source_data.append('/')
@@ -1075,10 +1070,8 @@ class sparkHandler(object):
     # @return (String, [ArMetadata]) equivalent to (analysis_id, List[analysis_results])
     def predict(self, predict_frame, base_ar, **kwargs):
 
-        user = 'guest'
         for pname, pvalue in kwargs.items():
-            if pname == 'user':
-                user = str(pvalue)
+            None
 
         remove_model = False
         model_timestamp = str(time.time())
@@ -1221,7 +1214,7 @@ class sparkHandler(object):
         base_ar['status'] = self._labels['success_op']
 
         # writing ar.json file
-        generate_json_path(base_ar, user)
+        generate_json_path(base_ar)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
         self._logging.log_exec(self.analysis_id,
                                self._spark_session.sparkContext.applicationId,
