@@ -1,0 +1,21 @@
+{
+    "type": "pandas",
+    "rowcount" : 1062,
+    "cols" : 13 ,
+    "timeformat" : "dd-mm-yyyy HH:mi:ss:ms",
+    "columns" : [
+      {"name" : "COD",
+        "type" : "normalization_metadata.json"
+      },
+      {"name" : "INICIO",
+        "type" : "normalization",
+         "class" : "working_range",
+         "objective" : {
+          "minval" : -1.0,
+          "maxval" : 1.0
+      },
+      {"name" : "COD_float",
+        "type" : "normalization_metadata.json"
+      }
+      ]
+}

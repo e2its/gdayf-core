@@ -1,0 +1,133 @@
+{
+    "DCM_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "DCM",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "AF_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "AF",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+      "AcF_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "AcF",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "EV":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "EV",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "ERP_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "ERP",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "RaL_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "RaL",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns":  [
+          "AF100","AFF100"],
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "INC_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "INC",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    },
+    "Consumo_predict":{
+      "model" : "",
+      "parameters": {
+        "amode":"FAST",
+        "mode" : "train",
+        "objective_column": "Consumo",
+        "metric": "train_rmse",
+        "deep_impact": 8
+      },
+      "data":{
+        "filtered_columns": null,
+        "filtered_data": null,
+        "for_each":null
+      },
+      "Next": null
+    }
+}
+
