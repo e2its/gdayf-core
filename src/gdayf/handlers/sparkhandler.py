@@ -77,10 +77,13 @@ class sparkHandler(object):
     ## Constructor
     # Initialize all framework variables and starts or connect to spark cluster
     # Aditionally starts PersistenceHandler and logsHandler
-    def __init__(self):
+    # @param self object pointer
+    # @param e_c context pointer
+    def __init__(self, e_c):
+        self._ec = e_c
         self._framework = 'spark'
-        self._config = LoadConfig().get_config()
-        self._labels = LoadLabels().get_config()['messages']['corehandler']
+        self._config = self._ec.config.get_config()
+        self._labels = self._ec.labels.get_config()['messages']['corehandler']
         self.localfs = self._config['storage']['localfs']['value']
         self.hdfs =self._config['storage']['hdfs']['value']
         self.mongoDB = self._config['storage']['mongoDB']['value']
@@ -94,7 +97,6 @@ class sparkHandler(object):
         self._save_model = self._config['frameworks'][self._framework]['conf']['save_model']
         self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
         self._model_base = None
-        self.analysis_id = None
         self._spark_session = None
         self._persistence = PersistenceHandler()
         self._logging = LogsHandler(__name__)
@@ -220,14 +222,14 @@ class sparkHandler(object):
                         load_fails = False
 
                         if ar_metadata['load_path'][counter_storage]['hash_value'] is not None:
-                            self._logging.log_info(self.analysis_id, self._spark_session.sparkContext.applicationId,
+                            self._logging.log_info(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
                                                    self._labels["hk_check"],
                                                    ar_metadata['load_path'][counter_storage]['hash_value'] + ' - ' +
                                                    hash_key(ar_metadata['load_path'][counter_storage]['hash_type'],
                                                             ar_metadata['load_path'][counter_storage]['value'])
                                                    )
                 except Py4JJavaError:
-                    self._logging.log_error(self.analysis_id, self._spark_session.sparkContext.applicationId,
+                    self._logging.log_error(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
                                             self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
 
             counter_storage += 1
@@ -483,7 +485,7 @@ class sparkHandler(object):
                                   .filter(resultado_train.prediction <= fmax(resultado_train[objective])).count() \
                                   / float(resultado_train.count())
 
-        self._logging.log_exec(self.analysis_id, self._spark_session.sparkContext.applicationId, self._labels["tolerance"],
+        self._logging.log_exec(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId, self._labels["tolerance"],
                                str(tolerance))
         return accuracy
 
@@ -556,7 +558,7 @@ class sparkHandler(object):
     def execute_normalization(self, dataframe, base_ns, model_id, filtering='NONE', exist_objective=True):
         if base_ns is not None:
             data_norm = dataframe.copy(deep=True)
-            self._logging.log_exec(self.analysis_id,
+            self._logging.log_exec(self._ec.get_id_analysis(),
                                    self._spark_session.sparkContext.applicationId, self._labels["exec_norm"], str(base_ns))
             normalizer = Normalizer()
             if not exist_objective:
@@ -584,23 +586,20 @@ class sparkHandler(object):
     # @param dataframe  pandas dataframe
     # @return (base_ns)
     def define_special_spark_naive_norm(self, df_metadata):
-        self._logging.log_exec(self.analysis_id,
+        self._logging.log_exec(self._ec.get_id_analysis(),
                                self._spark_session.sparkContext.applicationId, self._labels["def_naive_norm"])
         normalizer = Normalizer()
         aux_ns = normalizer.define_special_spark_naive_norm(dataframe_metadata=df_metadata)
         del normalizer
         return aux_ns
 
-
     ## Main method to execute sets of analysis and normalizations base on params
     # @param self object pointer
-    # @param analysis_id String (Analysis identificator)
     # @param training_pframe pandas.DataFrame
     # @param base_ar ar_template.json
     # @param **kwargs extra arguments
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
-    def order_training(self, analysis_id, training_pframe, base_ar, **kwargs):
-        assert isinstance(analysis_id, str)
+    def order_training(self, training_pframe, base_ar, **kwargs):
         assert isinstance(training_pframe, DataFrame)
         assert isinstance(base_ar, ArMetadata)
 
@@ -612,7 +611,7 @@ class sparkHandler(object):
                 filtering = pvalue
 
         # python train parameters effective
-        self.analysis_id = analysis_id
+        analysis_id = self._ec.get_id_analysis()
         supervised = True
         tolerance = 0.0
         objective_column = base_ar['objective_column']
@@ -995,7 +994,6 @@ class sparkHandler(object):
 
         fw = get_model_fw(armetadata)
         model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
-        analysis_id = armetadata['model_id']
 
         #Updating status
         armetadata['status'] = self._labels["success_op"]
@@ -1033,12 +1031,12 @@ class sparkHandler(object):
 
         armetadata['load_path'] = load_storage
 
-        self._logging.log_exec(analysis_id,
+        self._logging.log_exec(self._ec.get_id_analysis(),
                                self._spark_session.sparkContext.applicationId, self._labels["msaved"],
                                model_id)
 
         self._persistence.store_json(storage_json=armetadata['json_path'], ar_json=armetadata)
-        self._logging.log_info(analysis_id,
+        self._logging.log_info(self._ec.get_id_analysis(),
                                self._spark_session.sparkContext.applicationId,
                                self._labels["model_stored"], model_id)
 
@@ -1075,8 +1073,8 @@ class sparkHandler(object):
 
         remove_model = False
         model_timestamp = str(time.time())
-        self.analysis_id = base_ar['model_id']
-        analysis_id = self.analysis_id
+
+        analysis_id = self._ec.set_id_analysis(base_ar['model_id'])
         base_model_id = base_ar['model_parameters']['spark']['parameters']['model_id']['value'] + self._get_ext()
         model_id = base_model_id + '_' + model_timestamp
         antype = base_ar['model_parameters']['spark']['types'][0]['type']
@@ -1088,7 +1086,7 @@ class sparkHandler(object):
         load_fails, remove_model = self._get_model(base_ar, base_model_id, remove_model)
 
         if load_fails or self._model_base is None:
-            self._logging.log_critical(self.analysis_id, self._spark_session.sparkContext.applicationId,
+            self._logging.log_critical(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
                                        self._labels["no_models"], base_model_id)
             base_ar['status'] = self._labels['failed_op']  # Default Failed Operation Code
             return None
@@ -1152,7 +1150,7 @@ class sparkHandler(object):
                                'test_frame (' + str(npredict_frame.count()) + ')')
 
         base_ar['type'] = 'predict'
-        self._logging.log_info(self.analysis_id, self._spark_session.sparkContext.applicationId,
+        self._logging.log_info(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
                                self._labels["action_type"], base_ar['type'])
 
         base_ar['timestamp'] = model_timestamp
@@ -1216,10 +1214,10 @@ class sparkHandler(object):
         # writing ar.json file
         generate_json_path(base_ar)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
-        self._logging.log_exec(self.analysis_id,
+        self._logging.log_exec(self._ec.get_id_analysis(),
                                self._spark_session.sparkContext.applicationId,
                                self._labels["model_stored"], model_id)
-        self._logging.log_info(self.analysis_id,
+        self._logging.log_info(self._ec.get_id_analysis(),
                                self._spark_session.sparkContext.applicationId,
                                self._labels["end"], model_id)
         for handler in self._logging.logger.handlers:

@@ -18,12 +18,15 @@ import logging.config
 from gdayf.conf.loadconfig import LoadConfig
 
 ## Class oriented to manage all messages and interaction with DayF product logs
+# @param e_c context pointer
+# @param module __name__
 class LogsHandler (object):
     ## Constructor
-    def __init__(self, module=__name__):
+    def __init__(self, e_c, module=__name__):
         # @var _config
         # protected variable for loading and store DayF whole configuration parameters
-        self._conf = LoadConfig().get_config()['logging']
+        self._ec = e_c
+        self._conf = self._ec.config.get_config()['logging']
         # @var logger
         # variable for setting log global handlers
         self.logger = logging.getLogger(module)

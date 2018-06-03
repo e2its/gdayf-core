@@ -78,10 +78,12 @@ class H2OHandler(object):
     ## Constructor
     # Initialize all framework variables and starts or connect to h2o cluster
     # Aditionally starts PersistenceHandler and logsHandler
-    def __init__(self):
+    # @param e_c context pointer
+    def __init__(self, e_c):
+        self._ec = e_c
         self._framework = 'h2o'
-        self._config = LoadConfig().get_config()
-        self._labels = LoadLabels().get_config()['messages']['corehandler']
+        self._config = self._ec.config.get_config()
+        self._labels = self._ec.labels.get_config()['messages']['corehandler']
         self.localfs = self._config['storage']['localfs']['value']
         self.hdfs =self._config['storage']['hdfs']['value']
         self.mongoDB = self._config['storage']['mongoDB']['value']
@@ -97,11 +99,11 @@ class H2OHandler(object):
         self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
         self._anomaly_threshold = self._config['frameworks'][self._framework]['conf']['anomaly_threshold']
         self._model_base = None
-        self.analysis_id = None
         self._h2o_session = None
-        self._persistence = PersistenceHandler()
-        self._logging = LogsHandler(__name__)
+        self._persistence = PersistenceHandler(e_c=self._ec)
+        self._logging = LogsHandler(e_c=self._ec, module=__name__)
         self._frame_list = list()
+        self.analysis_id = None
 
     ## Destructor
     def __del__(self):
@@ -184,7 +186,7 @@ class H2OHandler(object):
         load_fails, remove_model = self._get_model(ar_metadata, base_model_id, remove_model)
 
         if load_fails:
-            self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
+            self._logging.log_critical(self._h2o_session.session_id,
                                        self._labels["no_models"], ar_metadata)
             return None
         load_storage = StorageMetadata()
@@ -219,7 +221,7 @@ class H2OHandler(object):
                                                self._labels["success_op"], file_path)
                     except H2OError:
                         load_fails = True
-                        self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
+                        self._logging.log_critical(self._h2o_session.session_id,
                                                 self._labels["failed_op"], download_path)
                 else:
                     try:
@@ -228,7 +230,7 @@ class H2OHandler(object):
                                                self._labels["success_op"], file_path)
                     except H2OError:
                         load_fails = True
-                        self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
+                        self._logging.log_critical(self._h2o_session.session_id,
                                                self._labels["failed_op"], download_path)
         try:
             if self._model_base is not None and remove_model:
@@ -726,26 +728,22 @@ class H2OHandler(object):
 
     ## Main method to execute sets of analysis and normalizations base on params
     # @param self object pointer
-    # @param analysis_id String (Analysis identificator)
     # @param training_pframe pandas.DataFrame
     # @param base_ar ar_template.json
     # @param **kwargs extra arguments
     # @return (String, ArMetadata) equivalent to (analysis_id, analysis_results)
-    def order_training(self, analysis_id, training_pframe, base_ar, **kwargs):
-        assert isinstance(analysis_id, str)
+    def order_training(self, training_pframe, base_ar, **kwargs):
         assert isinstance(training_pframe, DataFrame)
         assert isinstance(base_ar, ArMetadata)
-
+        
+        analysis_id = self._ec.get_id_analysis()
         filtering = 'NONE'
         for pname, pvalue in kwargs.items():
             if pname == 'filtering':
                 assert isinstance(pvalue, str)
                 filtering = pvalue
 
-
-
         # python train parameters effective
-        self.analysis_id = analysis_id
         supervised = True
         aborted = False
         objective_column = base_ar['objective_column']
@@ -764,7 +762,7 @@ class H2OHandler(object):
 
         base_ns = get_model_ns(base_ar)
         modelid = base_ar['model_parameters']['h2o']['model']
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["st_analysis"], modelid)
+        self._logging.log_info( self._h2o_session.session_id, self._labels["st_analysis"], modelid)
 
 
         assert isinstance(base_ns, list) or base_ns is None
@@ -784,20 +782,20 @@ class H2OHandler(object):
         if not norm_executed:
             data_normalized = None
             try:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["cor_struct"],
                                           str(data_initial['correlation'][objective_column]))
             except KeyError:
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_exec(self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_initial['correlation']))
 
         else:
             df_metadata = data_normalized
             base_ar['normalizations_set'] = base_ns
             try:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_normalized['correlation'][objective_column]))
             except KeyError:
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                self._logging.log_exec(self._h2o_session.session_id, self._labels["cor_struct"],
                                        str(data_initial['correlation']))
             if test_frame is not None:
                 test_frame, _, _, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns,
@@ -811,16 +809,16 @@ class H2OHandler(object):
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
 
                 valid_frame = get_frame('valid_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'training_frame(' + str(training_frame.nrows) +
                                        ') validating_frame(' + str(valid_frame.nrows) + ')')
             else:
                 training_frame = get_frame('train_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'training_frame(' + str(training_frame.nrows) + ')')
             if "test_frame" in kwargs.keys():
                 test_frame = get_frame('test_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["getting_from_h2o"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["getting_from_h2o"],
                                        'test_frame (' + str(test_frame.nrows) + ')')
         else:
             if training_pframe.count(axis=0).all() >  \
@@ -830,7 +828,7 @@ class H2OHandler(object):
                         split_frame(ratios=[self._config['frameworks']['h2o']['conf']['validation_frame_ratio']],
                                     destination_frames=['train_' + analysis_id + '_' + str(train_hash_value),
                                                         'valid_' + analysis_id + '_' + str(train_hash_value)])
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                        'training_frame(' + str(training_frame.nrows) +
                                        ') validating_frame(' + str(valid_frame.nrows) + ')')
                 self._frame_list.append(training_frame.frame_id)
@@ -839,14 +837,14 @@ class H2OHandler(object):
                 training_frame = \
                     H2OFrame(python_obj=training_pframe,
                              destination_frame='train_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                        'training_frame(' + str(training_frame.nrows) + ')')
                 self._frame_list.append(training_frame.frame_id)
 
             if "test_frame" in kwargs.keys():
                 test_frame = H2OFrame(python_obj=test_frame,
                                       destination_frame='test_' + analysis_id + '_' + str(train_hash_value))
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                        'test_frame (' + str(test_frame.nrows) + ')')
                 self._frame_list.append(test_frame.frame_id)
 
@@ -858,13 +856,13 @@ class H2OHandler(object):
                              objective_column=objective_column)
 
             # Initializing base structures
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["objective"],
+            self._logging.log_info( self._h2o_session.session_id, self._labels["objective"],
                                    objective_column + ' - ' + training_frame.type(objective_column))
 
             tolerance = get_tolerance(df_metadata['columns'], objective_column, self._tolerance)
 
         # Generating base_path
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["action_type"], base_ar['type'])
+        self._logging.log_info( self._h2o_session.session_id, self._labels["action_type"], base_ar['type'])
         base_path = self.generate_base_path(base_ar, base_ar['type'])
 
         final_ar_model = copy.deepcopy(base_ar)
@@ -876,10 +874,10 @@ class H2OHandler(object):
 
 
         model_id = modelid + '_' + model_timestamp
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_id"], model_id)
+        self._logging.log_info( self._h2o_session.session_id, self._labels["model_id"], model_id)
 
         analysis_type = base_ar['model_parameters']['h2o']['types'][0]['type']
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["amode"],
+        self._logging.log_info( self._h2o_session.session_id, self._labels["amode"],
                                base_ar['model_parameters']['h2o']['types'][0]['type'])
 
         ''' Generating and executing Models '''
@@ -917,7 +915,7 @@ class H2OHandler(object):
         train_command.append(")")
         train_command = ''.join(train_command)
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["gmodel"], model_command)
+        self._logging.log_exec(self._h2o_session.session_id, self._labels["gmodel"], model_command)
 
         # Generating model
         if self._debug:
@@ -939,7 +937,7 @@ class H2OHandler(object):
 
         except OSError as execution_error:
             aborted = True
-            self._logging.log_error(analysis_id, self._h2o_session.session_id, self._labels["abort"],
+            self._logging.log_error(self._h2o_session.session_id, self._labels["abort"],
                                    repr(execution_error))
             try:
                 H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id,
@@ -954,8 +952,8 @@ class H2OHandler(object):
                                                                                       seleccionable=False,
                                                                                       type="String")
         final_ar_model['execution_seconds'] = time.time() - start
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["tmodel"], model_id)
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["exec_time"],
+        self._logging.log_info( self._h2o_session.session_id, self._labels["tmodel"], model_id)
+        self._logging.log_info( self._h2o_session.session_id, self._labels["exec_time"],
                                str(final_ar_model['execution_seconds']))
 
         if self._debug:
@@ -972,7 +970,7 @@ class H2OHandler(object):
                 # Generating execution metrics
                 final_ar_model['metrics']['execution'] = ExecutionMetricCollection()
 
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+                self._logging.log_info( self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
 
 
                 final_ar_model['metrics']['execution']['train'] = self._generate_execution_metrics(dataframe=None,
@@ -985,7 +983,7 @@ class H2OHandler(object):
                     final_ar_model['metrics']['accuracy']['train'] = \
                     self._accuracy(objective_column, training_frame, antype=analysis_type, tolerance=tolerance,
                                        base_type=training_frame.type(objective_column))
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_tacc"],
+                    self._logging.log_exec(self._h2o_session.session_id, self._labels["model_tacc"],
                                            model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['train']))
                     final_ar_model['tolerance'] = tolerance
                 else:
@@ -1025,10 +1023,10 @@ class H2OHandler(object):
                         final_ar_model['metrics']['accuracy']['combined'] = \
                             (final_ar_model['metrics']['accuracy']['train']*train_balance +
                              final_ar_model['metrics']['accuracy']['test']*test_balance)
-                        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+                        self._logging.log_exec(self._h2o_session.session_id, self._labels["model_pacc"],
                                                model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['test']))
 
-                        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["model_cacc"],
+                        self._logging.log_exec(self._h2o_session.session_id, self._labels["model_cacc"],
                                                model_id + ' - ' + str(final_ar_model['metrics']['accuracy']['combined']))
                     else:
 
@@ -1038,7 +1036,7 @@ class H2OHandler(object):
                 #final_ar_model['tolerance'] = tolerance
 
             except Exception as execution_error:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["abort"],
+                self._logging.log_info( self._h2o_session.session_id, self._labels["abort"],
                                        repr(execution_error))
 
                 final_ar_model['metrics'] = OrderedDict()
@@ -1058,22 +1056,22 @@ class H2OHandler(object):
 
             # Generating model metrics
             final_ar_model['metrics']['model'] = self._generate_model_metrics()
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gmodel_metric"], model_id)
+            self._logging.log_info( self._h2o_session.session_id, self._labels["gmodel_metric"], model_id)
 
             # Generating anomalies metrics
             if analysis_type == 'anomalies':
                 final_ar_model['metrics']['anomalies'] = self._generate_execution_metrics(dataframe=training_frame[x],
                                                                                           source='train',
                                                                                           antype=analysis_type)
-                self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["ganomaly_metric"], model_id)
+                self._logging.log_info( self._h2o_session.session_id, self._labels["ganomaly_metric"], model_id)
 
             # Generating Variable importance
             final_ar_model['metrics']['var_importance'] = self._generate_importance_variables()
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gvar_metric"], model_id)
+            self._logging.log_info( self._h2o_session.session_id, self._labels["gvar_metric"], model_id)
 
             # Generating scoring_history
             final_ar_model['metrics']['scoring'] = self._generate_scoring_history()
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gsco_metric"], model_id)
+            self._logging.log_info( self._h2o_session.session_id, self._labels["gsco_metric"], model_id)
 
             final_ar_model['status'] = self._labels['success_op']
 
@@ -1097,8 +1095,8 @@ class H2OHandler(object):
         generate_json_path(final_ar_model)
         self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["end"], model_id)
+        self._logging.log_info( self._h2o_session.session_id, self._labels["model_stored"], model_id)
+        self._logging.log_info( self._h2o_session.session_id, self._labels["end"], model_id)
 
         if self._autosaved and not aborted:
             self.store_model(armetadata=final_ar_model)
@@ -1131,7 +1129,6 @@ class H2OHandler(object):
 
         fw = get_model_fw(armetadata)
         model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
-        analysis_id = armetadata['model_id']
 
         if model_id + self._get_ext() not in H2Olist()['key'].tolist():
             return saved_model
@@ -1178,10 +1175,10 @@ class H2OHandler(object):
 
         armetadata['load_path'] = load_storage
 
-        self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["msaved"], model_id)
+        self._logging.log_exec(self._h2o_session.session_id, self._labels["msaved"], model_id)
 
         self._persistence.store_json(storage_json=armetadata['json_path'], ar_json=armetadata)
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
+        self._logging.log_info( self._h2o_session.session_id, self._labels["model_stored"], model_id)
 
         return saved_model
 
@@ -1216,8 +1213,7 @@ class H2OHandler(object):
 
         remove_model = False
         model_timestamp = str(time.time())
-        self.analysis_id = base_ar['model_id']
-        analysis_id = self.analysis_id
+        analysis_id = self._ec.set_id_analysis(base_ar['model_id'])
         base_model_id = base_ar['model_parameters']['h2o']['parameters']['model_id']['value'] + '.model'
         model_id = base_model_id + '_' + model_timestamp
 
@@ -1230,7 +1226,7 @@ class H2OHandler(object):
         load_fails, remove_model = self._get_model(base_ar, base_model_id, remove_model)
 
         if load_fails or self._model_base is None:
-            self._logging.log_critical(self.analysis_id, self._h2o_session.session_id,
+            self._logging.log_critical(self._h2o_session.session_id,
                                        self._labels["no_models"], base_model_id)
             base_ar['status'] = self._labels['failed_op']  # Default Failed Operation Code
             return None
@@ -1241,7 +1237,7 @@ class H2OHandler(object):
         if objective_column is None:
             exist_objective = False
         if exist_objective:
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["objective"],
+            self._logging.log_info( self._h2o_session.session_id, self._labels["objective"],
                                    objective_column)
             # Recovering tolerance
             tolerance = base_ar['tolerance']
@@ -1252,11 +1248,11 @@ class H2OHandler(object):
 
         if objective_column in list(predict_frame.columns.values):
             try:
-                self._logging.log_info(analysis_id, self._h2o_session.session_id,
-                                   self._labels["cor_struct"],  str(data_initial['correlation'][objective_column]))
+                self._logging.log_info(self._h2o_session.session_id,
+                                       self._labels["cor_struct"],  str(data_initial['correlation'][objective_column]))
             except KeyError:
-                self._logging.log_exec(analysis_id, self._h2o_session.session_id,
-                                   self._labels["cor_struct"],  str(data_initial['correlation']))
+                self._logging.log_exec(self._h2o_session.session_id,
+                                       self._labels["cor_struct"],  str(data_initial['correlation']))
             npredict_frame, data_normalized, _, norm_executed, _ = self.execute_normalization(dataframe=predict_frame,
                                                                                               base_ns=base_ns,
                                                                                               model_id=modelid,
@@ -1271,29 +1267,29 @@ class H2OHandler(object):
                                                                                               exist_objective=False)
 
         if not norm_executed:
-            self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["exec_norm"],
+            self._logging.log_exec(self._h2o_session.session_id, self._labels["exec_norm"],
                                    'No Normalizations Required')
         else:
             # Transforming original dataframe to H2OFrame
             predict_frame = H2OFrame(python_obj=predict_frame,
                                      destination_frame='predict_frame_' + base_ar['model_id'])
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+            self._logging.log_info( self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                    'test_frame (' + str(predict_frame.nrows) + ')')
             self._frame_list.append(predict_frame.frame_id)
 
             base_ar['data_normalized'] = data_normalized
             if objective_column in list(npredict_frame.columns.values):
                 try:
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["cor_struct"],
+                    self._logging.log_exec(self._h2o_session.session_id, self._labels["cor_struct"],
                                            str(data_normalized['correlation'][objective_column]))
                 except KeyError:
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["no_cor_struct"],
+                    self._logging.log_exec(self._h2o_session.session_id, self._labels["no_cor_struct"],
                                            str(data_normalized['correlation']))
 
         #Transforming to H2OFrame
         npredict_frame = H2OFrame(python_obj=npredict_frame,
                                   destination_frame='npredict_frame_' + base_ar['model_id'])
-        self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["parsing_to_h2o"],
+        self._logging.log_info( self._h2o_session.session_id, self._labels["parsing_to_h2o"],
                                'test_frame (' + str(npredict_frame.nrows) + ')')
         self._frame_list.append(npredict_frame.frame_id)
 
@@ -1316,7 +1312,7 @@ class H2OHandler(object):
                                     path=path.dirname(base_ar['log_path'][0]['value']))
             connection().start_logging(base_ar['log_path'][0]['value'])
 
-        self._logging.log_info(analysis_id, self._h2o_session.session_id,
+        self._logging.log_info( self._h2o_session.session_id,
                                self._labels['st_predict_model'],
                                base_model_id)
 
@@ -1373,12 +1369,12 @@ class H2OHandler(object):
                                          storage_json=base_ar['log_path'])
 
         if not exist_objective or objective_type is not None:
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
+            self._logging.log_info( self._h2o_session.session_id, self._labels["gexec_metric"], model_id)
             base_ar['metrics']['execution'][base_ar['type']] = self._generate_execution_metrics(dataframe=npredict_frame,
                                                                                         source=None, antype=antype)
         if objective_column in npredict_frame.columns:
             base_ar['metrics']['accuracy']['predict'] = accuracy
-            self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_pacc"],
+            self._logging.log_info( self._h2o_session.session_id, self._labels["model_pacc"],
                                    base_model_id + ' - ' + str(base_ar['metrics']['accuracy']['predict']))
 
         base_ar['status'] = self._labels['success_op']

@@ -36,8 +36,10 @@ from bson.codec_options import CodecOptions
 ## Class to manage trasient information between all persistence options and models on an unified way
 class PersistenceHandler(object):
     ## Class Constructor
-    def __init__(self):
-        self._config = LoadConfig().get_config()['storage']
+    # @param e_c context pointer
+    def __init__(self, e_c):
+        self._ec = e_c
+        self._config = self._ec.config.get_config()['storage']
 
     ## Method used to store a file on one persistence system ['localfs', ' hdfs']
     # using mmap structure to manage multi-persistence features
@@ -348,11 +350,9 @@ class PersistenceHandler(object):
     ## Method used to recover an experiment as [ar_metadata]
     # oriented to store full Analysis_results json but useful on whole json
     # @param self object pointer
-    # @param analysis_id experiment identificator
-    # @param user user_id
     # @param client Cliente MongoClient()
     # @return [ArMetadata]
-    def recover_experiment_mongoDB(self, analysis_id, user, client=None):
+    def recover_experiment_mongoDB(self, client=None):
         execution_list = list()
         remove_client = False
         if client is None or not isinstance(client(MongoClient)):
@@ -366,8 +366,8 @@ class PersistenceHandler(object):
                 return execution_list
         try:
             db = client[self._config['mongoDB']['value']]
-            collection = db[user]
-            query = {"$and": [{"model_id": analysis_id}, {"type": "train"}]}
+            collection = db[self._ec.get_id_user()]
+            query = {"$and": [{"model_id": self._ec.get_id_analysis()}, {"type": "train"}]}
             for element in collection.find(query):
                 execution_list.append(element)
             for element in execution_list:

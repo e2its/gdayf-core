@@ -18,8 +18,6 @@ from gdayf.handlers.inputhandler import inputHandlerCSV
 from gdayf.common.dfmetada import DFMetada
 
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.conf.loadconfig import LoadConfig
-from gdayf.conf.loadconfig import LoadLabels
 from gdayf.common.utils import get_model_fw
 from gdayf.common.constants import *
 from gdayf.common.utils import pandas_split_data, hash_key
@@ -38,29 +36,30 @@ from pymongo.errors import *
 # import bson
 # from  bson.codec_options import CodecOptions
 from hashlib import md5
-from gdayf.core import global_var
+from gdayf.core.experiment_context import Experiment_Context as E_C
 
 ## Core class oriented to manage the comunication and execution messages pass for all components on system
 # orchestrating the execution of actions activities (train and prediction) on specific frameworks
 class Controller(object):
 
     ## Constructor
-    def __init__(self, user_id='PoC_gDayF', workflow_id='default'):
-        self._config = LoadConfig().get_config()
-        self._labels = LoadLabels().get_config()['messages']['controller']
+    def __init__(self, e_c=None, user_id='PoC_gDayF', workflow_id='default'):
+        if e_c is None:
+            if workflow_id == 'default':
+                self._ec = E_C(user_id=user_id, workflow_id=workflow_id + '_' + self.timestamp)
+            else:
+                self._ec = E_C(user_id=user_id, workflow_id=workflow_id)
+        else:
+            self._ec = e_c
+        self._config = self._ec.config.get_config()
+        self._labels = self._ec.labels.get_config()['messages']['controller']
         self._logging = LogsHandler()
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
         self.model_handler = OrderedDict()
-        self.user_id = user_id
         self.adviser = importlib.import_module(self._config['optimizer']['adviser_classpath'])
         self._logging.log_info('gDayF', "Controller", self._labels["loading_adviser"],
                                self._config['optimizer']['adviser_classpath'])
         self.timestamp = str(time())
-        if workflow_id == 'default':
-            self.workflow_id = workflow_id + '_' + self.timestamp
-        else:
-            self.workflow_id = workflow_id
-        global_var.set_id_user(user_id)
 
     ## Method leading configurations coherence checks
     # @param self object pointer
@@ -73,7 +72,7 @@ class Controller(object):
         hdfs = (storage_conf['hdfs'] is not None) \
                   and self._coherence_fs_checks(storage_conf['hdfs'], grants=grants)
         mongoDB = (storage_conf['mongoDB'] is not None) \
-                  and self._coherence_db_checks(storage_conf['mongoDB'], user=self.user_id)
+                  and self._coherence_db_checks(storage_conf['mongoDB'])
         self._logging.log_info('gDayF', "Controller", self._labels["primary_path"],
                                str(storage_conf['primary_path']))
 
@@ -183,9 +182,8 @@ class Controller(object):
     ## Method leading configurations coherence checks on fs engines
     # @param self object pointer
     # @param storage StorageMetadata
-    # @param user user_id
     # @return True if OK / False if wrong
-    def _coherence_db_checks(self, storage, user):
+    def _coherence_db_checks(self, storage):
         if storage['type'] == 'mongoDB':
             try:
                 client = MongoClient(host=storage['url'],
@@ -196,7 +194,7 @@ class Controller(object):
                 return False
             try:
                 db = client[storage['value']]
-                collection = db[user]
+                collection = db[self._ec.get_id_user()]
                 test_insert = collection.insert_one({'test': 'connection.check.dot.bson'}).inserted_id
                 collection.delete_one({"_id": test_insert})
             except PyMongoError as wexecution_error:
@@ -266,7 +264,7 @@ class Controller(object):
         try:
             prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
                                                                         base_ar=base_ar,
-                                                                        user=self.user_id)
+                                                                        user=self._ec.get_id_user())
         except TypeError:
             self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
 
@@ -384,13 +382,11 @@ class Controller(object):
                                                             train_perc=self._config['common']['test_frame_ratio'])
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
-
-        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath + '_' + str(time()),
-                                            metric=metric,
+        
+        self._ec.set_id_analysis(self._ec.get_id_user() + '_' + id_datapath + '_' + str(time()))
+        adviser = self.adviser.AdviserAStar(metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
-                                            hash_dataframe=hash_dataframe,
-                                            workflow_id=self.workflow_id,
-                                            user_id=self.user_id)
+                                            hash_dataframe=hash_dataframe)
 
         adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
 
@@ -409,85 +405,77 @@ class Controller(object):
 
                 self.init_handler(fw)
                 if pd_test_dataset is not None:
-                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                         training_pframe=pd_dataset,
+                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(training_pframe=pd_dataset,
                                                                                          base_ar=each_model,
                                                                                          test_frame=pd_test_dataset,
-                                                                                         filtering='STANDARDIZE',
-                                                                                         user=self.user_id)
+                                                                                         filtering='STANDARDIZE')
                 else:
-                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(analysis_id=adviser.analysis_id,
-                                                                                         training_pframe=pd_dataset,
+                    _, analyzed_model = self.model_handler[fw]['handler'].order_training(training_pframe=pd_dataset,
                                                                                          base_ar=each_model,
                                                                                          test_frame=pd_dataset,
-                                                                                         filtering='STANDARDIZE',
-                                                                                         user=self.user_id)
+                                                                                         filtering='STANDARDIZE')
 
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
             adviser.next_analysis_list.clear()
-            adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
-                                                                            model_list=
+            adviser.analysis_recommendation_order = adviser.priorize_models(model_list=
                                                                             adviser.analysis_recommendation_order)
             adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
 
-        self._logging.log_info(adviser.analysis_id, 'controller',
+        self._logging.log_info(self._ec.get_id_analysis,'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_info(adviser.analysis_id, 'controller',
+        self._logging.log_info(self._ec.get_id_analysis,'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
-        #self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric, supervised)
 
-        self._logging.log_exec(adviser.analysis_id, 'controller', self._labels["end"])
+        self._logging.log_exec(self._ec.get_id_analysis, 'controller', self._labels["end"])
 
         self.clean_handlers()
 
-        adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
-                                                                        model_list=
+        adviser.analysis_recommendation_order = adviser.priorize_models(model_list=
                                                                         adviser.analysis_recommendation_order)
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
 
     ## Method oriented to log leaderboard against selected metrics
-    # @param analysis_id
     # @param ar_list List of AR models Execution Data
     # @param metric to execute order ['train_accuracy', 'train_rmse', 'test_accuracy', 'combined_accuracy', 'test_rmse', 'cdistance']
-    def log_model_list(self, analysis_id, ar_list, metric):
+    def log_model_list(self, ar_list, metric):
         best_check = True
-        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
+        ordered_list = self.priorize_list(arlist=ar_list, metric=metric)
         for model in ordered_list:
             if best_check:
-                self._logging.log_info(analysis_id, 'controller', self._labels["best_model"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["best_model"],
                                        model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
                 best_check = False
             else:
-                self._logging.log_info(analysis_id, 'controller', self._labels["res_model"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["res_model"],
                                        model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
-            self._logging.log_info(analysis_id, 'controller', self._labels["round_reach"], model['round'])
+            self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["round_reach"], model['round'])
             if model["normalizations_set"] is None:
-                self._logging.log_info(analysis_id, 'controller', self._labels["norm_app"], [])
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["norm_app"], [])
             else:
-                self._logging.log_info(analysis_id, 'controller', self._labels["norm_app"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["norm_app"],
                                        model["normalizations_set"])
 
             if metric in ACCURACY_METRICS or metric in REGRESSION_METRICS:
-                self._logging.log_info(analysis_id, 'controller', self._labels["ametric_order"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["ametric_order"],
                                        model['metrics']['accuracy'])
-                self._logging.log_info(analysis_id, 'controller', self._labels["pmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['train']['RMSE'])
-                self._logging.log_info(analysis_id, 'controller', self._labels["pmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['test']['RMSE'])
             if metric in CLUSTERING_METRICS:
                 try:
-                    self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
+                    self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["ckmetric_order"],
                                        model['metrics']['execution']['train']['k'])
                 except KeyError:
-                    self._logging.log_info(analysis_id, 'controller', self._labels["ckmetric_order"],
+                    self._logging.log_info(self._ec.get_id_analysis,'controller', self._labels["ckmetric_order"],
                                        "0")
-                self._logging.log_info(analysis_id, 'controller', self._labels["ctmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["ctmetric_order"],
                                        model['metrics']['execution']['train']['tot_withinss'])
-                self._logging.log_info(analysis_id, 'controller', self._labels["cbmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["cbmetric_order"],
                                        model['metrics']['execution']['train']['betweenss'])
 
     ## Method oriented to log leaderboard against selected metrics on dataframe
@@ -496,12 +484,12 @@ class Controller(object):
     # @param metric to execute order ['train_accuracy', 'train_rmse', 'test_accuracy', 'combined_accuracy', 'test_rmse', 'cdistance']
     # @return Dataframe performance model list
 
-    def table_model_list(self, analysis_id, ar_list, metric):
+    def table_model_list(self, ar_list, metric):
         dataframe = list()
         normal_cols = ['Model', 'Train_accuracy', 'Test_accuracy', 'Combined_accuracy', 'train_rmse', 'test_rmse']
         cluster_cols = ['Model', 'k', 'tot_withinss', 'betweenss']
 
-        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=ar_list, metric=metric)
+        ordered_list = self.priorize_list(arlist=ar_list, metric=metric)
         for model in ordered_list:
             if metric in ACCURACY_METRICS or metric in REGRESSION_METRICS:
                 try:
@@ -590,13 +578,10 @@ class Controller(object):
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
-
-        adviser = self.adviser.AdviserAStar(analysis_id=self.user_id + '_' + id_datapath + '_' + str(time()),
-                                            metric=metric,
+        self._ec.set_id_analysis(self._ec.get_id_user() + '_' + id_datapath + '_' + str(time()))
+        adviser = self.adviser.AdviserAStar(metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
-                                            hash_dataframe=hash_dataframe,
-                                            workflow_id=self.workflow_id,
-                                            user_id=self.user_id)
+                                            hash_dataframe=hash_dataframe)
 
         adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=list_ar_metadata)
 
@@ -609,39 +594,33 @@ class Controller(object):
 
                 if pd_test_dataset is not None:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(
-                        analysis_id=adviser.analysis_id,
                         training_pframe=pd_dataset,
                         base_ar=each_model,
-                        test_frame=pd_test_dataset, filtering='NONE',
-                        user=self.user_id)
+                        test_frame=pd_test_dataset, filtering='NONE')
                 else:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(
-                        analysis_id=adviser.analysis_id,
                         training_frame=pd_dataset,
-                        base_ar=each_model, filtering='NONE',
-                        user=self.user_id)
+                        base_ar=each_model, filtering='NONE')
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
 
             adviser.next_analysis_list.clear()
-            adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
-                                                                            model_list=
+            adviser.analysis_recommendation_order = adviser.priorize_models(model_list=
                                                                             adviser.analysis_recommendation_order)
             adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=adviser.analysis_recommendation_order)
 
-        self._logging.log_info(adviser.analysis_id, 'controller',
+        self._logging.log_info(self._ec.get_id_analysis, 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_info(adviser.analysis_id, 'controller',
+        self._logging.log_info(self._ec.get_id_analysis, 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
-        self.log_model_list(adviser.analysis_id, adviser.analysis_recommendation_order, metric)
+        self.log_model_list(adviser.adviser.analysis_recommendation_order, metric)
 
-        self._logging.log_info(adviser.analysis_id, 'controller', self._labels["end"])
+        self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["end"])
 
         self.clean_handlers()
 
-        adviser.analysis_recommendation_order = adviser.priorize_models(analysis_id=adviser.analysis_id,
-                                                                        model_list=
+        adviser.analysis_recommendation_order = adviser.priorize_models(model_list=
                                                                         adviser.analysis_recommendation_order)
 
         return self._labels['success_op'], adviser.analysis_recommendation_order
@@ -683,7 +662,7 @@ class Controller(object):
                 self.init_handler(fw)
                 for each_model in model_list:
                     if fw in each_model['model_parameters'].keys():
-                        self.model_handler[fw]['handler'].store_model(each_model, user=self.user_id)
+                        self.model_handler[fw]['handler'].store_model(each_model, user=self._ec.get_id_user())
                 self.clean_handler(fw)
 
     ## Method leading and controlling model loads
@@ -740,18 +719,17 @@ class Controller(object):
     # @param experiment analysys_id for mongoDB recovery
     # @param user user_id for mongoDB recovery
     # @return OrderedDict() with execution tree data Analysis
-    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True, experiment=None):
-        if (arlist is None or len(arlist) == 0) and experiment is None:
+    def reconstruct_execution_tree(self, arlist=None, metric='combined', store=True):
+        if (arlist is None or len(arlist) == 0) and self._ec.get_id_analysis() is None:
             self._logging.log_critical('gDayF', 'controller', self._labels["failed_model"])
             return None
-        elif experiment is not None and self.user_id != 'guest':
-            analysis_id = experiment
-            new_arlist = PersistenceHandler().recover_experiment_mongoDB(analysis_id=experiment, user=self.user_id)
+        elif self._ec.get_id_analysis() is not None and self._ec.get_id_user() != 'guest':
+            new_arlist = PersistenceHandler().recover_experiment_mongoDB(user=self._ec.get_id_user())
         else:
             analysis_id = arlist[0]['model_id']
             new_arlist = arlist
 
-        ordered_list = self.priorize_list(analysis_id=analysis_id, arlist=new_arlist, metric=metric)
+        ordered_list = self.priorize_list(arlist=new_arlist, metric=metric)
 
         root = OrderedDict()
         root['data'] = None
@@ -790,7 +768,7 @@ class Controller(object):
                         found = True
                     counter += 1
                 if not found:
-                    self._logging.log_debug(analysis_id, 'controller', self._labels['fail_reconstruct'],
+                    self._logging.log_debug(self._ec.get_id_analysis, 'controller', self._labels['fail_reconstruct'],
                                             model_id)
             level += 1
 
@@ -802,13 +780,13 @@ class Controller(object):
             datafile = list()
             datafile.append(self._config['storage'][primary_path]['value'])
             datafile.append('/')
-            datafile.append(self.user_id)
+            datafile.append(self._ec.get_id_user())
             datafile.append('/')
             datafile.append(self.workflow_id)
             datafile.append('/')
             datafile.append(self._config['common']['execution_tree_dir'])
             datafile.append('/')
-            datafile.append(analysis_id)
+            datafile.append(self._ec.get_id_analysis())
             datafile.append('.json')
 
             if self._config['persistence']['compress_json']:
@@ -825,10 +803,9 @@ class Controller(object):
     # @param arlist Priorized ArMetadata list
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
     # @return OrderedDict() with execution tree data Analysis
-    def priorize_list(self, analysis_id, arlist, metric):
-        adviser = self.adviser.AdviserAStar(analysis_id=analysis_id, metric=metric,
-                                            workflow_id=self.workflow_id, user_id=self.user_id)
-        ordered_list = adviser.priorize_models(adviser.analysis_id, arlist)
+    def priorize_list(self, arlist, metric):
+        adviser = self.adviser.AdviserAStar(e_c= self._ec, metric=metric)
+        ordered_list = adviser.priorize_models(adviser.arlist)
         del adviser
         return ordered_list
 

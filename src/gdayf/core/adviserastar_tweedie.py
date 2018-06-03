@@ -27,18 +27,14 @@ class AdviserAStar(Adviser):
 
     ## Constructor
     # @param self object pointer
-    # @param analysis_id main id traceability code
+    # @param e_c context pointer
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['train_accuracy', 'test_rmse', 'train_rmse', 'test_accuracy', 'combined_accuracy'] on train
     # @param dataframe_name dataframe_name or id
     # @param hash_dataframe MD5 hash value
-    # @param workflow_id Workflow identifier
-    # @param user_id user identifier
-    def __init__(self, analysis_id, deep_impact=3, metric='train_accuracy', dataframe_name='', hash_dataframe='',
-                 workflow_id='', user_id='guest'):
-        super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
-                                           dataframe_name=dataframe_name, hash_dataframe=hash_dataframe,
-                                           workflow_id=workflow_id, user_id=user_id)
+    def __init__(self, e_c, deep_impact=3, metric='train_accuracy', dataframe_name='', hash_dataframe=''):
+        super(AdviserAStar, self).__init__(e_c=e_c, deep_impact=deep_impact, metric=metric,
+                                           dataframe_name=dataframe_name, hash_dataframe=hash_dataframe)
 
     ## Method mangaing the generation of possible optimized models
     # @param armetadata ArMetadata Model

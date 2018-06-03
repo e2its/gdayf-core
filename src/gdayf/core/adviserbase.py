@@ -22,7 +22,6 @@ from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
 from gdayf.models.sparkframeworkmetadata import sparkFrameworkMetadata
 from gdayf.models.sparkmodelmetadata import sparkModelMetadata
-from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.common.utils import compare_sorted_list_dict
 from gdayf.common.utils import get_model_fw
@@ -43,20 +42,18 @@ class Adviser(object):
 
     ## Constructor
     # @param self object pointer
-    # @param analysis_id main id traceability code
+    # @param e_c context pointer
     # @param deep_impact A* max_deep
     # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
     # @param dataframe_name dataframe_name or id
     # @param hash_dataframe MD5 hash value
-    # @param workflow_id Workflow identifier
-    # @param user_id user identifier
-    def __init__(self, analysis_id, deep_impact=5, metric='accuracy', dataframe_name='', hash_dataframe='',
-                 workflow_id='', user_id ='guest'):
-        self._labels = LoadLabels().get_config()['messages']['adviser']
-        self._config = LoadConfig().get_config()['optimizer']
+
+    def __init__(self, e_c, deep_impact=5, metric='accuracy', dataframe_name='', hash_dataframe=''):
+        self._ec = e_c
+        self._labels = self._ec.config.get_config()['messages']['adviser']
+        self._config = self._ec.labels.get_config()['optimizer']
         self._logging = LogsHandler()
         self.timestamp = time()
-        self.analysis_id = analysis_id
         self.an_objective = None
         self.deep_impact = deep_impact
         self.analysis_recommendation_order = list()
@@ -66,8 +63,7 @@ class Adviser(object):
         self.metric = metric
         self.dataframe_name = dataframe_name
         self.hash_dataframe = hash_dataframe
-        self.workflow_id = workflow_id
-        self.user_id = user_id
+
 
     ## Main method oriented to execute smart analysis
     # @param self object pointer
@@ -79,7 +75,7 @@ class Adviser(object):
         supervised = True
         if objective_column is None:
             supervised = False
-        self._logging.log_exec(self.analysis_id, 'AdviserAStar',
+        self._logging.log_exec(self._ec.get_id_analysis(), 'AdviserAStar',
                                self._labels["ana_type"],
                                str(atype) + ' (' + str(self.deepness) + ')')
         if supervised:
@@ -164,7 +160,7 @@ class Adviser(object):
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
         self.deepness += 1
-        return self.analysis_id, self.next_analysis_list
+        return self._ec.get_id_analysis(), self.next_analysis_list
 
     ## Method oriented to execute poc analysis
     # @param self object pointer
@@ -192,7 +188,7 @@ class Adviser(object):
             if len(self.next_analysis_list) == 0:
                 self.next_analysis_list = None
         self.deepness += 1
-        return self.analysis_id, self.next_analysis_list
+        return self._ec.get_id_analysis(), self.next_analysis_list
 
     ## Method oriented to execute new analysis
     # @param self object pointer
@@ -233,7 +229,7 @@ class Adviser(object):
             if len(self.next_analysis_list) == 0:
                 self.next_analysis_list = None
         self.deepness += 1
-        return self.analysis_id, self.next_analysis_list
+        return self._ec.get_id_analysis(), self.next_analysis_list
 
     ## Method oriented to execute smart normal and fast analysis
     # @param self object pointer
@@ -273,7 +269,7 @@ class Adviser(object):
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
         self.deepness += 1
-        return self.analysis_id, self.next_analysis_list
+        return self._ec.get_id_analysis(), self.next_analysis_list
 
     ## Method oriented to execute unsupervised anomalies models
     # @param self object pointer
@@ -314,7 +310,7 @@ class Adviser(object):
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
         self.deepness += 1
-        return self.analysis_id, self.next_analysis_list
+        return self._ec.get_id_analysis(), self.next_analysis_list
 
     ## Method oriented to execute unsupervised clustering models
     # @param self object pointer
@@ -355,7 +351,7 @@ class Adviser(object):
             if len(self.next_analysis_list) == 0:
                     self.next_analysis_list = None
         self.deepness += 1
-        return self.analysis_id, self.next_analysis_list
+        return self._ec.get_id_analysis(), self.next_analysis_list
 
     ## Method oriented to generate specific candidate metadata
     # @param self object pointer
@@ -367,16 +363,16 @@ class Adviser(object):
 
             ar_structure = ArMetadata()
             if ar_metadata['dataset_hash_value'] == self.hash_dataframe:
-                self.analysis_id = ar_metadata['model_id']
+                self._ec.set_id_analysis(ar_metadata['model_id'])
                 ar_structure['predecessor'] = ar_metadata['model_parameters'][get_model_fw(ar_metadata)] \
                     ['parameters']['model_id']['value']
                 ar_structure['round'] = int(ar_metadata['round']) + 1
             else:
                 ar_structure['predecessor'] = 'root'
 
-            ar_structure['model_id'] = self.analysis_id
+            ar_structure['model_id'] = self._ec.get_id_analysis()
             ar_structure['version'] = version
-            ar_structure['user_id'] = self.user_id
+            ar_structure['user_id'] = self._ec.get_id_user()
             ar_structure['workflow_id'] = ar_metadata['workflow_id']
             ar_structure['objective_column'] = ar_metadata['objective_column']
             ar_structure['timestamp'] = self.timestamp
@@ -441,10 +437,10 @@ class Adviser(object):
                    and model_params['only_standardize'])\
                or (norm_sets is None and  model_params['only_standardize']):
                 ar_structure = ArMetadata()
-                ar_structure['model_id'] = self.analysis_id
+                ar_structure['model_id'] = self._ec.get_id_analysis()
                 ar_structure['version'] = version
-                ar_structure['user_id'] = self.user_id
-                ar_structure['workflow_id'] = self.workflow_id
+                ar_structure['user_id'] = self._ec.get_id_user()
+                ar_structure['workflow_id'] = self.self._ec.get_id_workflow()
                 ar_structure['objective_column'] = objective_column
                 ar_structure['timestamp'] = self.timestamp
                 ar_structure['normalizations_set'] = norm_sets
@@ -499,7 +495,7 @@ class Adviser(object):
         for _ , pvalue in base.items():
             if variabilizations > pvalue['base'] and increment < pvalue['increment']:
                 increment = pvalue['increment']
-        self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["inc_application"],
+        self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["inc_application"],
                                increment)
         return increment
 
@@ -548,13 +544,13 @@ class Adviser(object):
             fw = model_list[iterator][0]
             model = model_list[iterator][1]
             if fw_config[fw]['conf']['min_rows_enabled'] and (nrows < model['min_rows_applicability']):
-                self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'rows < ' +
                                        str(model['min_rows_applicability']))
                 exclude_model.append(model_list[iterator])
             if fw_config[fw]['conf']['max_cols_enabled'] and model['max_cols_applicability'] is not None \
                     and(ncols > model['max_cols_applicability']):
-                self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'cols > ' +
                                        str(model['max_cols_applicability']))
                 exclude_model.append(model_list[iterator])
@@ -682,10 +678,9 @@ class Adviser(object):
 
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
-    # @param analysis_id
     # @param model_list for models analyzed
     # @return (fw,model_list) (ArMetadata, normalization_set)
-    def priorize_models(self, analysis_id, model_list):
+    def priorize_models(self, model_list):
         if self.metric == 'train_accuracy':
             return sorted(model_list, key=self.get_train_accuracy, reverse=True)
         elif self.metric == 'test_accuracy':
@@ -723,7 +718,6 @@ class Adviser(object):
         ''' Deleted 31/08/2017. Change vector model
         return fw, model['model_parameters'][fw]['model'], vector, normalization_set'''
 
-
     ## Check if model has benn executed or is planned to execute
     # @param vector - model vector
     # @return True if executed False in other case
@@ -753,8 +747,8 @@ class Adviser(object):
         if not self.is_executed(vector):
             model_list.append(model)
             self.analyzed_models.append(vector)
-            self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["new_vector"], str(vector))
+            self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["new_vector"], str(vector))
         else:
             self.excluded_models.append(vector)
-            self._logging.log_info(self.analysis_id, 'AdviserAStar', self._labels["exc_vector"], str(vector))
+            self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["exc_vector"], str(vector))
 
