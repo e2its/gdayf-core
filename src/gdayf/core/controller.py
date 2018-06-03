@@ -31,15 +31,14 @@ from collections import OrderedDict
 from pathlib import Path
 from pandas import DataFrame
 import importlib
-from json import load
 from json.decoder import JSONDecodeError
 from time import time
 from pymongo import  MongoClient
 from pymongo.errors import *
-import bson
-from  bson.codec_options import CodecOptions
-from copy import deepcopy
+# import bson
+# from  bson.codec_options import CodecOptions
 from hashlib import md5
+from gdayf.core import global_var
 
 ## Core class oriented to manage the comunication and execution messages pass for all components on system
 # orchestrating the execution of actions activities (train and prediction) on specific frameworks
@@ -61,6 +60,7 @@ class Controller(object):
             self.workflow_id = workflow_id + '_' + self.timestamp
         else:
             self.workflow_id = workflow_id
+        global_var.set_id_user(user_id)
 
     ## Method leading configurations coherence checks
     # @param self object pointer
@@ -494,6 +494,7 @@ class Controller(object):
     # @param analysis_id
     # @param ar_list List of AR models Execution Data
     # @param metric to execute order ['train_accuracy', 'train_rmse', 'test_accuracy', 'combined_accuracy', 'test_rmse', 'cdistance']
+    # @return Dataframe performance model list
 
     def table_model_list(self, analysis_id, ar_list, metric):
         dataframe = list()
@@ -671,7 +672,7 @@ class Controller(object):
             exclusion = list()
             model_list = list()
             for model in arlist:
-                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
+                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
                         model['normalizations_set']) not in exclusion:
                         model_list.append(model)
                         exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
@@ -714,7 +715,7 @@ class Controller(object):
             exclusion = list()
             model_list = list()
             for model in arlist:
-                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'], \
+                if (get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
                         model['normalizations_set']) not in exclusion:
                         exclusion.append((get_model_fw(model), model['model_parameters'][get_model_fw(model)]['model'],
                                           model['normalizations_set']))
@@ -840,50 +841,6 @@ class Controller(object):
         failed, armetadata = persistence.get_ar_from_engine(path=path)
         del persistence
         return failed, armetadata
-
-if __name__ == '__main__':
-    source_data = list()
-    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
-    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
-    source_data.append("CODE/h2o-bk/datasets/")
-    source_data.append("ENB2012_data-Y1.csv")
-    #Analysis
-    controller = Controller()
-    controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                             amode=FAST, metric='combined', deep_impact=3)
-
-    #Prediction
-    source_data = list()
-    source_data.append("D:/Dropbox/DayF/Technology/Python-DayF-adaptation-path/")
-    source_data.append("Oreilly.Practical.Machine.Learning.with.H2O.149196460X/")
-    source_data.append("CODE/h2o-bk/datasets/")
-    source_data.append("ENB2012_data-Y1.csv")
-    model_source = list()
-    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499277062.9702203/train/1499277062.9702203/replica/json/")
-    model_source.append('H2OGradientBoostingEstimator_1499277177.3076756.json')
-    controller = Controller()
-    prediction_frame = controller.exec_prediction(datapath=''.join(source_data), model_file=''.join(model_source))
-    print(prediction_frame)
-
-    # Save Pojo
-    model_source = list()
-    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499277062.9702203/train/1499277062.9702203/replica/json/")
-    model_source.append('H2OGradientBoostingEstimator_1499277177.3076756.json')
-    controller = Controller()
-    fp = open(''.join(model_source))
-    result = controller.get_java_model(load(fp, object_hook=OrderedDict), 'pojo')
-    fp.close()
-    print(result)
-
-    # Save Mojo
-    model_source = list()
-    model_source.append("D:/Data/models/h2o/ENB2012_data-Y1.csv_1499277062.9702203/train/1499277062.9702203/replica/json/")
-    model_source.append('H2OGradientBoostingEstimator_1499277177.3076756.json')
-    controller = Controller()
-    fp = open(''.join(model_source))
-    result = controller.get_java_model(load(fp, object_hook=OrderedDict), 'mojo')
-    fp.close()
-    print(result)
 
 
 

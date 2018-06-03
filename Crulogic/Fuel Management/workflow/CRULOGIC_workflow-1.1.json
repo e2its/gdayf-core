@@ -217,7 +217,7 @@
   "Cruise-Control":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Cruise-Control",
       "metric": "test_rmse",
@@ -253,7 +253,8 @@
             "Avg-fuel"
             ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
@@ -296,7 +297,8 @@
         "Avg-fuel"
       ],
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
@@ -339,7 +341,9 @@
         "Avg-fuel"
       ],
         "filtered_data": null,
-        "for_each":null
+        "for_each":null,
+        "for_each_exclusions":null
+
     },
     "Next": null
   },
@@ -382,7 +386,8 @@
           "Avg-fuel"
         ],
         "filtered_data": null,
-        "for_each":null
+        "for_each":null,
+        "for_each_exclusions":null
     },
     "Next": null
   }

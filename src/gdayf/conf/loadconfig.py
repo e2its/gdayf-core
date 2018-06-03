@@ -13,7 +13,9 @@ Copyright (C) e2its - All Rights Reserved
 
 from collections import OrderedDict
 import json
-from os import path
+from os import path, makedirs
+from shutil import copyfile
+from  gdayf.core import global_var
 
 
 ## Class Getting the config file place on default location and load all parameters on an internal variables
@@ -23,12 +25,23 @@ class LoadConfig(object):
     _configfile = None
 
     ## Constructor
-    def __init__(self, configfile=r'/Data/e2its-dayf.svn/gdayf/branches/1.1.2-mrazul/src/gdayf/conf/config.json'):
+    def __init__(self):
         # @var _config protected member variable to store config parameters
         self._config = None
+        configpath = path.join(path.dirname(__file__), '../../../.config')
+        configfile = path.join(configpath, 'config.json')
+        user_configpath = path.join(configpath, global_var.get_id_user())
+        user_configfile = path.join(user_configpath, 'config.json')
+        if not path.exists(user_configfile):
+            try:
+                makedirs(user_configpath, mode=0o755, exist_ok=True)
+                copyfile(configfile, user_configfile)
+            except IOError:
+                raise IOError
+
         # @var _configfile protected member variable to store configfile path
-        self._configfile = configfile
-        if path.exists(configfile):
+        self._configfile = user_configfile
+        if path.exists(self._configfile):
             with open(configfile, 'rt') as f:
                 try: 
                     self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')
@@ -58,12 +71,15 @@ class LoadLabels(object):
     _configfile = None
 
     ## Constructor
-    def __init__(self, lang='en', configfile=r'/Data/e2its-dayf.svn/gdayf/branches/1.1.0-mrazul/src/gdayf/conf/labels.json'):
+    def __init__(self, lang='en'):
         # @var _config protected member variable to store config parameters
         self._config = None
+        configpath = path.join(path.dirname(__file__), '../../../.config')
+        configfile = path.join(configpath, 'labels.json')
+
         # @var _configfile protected member variable to store configfile path
         self._configfile = configfile
-        if path.exists(configfile):
+        if path.exists(self._configfile):
             with open(configfile, 'rt') as f:
                 try:
                     self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')[lang]

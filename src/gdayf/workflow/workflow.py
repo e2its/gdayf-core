@@ -22,17 +22,19 @@ from gdayf.common.utils import decode_ordered_dict_to_dataframe, xstr
 from gdayf.common.constants import *
 from gdayf.handlers.inputhandler import inputHandlerCSV
 from json.decoder import JSONDecodeError
-from json import load,dumps,loads
+from json import load, dumps
 from collections import OrderedDict
-from pandas import DataFrame, set_option, read_json
+from pandas import DataFrame, set_option
 from time import time
 from pathlib import Path
+from gdayf.core import global_var
 
 ## Core class oriented to manage pipeline of workflows execution
 # orchestrating the execution of actions activities
 class Workflow(object):
     ## Constructor
     def __init__(self, user_id='PoC_gDayF'):
+        global_var.set_id_user(user_id)
         self._config = LoadConfig().get_config()
         self._labels = LoadLabels().get_config()['messages']['workflow']
         self._logging = LogsHandler()
@@ -82,7 +84,6 @@ class Workflow(object):
     # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
 
     def train_workflow(self, datapath, wkey, workflow, prefix='main', workflow_id='default', save_models=EACH_BEST):
-        set_option('display.height', 1000)
         set_option('display.max_rows', 500)
         set_option('display.max_columns', 500)
         set_option('display.width', 1000)
@@ -108,76 +109,84 @@ class Workflow(object):
             self._logging.log_info('gDayF', "Workflow", self._labels["variables_desc"], variables)
             if wf["data"]["for_each"] is not None:
                 fe_column = wf["data"]["for_each"]
+                fe_data_exclusions = wf["data"]["for_each_exclusions"]
                 fe_filtered_data = wf["data"]["filtered_data"]
                 fe_parameters = wf["parameters"]
                 fe_next = wf["Next"]
 
                 for each in eval('dataset.'+fe_column+'.unique()'):
-                    aux_dataset = eval('dataset[dataset.' + fe_column + '== each]')
-                    pfix = xstr(prefix + '_' + str(each))
+                    if fe_data_exclusions is None or each not in fe_data_exclusions:
+                        aux_dataset = eval('dataset[dataset.' + fe_column + '== each]')
+                        pfix = xstr(prefix + '_' + str(each))
 
 
-                    if fe_filtered_data is not None:
-                        qcolumn = fe_filtered_data["column"]
-                        quantile = aux_dataset[qcolumn].quantile(q=fe_filtered_data["quantile"])
-                        aux_dataset = eval('aux_dataset.loc[aux_dataset.' + qcolumn + '<= ' + str(quantile) + ']')
-                        pfix = xstr(pfix + '_' + str(fe_filtered_data["quantile"]))
+                        if fe_filtered_data is not None:
+                            qcolumn = fe_filtered_data["column"]
+                            quantile = aux_dataset[qcolumn].quantile(q=fe_filtered_data["quantile"])
+                            aux_dataset = eval('aux_dataset.loc[aux_dataset.' + qcolumn + '<= ' + str(quantile) + ']')
+                            pfix = xstr(pfix + '_' + str(fe_filtered_data["quantile"]))
 
 
-                    if fe_parameters is not None:
-                        source_parameters = list()
-                        source_parameters.append('controller.exec_analysis(')
-                        source_parameters.append('datapath=aux_dataset.loc[:, variables]')
-                        for ikey, ivalue in fe_parameters.items():
-                            source_parameters.append(',')
-                            source_parameters.append(ikey)
-                            source_parameters.append('=')
-                            if isinstance(ivalue, str) and ikey != "amode":
-                                source_parameters.append('\'')
-                                source_parameters.append(ivalue)
-                                source_parameters.append('\'')
-                            else:
-                                source_parameters.append(str(ivalue))
-                        source_parameters.append(')')
+                        if fe_parameters is not None:
+                            source_parameters = list()
+                            source_parameters.append('controller.exec_analysis(')
+                            source_parameters.append('datapath=aux_dataset.loc[:, variables]')
+                            for ikey, ivalue in fe_parameters.items():
+                                source_parameters.append(',')
+                                source_parameters.append(ikey)
+                                source_parameters.append('=')
+                                if isinstance(ivalue, str) and ikey != "amode":
+                                    source_parameters.append('\'')
+                                    source_parameters.append(ivalue)
+                                    source_parameters.append('\'')
+                                else:
+                                    source_parameters.append(str(ivalue))
+                            source_parameters.append(')')
 
-                        self._logging.log_info('gDayF', "Workflow", self._labels["desc_operation"],
-                                               ''.join(source_parameters))
-                        status, recomendations = eval(''.join(source_parameters))
-                        controller.remove_models(recomendations, mode=save_models)
-                        controller.reconstruct_execution_tree(recomendations, metric=fe_parameters['metric'], store=True)
+                            self._logging.log_info('gDayF', "Workflow", self._labels["desc_operation"],
+                                                   ''.join(source_parameters))
+                            status, recomendations = eval(''.join(source_parameters))
+                            controller.remove_models(recomendations, mode=save_models)
+                            controller.reconstruct_execution_tree(recomendations, metric=fe_parameters['metric'],
+                                                                  store=True)
 
 
-                        model_id = recomendations[0]['model_id']
-                        print(controller.table_model_list(model_id, recomendations,
-                                                          metric=eval(fe_parameters['metric'])))
-                        filename = self.storage_path('train', wkey + '_' + str(pfix) + '_' + 'train_performance'
-                                                     , 'xls', workflow_id)
-                        controller.table_model_list(model_id, recomendations,
-                                                    metric=eval(fe_parameters['metric']))\
-                            .to_excel(filename, index=False, sheet_name='performance')
-                        self.replicate_file('train', filename=filename, workflow_id=workflow_id)
+                            model_id = recomendations[0]['model_id']
+                            table_model_list = controller.table_model_list(model_id, recomendations,
+                                                                           metric=eval(fe_parameters['metric']))
+                            self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
+                                                   table_model_list.to_string(justify="left"))
 
-                        prediction_frame = controller.exec_prediction(datapath=aux_dataset,
-                                                                      model_file=recomendations[0]['json_path'][0]['value'])
-                        try:
-                            if 'predict' in prediction_frame.columns.values:
-                                prediction_frame.rename(columns={"predict": wkey}, inplace=True)
-                            elif 'prediction' in prediction_frame.columns.values:
-                                prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
-                        except AttributeError:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"])
-                        print(prediction_frame)
-                        try:
-                            filename = self.storage_path('train', wkey + '_'
-                                                         + str(pfix) + '_' + 'prediction', 'xls', workflow_id)
-                            prediction_frame.to_excel(filename, index=False, sheet_name='train_prediction')
+                            filename = self.storage_path('train', wkey + '_' + str(pfix) + '_' + 'train_performance'
+                                                         , 'xls', workflow_id)
+                            table_model_list.to_excel(filename, index=False, sheet_name='performance')
                             self.replicate_file('train', filename=filename, workflow_id=workflow_id)
 
-                        except AttributeError:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
-                                                   prediction_frame)
-                        if fe_next is not None:
-                            self.workflow(prediction_frame, fe_next, pfix, workflow_id, save_models=save_models)
+                            prediction_frame = controller.exec_prediction(datapath=aux_dataset,
+                                                                          model_file=recomendations[0]['json_path'][0]['value'])
+                            try:
+                                if 'predict' in prediction_frame.columns.values:
+                                    prediction_frame.rename(columns={"predict": wkey}, inplace=True)
+                                elif 'prediction' in prediction_frame.columns.values:
+                                    prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
+
+                                self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
+                                                       prediction_frame.to_string(index_names=False, justify="left"))
+
+                                filename = self.storage_path('train', wkey + '_'
+                                                             + str(pfix) + '_' + 'prediction', 'xls', workflow_id)
+                                prediction_frame.to_excel(filename, index=False, sheet_name='train_prediction')
+                                self.replicate_file('train', filename=filename, workflow_id=workflow_id)
+
+                            except AttributeError as oexecution_error:
+                                self._logging.log_info('gDayF', "Workflow", self._labels["failed_model"],
+                                                       str(repr(oexecution_error)))
+
+                            try:
+                                if fe_next is not None and prediction_frame is not None:
+                                    self.workflow(prediction_frame, fe_next, pfix, workflow_id, save_models=save_models)
+                            except Exception as oexecution_error:
+                                self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
             else:
                 aux_dataset = dataset
 
@@ -208,36 +217,41 @@ class Workflow(object):
                     controller.reconstruct_execution_tree(recomendations, metric=wf['parameters']['metric'], store=True)
 
                     model_id = recomendations[0]['model_id']
-                    print(controller.table_model_list(model_id, recomendations,
-                                                      metric=eval(wf['parameters']['metric'])))
+                    table_model_list = controller.table_model_list(model_id, recomendations,
+                                                      metric=eval(wf['parameters']['metric']))
+                    self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
+                                           table_model_list.to_string(justify="left"))
 
                     filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
                                                  + 'train_performance', 'xls', workflow_id)
-                    controller.table_model_list(model_id, recomendations,
-                                                metric=eval(wf['parameters']['metric'])) \
-                        .to_excel(filename, index=False, sheet_name="performace")
+                    table_model_list.to_excel(filename, index=False, sheet_name="performace")
                     self.replicate_file('train', filename=filename, workflow_id=workflow_id)
 
                     prediction_frame = controller.exec_prediction(datapath=aux_dataset,
-                                                                  model_file=recomendations[0]['json_path'][0][
-                                                                      'value'])
-                    if 'predict' in prediction_frame.columns.values:
-                        prediction_frame.rename(columns={"predict": wkey}, inplace=True)
-                    elif 'prediction' in prediction_frame.columns.values:
-                        prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
+                                                                  model_file=recomendations[0]['json_path'][0]['value'])
+                    try:
+                        if 'predict' in prediction_frame.columns.values:
+                            prediction_frame.rename(columns={"predict": wkey}, inplace=True)
+                        elif 'prediction' in prediction_frame.columns.values:
+                            prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
 
-                    print(prediction_frame)
-                    filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
-                                                 + 'prediction', 'xls', workflow_id)
-                    prediction_frame.to_excel(filename, index=False, sheet_name="train_prediction")
-                    self.replicate_file('train', filename=filename, workflow_id=workflow_id)
+                        self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
+                                               prediction_frame.to_string(index_names=False, justify="left"))
 
-                    if wf['Next'] is not None:
+                        filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
+                                                     + 'prediction', 'xls', workflow_id)
+                        prediction_frame.to_excel(filename, index=False, sheet_name="train_prediction")
+                        self.replicate_file('train', filename=filename, workflow_id=workflow_id)
+
+                    except AttributeError as oexecution_error:
+                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_model"],
+                                                   str(repr(oexecution_error)))
+
+                    if wf['Next'] is not None and prediction_frame is not None:
                         try:
                             self.workflow(prediction_frame, wf['Next'], pfix, workflow_id, save_models=save_models)
                         except Exception as oexecution_error:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"],
-                                                   str(wf['Next']))
+                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
 
         controller.clean_handlers()
@@ -286,53 +300,61 @@ class Workflow(object):
 
                 if wf["data"]["for_each"] is not None:
                     fe_column = wf["data"]["for_each"]
+                    fe_data_exclusions = wf["data"]["for_each_exclusions"]
                     fe_filtered_data = wf["data"]["filtered_data"]
                     fe_next = wf["Next"]
 
                     for each in eval('dataset.' + fe_column + '.unique()'):
-                        aux_dataset = eval('dataset[dataset.' + fe_column + '== each]')
-                        pfix = xstr(prefix + '_' + str(each))
+                        if fe_data_exclusions is None or each not in fe_data_exclusions:
+                            aux_dataset = eval('dataset[dataset.' + fe_column + '== each]')
+                            pfix = xstr(prefix + '_' + str(each))
 
-                        if fe_filtered_data is not None:
-                            qcolumn = fe_filtered_data["column"]
-                            quantile = aux_dataset[qcolumn].quantile(q=fe_filtered_data["quantile"])
-                            aux_dataset = eval('aux_dataset.loc[aux_dataset.' + qcolumn + '<= ' + str(quantile) + ']')
-                            pfix = xstr(pfix + '_' + str(fe_filtered_data["quantile"]))
+                            if fe_filtered_data is not None:
+                                qcolumn = fe_filtered_data["column"]
+                                quantile = aux_dataset[qcolumn].quantile(q=fe_filtered_data["quantile"])
+                                aux_dataset = eval('aux_dataset.loc[aux_dataset.' + qcolumn + '<= ' + str(quantile) + ']')
+                                pfix = xstr(pfix + '_' + str(fe_filtered_data["quantile"]))
 
-                        prediction_frame = controller.exec_prediction(datapath=aux_dataset,
-                                                                      model_file=wf["model"][str(each)])
-                        try:
-                            if 'predict' in prediction_frame.columns.values:
-                                prediction_frame.rename(columns={"predict": wkey}, inplace=True)
-                            elif 'prediction' in prediction_frame.columns.values:
-                                prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
-                        except AttributeError:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"])
-                        print(prediction_frame)
-                        try:
-                            if isinstance(prediction_frame, DataFrame):
-                                filename = self.storage_path('predict', wkey + '_'
-                                                    + str(pfix) + '_' + 'prediction', 'xls', workflow_id)
-                                prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
-                                self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
-                            else:
-                                for ikey, ivalue in prediction_frame['columns'].items():
-                                    ppDF = decode_ordered_dict_to_dataframe(ivalue)
-                                    if isinstance(ppDF, DataFrame):
-                                        filename = self.storage_path('predict', wkey + '_'
-                                                      + str(pfix) + '_' + 'prediction_' + ikey, 'xls', workflow_id)
-                                        ppDF.to_excel(filename, index=False, sheet_name="prediction")
-                                        self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
-                                filename = self.storage_path('predict', wkey + '_'
-                                          + str(each) + '_' + 'prediction', 'json', workflow_id)
-                                with open(filename, 'w') as f:
-                                    f.write(dumps(prediction_frame['global_mse']))
-                                self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
-                        except AttributeError:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
-                                                   prediction_frame)
-                        if fe_next is not None:
-                            self.workflow(prediction_frame, fe_next, pfix, workflow_id, save_models=save_models)
+                            prediction_frame = controller.exec_prediction(datapath=aux_dataset,
+                                                                          model_file=wf["model"][str(each)])
+                            try:
+                                if 'predict' in prediction_frame.columns.values:
+                                    prediction_frame.rename(columns={"predict": wkey}, inplace=True)
+                                elif 'prediction' in prediction_frame.columns.values:
+                                    prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
+                            except AttributeError:
+                                self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"])
+
+                            self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
+                                                   prediction_frame.to_string(index_names=False, justify="left"))
+
+                            try:
+                                if isinstance(prediction_frame, DataFrame):
+                                    filename = self.storage_path('predict', wkey + '_'
+                                                        + str(pfix) + '_' + 'prediction', 'xls', workflow_id)
+                                    prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
+                                    self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
+                                else:
+                                    for ikey, ivalue in prediction_frame['columns'].items():
+                                        ppDF = decode_ordered_dict_to_dataframe(ivalue)
+                                        if isinstance(ppDF, DataFrame):
+                                            filename = self.storage_path('predict', wkey + '_'
+                                                          + str(pfix) + '_' + 'prediction_' + ikey, 'xls', workflow_id)
+                                            ppDF.to_excel(filename, index=False, sheet_name="prediction")
+                                            self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
+                                    filename = self.storage_path('predict', wkey + '_'
+                                              + str(each) + '_' + 'prediction', 'json', workflow_id)
+                                    with open(filename, 'w') as f:
+                                        f.write(dumps(prediction_frame['global_mse']))
+                                    self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
+                            except AttributeError:
+                                self._logging.log_info('gDayF', "Workflow", self._labels["anomalies_operation"],
+                                                       prediction_frame)
+                            try:
+                                if fe_next is not None and prediction_frame is not None:
+                                    self.workflow(prediction_frame, fe_next, pfix, workflow_id, save_models=save_models)
+                            except Exception as oexecution_error:
+                                self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
                 else:
                     aux_dataset = dataset
 
@@ -342,7 +364,8 @@ class Workflow(object):
                     elif 'prediction' in prediction_frame.columns.values:
                         prediction_frame.rename(columns={"prediction": wkey}, inplace=True)
 
-                    print(prediction_frame)
+                    self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
+                                           prediction_frame.to_string(index_names=False, justify="left"))
                     if isinstance(prediction_frame, DataFrame):
                         filename = self.storage_path('predict', wkey + '_prediction', 'xls', workflow_id)
                         prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
@@ -362,12 +385,11 @@ class Workflow(object):
                         with open(filename, 'w') as f:
                             f.write(dumps(prediction_frame))
                         self.replicate_file('predict', filename=filename, workflow_id=workflow_id)
-                    if wf['Next'] is not None:
+                    if wf['Next'] is not None and prediction_frame is not None:
                         try:
                             self.workflow(prediction_frame, wf['Next'], pfix, workflow_id, save_models=save_models)
                         except Exception as oexecution_error:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"],
-                                                   str(wf['Next']))
+                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
         controller.clean_handlers()
         del controller

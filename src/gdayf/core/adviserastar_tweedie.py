@@ -13,14 +13,11 @@ Copyright (C) e2its - All Rights Reserved
  * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
 '''
 
-#from gdayf.common.dfmetada import DFMetada
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.common.utils import decode_ordered_dict_to_dataframe
-#from gdayf.common.utils import decode_json_to_dataframe
 from gdayf.core.adviserbase import Adviser
 from gdayf.common.utils import get_model_fw
 from gdayf.models.parametersmetadata import ParameterMetadata
-#from json import dumps
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
@@ -32,19 +29,18 @@ class AdviserAStar(Adviser):
     # @param self object pointer
     # @param analysis_id main id traceability code
     # @param deep_impact A* max_deep
-    # @param metric metrict for priorizing models ['accuracy', 'rmse', 'test_accuracy', 'combined'] on train
+    # @param metric metrict for priorizing models ['train_accuracy', 'test_rmse', 'train_rmse', 'test_accuracy', 'combined_accuracy'] on train
     # @param dataframe_name dataframe_name or id
     # @param hash_dataframe MD5 hash value
     # @param workflow_id Workflow identifier
     # @param user_id user identifier
-    def __init__(self, analysis_id, deep_impact=3, metric='accuracy', dataframe_name='', hash_dataframe='',
+    def __init__(self, analysis_id, deep_impact=3, metric='train_accuracy', dataframe_name='', hash_dataframe='',
                  workflow_id='', user_id='guest'):
         super(AdviserAStar, self).__init__(analysis_id, deep_impact=deep_impact, metric=metric,
                                            dataframe_name=dataframe_name, hash_dataframe=hash_dataframe,
                                            workflow_id=workflow_id, user_id=user_id)
 
-    ## Method manging generation of possible optimized models
-
+    ## Method mangaing the generation of possible optimized models
     # @param armetadata ArMetadata Model
     # @return list of possible optimized models to execute return None if nothing to do
     def optimize_models(self, armetadata):
@@ -189,7 +185,7 @@ class AdviserAStar(Adviser):
                 elif model['model'] == 'H2ODeepLearningEstimator':
 
                     if scoring_metric.shape[0] == 0 or \
-                            (scoring_metric['epochs'].max() >= \
+                            (scoring_metric['epochs'].max() >=
                                      model['parameters']['epochs']['value']):
                         epochs = model['parameters']['epochs']['value'] * epochs_increment
                     else:
@@ -265,12 +261,12 @@ class AdviserAStar(Adviser):
                             model_aux = new_armetadata['model_parameters']['h2o']
                             if model_aux['parameters']['hidden']['value'][0] > model_aux['parameters']['hidden']['value'][
                                 1]:
-                                model_aux['parameters']['hidden']['value'].insert(0, \
+                                model_aux['parameters']['hidden']['value'].insert(0,
                                                                                   round(model_aux['parameters']['hidden'][
                                                                                             'value'][0] * deeper_increment))
                                 model_aux['parameters']['hidden_dropout_ratios']['value'].insert(0, h_dropout_ratio)
                             else:
-                                model_aux['parameters']['hidden']['value'].append( \
+                                model_aux['parameters']['hidden']['value'].append(
                                     round(model_aux['parameters']['hidden']['value'][-1] * deeper_increment))
                                 model_aux['parameters']['hidden_dropout_ratios']['value'].append(h_dropout_ratio)
 
@@ -365,7 +361,7 @@ class AdviserAStar(Adviser):
 
                 elif model['model'] == 'H2OAutoEncoderEstimator':
                     if scoring_metric.shape[0] == 0 or \
-                            (scoring_metric['epochs'].max() >= \
+                            (scoring_metric['epochs'].max() >=
                                      model['parameters']['epochs']['value']):
                         epochs = model['parameters']['epochs']['value'] * epochs_increment
                     else:

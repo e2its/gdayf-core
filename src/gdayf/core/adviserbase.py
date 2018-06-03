@@ -15,7 +15,6 @@ Copyright (C) e2its - All Rights Reserved
 
 from gdayf.models.frameworkmetadata import FrameworkMetadata
 from gdayf.common.armetadata import ArMetadata
-from copy import deepcopy
 from gdayf.normalizer.normalizer import Normalizer
 from gdayf.conf.loadconfig import LoadConfig
 from gdayf.models.atypesmetadata import ATypesMetadata
@@ -25,9 +24,7 @@ from gdayf.models.sparkframeworkmetadata import sparkFrameworkMetadata
 from gdayf.models.sparkmodelmetadata import sparkModelMetadata
 from gdayf.conf.loadconfig import LoadLabels
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.common.constants import FTYPES
-from gdayf.common.dfmetada import compare_dict
-from gdayf.common.utils import compare_list_ordered_dict
+from gdayf.common.utils import compare_sorted_list_dict
 from gdayf.common.utils import get_model_fw
 from gdayf.common.constants import *
 from collections import OrderedDict
@@ -35,7 +32,7 @@ from time import time
 from hashlib import md5 as md5
 from json import dumps
 from copy import deepcopy
-from numpy import isnan
+
 
 ## Class focused on execute A* based analysis on three modalities of working
 # Fast: 1 level analysis over default parameters
@@ -439,26 +436,30 @@ class Adviser(object):
             fw_model_list.extend(nmdlist)
 
         for fw, model_params, norm_sets in fw_model_list:
-            ar_structure = ArMetadata()
-            ar_structure['model_id'] = self.analysis_id
-            ar_structure['version'] = version
-            ar_structure['user_id'] = self.user_id
-            ar_structure['workflow_id'] = self.workflow_id
-            ar_structure['objective_column'] = objective_column
-            ar_structure['timestamp'] = self.timestamp
-            ar_structure['normalizations_set'] = norm_sets
-            ar_structure['dataset'] = self.dataframe_name
-            ar_structure['dataset_hash_value'] = self.hash_dataframe
-            ar_structure['data_initial'] = dataframe_metadata
-            ar_structure['data_normalized'] = None
-            ar_structure['model_parameters'] = OrderedDict()
-            ar_structure['model_parameters'][fw] = model_params
-            ar_structure['ignored_parameters'] = None
-            ar_structure['full_parameters_stack'] = None
-            ar_structure['predecessor'] = 'root'
-            ar_structure['status'] = -1
-            self.next_analysis_list.append(ar_structure)
-            self.analyzed_models.append(self.generate_vectors(ar_structure, norm_sets))
+            #Included 26/05/2018: Changeset: "only_standardize"
+            if not(norm_sets is not None and compare_sorted_list_dict(norm_sets, minimal_nmd)
+                   and model_params['only_standardize'])\
+               or (norm_sets is None and  model_params['only_standardize']):
+                ar_structure = ArMetadata()
+                ar_structure['model_id'] = self.analysis_id
+                ar_structure['version'] = version
+                ar_structure['user_id'] = self.user_id
+                ar_structure['workflow_id'] = self.workflow_id
+                ar_structure['objective_column'] = objective_column
+                ar_structure['timestamp'] = self.timestamp
+                ar_structure['normalizations_set'] = norm_sets
+                ar_structure['dataset'] = self.dataframe_name
+                ar_structure['dataset_hash_value'] = self.hash_dataframe
+                ar_structure['data_initial'] = dataframe_metadata
+                ar_structure['data_normalized'] = None
+                ar_structure['model_parameters'] = OrderedDict()
+                ar_structure['model_parameters'][fw] = model_params
+                ar_structure['ignored_parameters'] = None
+                ar_structure['full_parameters_stack'] = None
+                ar_structure['predecessor'] = 'root'
+                ar_structure['status'] = -1
+                self.next_analysis_list.append(ar_structure)
+                self.analyzed_models.append(self.generate_vectors(ar_structure, norm_sets))
 
     ## Method oriented to get frameworks default values from config
     # @param self object pointer

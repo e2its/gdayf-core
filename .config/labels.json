@@ -119,7 +119,9 @@
         "desc_operation": "Execute operation:",
         "anomalies_operation": "Anomalies Pattern:",
         "nothing_to_do": "Invalid mode: Nothing to do with Mode:",
-        "failed_wf": "Failed WF execution"
+        "failed_wf": "Failed WF execution",
+        "failed_model": "Not suitable model or data generated:",
+        "results": "Scoring Dataframe:"
       }
     },
     "ui":{

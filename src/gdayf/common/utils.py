@@ -15,13 +15,10 @@ Copyright (C) e2its - All Rights Reserved
 from hashlib import md5 as md5
 from hashlib import sha256 as sha256
 from pandas import read_json
-from collections import OrderedDict
-from pandas import DataFrame
 from json import dumps
 from copy import deepcopy
 from numpy.random import rand
 from gdayf.common.dfmetada import compare_dict
-from hdfs import InsecureClient as Client, HdfsError
 
 ## Function oriented to get the hash_key for a file
 # @param hash_type in ['MD5', 'SHS256']
@@ -33,13 +30,11 @@ def hash_key(hash_type, filename):
             return md5(open(filename, 'rb').read()).hexdigest()
         except IOError:
             raise
-        return 1
     elif hash_type == 'SHA256':
         try:
             return sha256(open(filename, 'rb').read()).hexdigest()
         except IOError:
             raise
-        return 1
 
 
 ## Function oriented convert a json dataframe string structure on pandas.dataframe()
@@ -70,11 +65,26 @@ def compare_list_ordered_dict(list1, list2):
         return False
     else:
         for i in range(0, len(list1)):
-            if not compare_dict(list1[i], list1[2]):
+            if not compare_dict(list1[i], list2[i]):
                 return False
         return True
 
 
+## Function oriented compare two normalizations_sets based on cmp functions
+# Need to be sorted in same order
+# @param list1 List of Dict
+# @param list2 List of Dict
+# @return True if equals false in other case
+def compare_sorted_list_dict(list1, list2):
+    if list1[0] is None or list2[0] is None:
+        return list1[0] is None and list2[0] is None
+    elif len(list1) != len(list2):
+        return False
+    else:
+        for i in range(0, len(list1)):
+            if not (list1[i] == list2[i]):
+                return False
+        return True
 ## Function to get framework from ar.json model description
 def get_model_fw(model):
     return list(model['model_parameters'].keys())[0]

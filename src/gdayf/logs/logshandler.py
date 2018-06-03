@@ -17,7 +17,6 @@ import logging
 import logging.config
 from gdayf.conf.loadconfig import LoadConfig
 
-
 ## Class oriented to manage all messages and interaction with DayF product logs
 class LogsHandler (object):
     ## Constructor

@@ -2,7 +2,7 @@
   "Avg-fuel":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Avg-fuel",
       "metric": "test_rmse",
@@ -11,14 +11,15 @@
     "data":{
       "filtered_columns":null,
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next":null
   },
   "Braking100":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Braking100",
       "metric": "test_rmse",
@@ -27,30 +28,32 @@
     "data":{
       "filtered_columns":null,
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
   "Strong-Acel100": {
     "model": "",
     "parameters": {
-      "amode": "POC",
+      "amode": "FAST_PARANOIAC",
       "mode": "train",
       "objective_column": "Strong-Acel100",
       "metric": "test_rmse",
       "deep_impact": 6
     },
     "data":{
-        "filtered_columns":null,
-        "filtered_data": null,
-         "for_each":null
+      "filtered_columns":null,
+      "filtered_data": null,
+      "for_each":null,
+      "for_each_exclusions":null
     },
   "Next": null
   },
   "idling100":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "idling100",
       "metric": "test_rmse",
@@ -59,14 +62,15 @@
     "data":{
   "filtered_columns": null,
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
   "out-rpm":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "out-rpm",
       "metric": "test_rmse",
@@ -75,14 +79,15 @@
     "data":{
       "filtered_columns": null,
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
   "Cruise-Control":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Cruise-Control",
       "metric": "test_rmse",
@@ -91,14 +96,15 @@
     "data":{
         "filtered_columns": null,
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
   "Rollout100":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Rollout100",
       "metric": "test_rmse",
@@ -107,39 +113,42 @@
     "data":{
       "filtered_columns": null,
       "filtered_data": null,
-      "for_each":null
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
   "Out-speed":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Out-speed",
       "metric": "test_rmse",
       "deep_impact": 6
     },
     "data":{
-        "filtered_columns": null,
-        "filtered_data": null,
-        "for_each":null
+      "filtered_columns": null,
+      "filtered_data": null,
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   },
   "Out-engine":{
     "model" : "",
     "parameters": {
-      "amode":"POC",
+      "amode":"FAST_PARANOIAC",
       "mode" : "train",
       "objective_column": "Out-engine",
       "metric": "test_rmse",
       "deep_impact": 6
     },
     "data":{
-        "filtered_columns": null,
-        "filtered_data": null,
-        "for_each":null
+      "filtered_columns": null,
+      "filtered_data": null,
+      "for_each":null,
+      "for_each_exclusions":null
     },
     "Next": null
   }

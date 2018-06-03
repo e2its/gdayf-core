@@ -9,7 +9,7 @@
         "url": "http://127.0.0.1:54321",
         "nthreads": 6,
         "ice_root": "/Data/Data/logs",
-        "max_mem_size": "12G",
+        "max_mem_size": "8G",
         "start_h2o": true,
         "debug": false,
         "save_model": "NATIVE",
@@ -35,6 +35,7 @@
           "module": "h2o.estimators.gbm",
           "min_rows_applicability": 0,
           "max_cols_applicability": 50,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -181,7 +182,7 @@
                 "type": "float"
               },
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -380,8 +381,9 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 0,
+          "min_rows_applicability": 500,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -491,7 +493,7 @@
                 "type": "int"
               },
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -530,7 +532,7 @@
             },
             "sampling":{
               "balance_classes": {
-                "value": false,
+                "value": true,
                 "seleccionable": true,
                 "type": "boolean"
               },
@@ -697,9 +699,10 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 25000,
+          "min_rows_applicability": 500,
           "max_cols_applicability": null,
-          "enabled": false,
+          "only_standardize": true,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -900,7 +903,7 @@
                 "type": "boolean"
               },
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -939,8 +942,8 @@
             },
             "sampling":{
               "balance_classes": {
-                "value": false,
-                "seleccionable": false,
+                "value": true,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "activation": {
@@ -1236,6 +1239,7 @@
           "module": "h2o.estimators.random_forest",
           "min_rows_applicability": 0,
           "max_cols_applicability": 50,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -1382,7 +1386,7 @@
                 "type": "float"
               },
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -1541,6 +1545,7 @@
           "module": "h2o.estimators.naive_bayes",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -1635,7 +1640,7 @@
             },
             "stopping":{
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -1674,7 +1679,7 @@
             },
             "sampling":{
               "balance_classes": {
-                "value": false,
+                "value": true,
                 "seleccionable": true,
                 "type": "boolean"
               }
@@ -1728,6 +1733,7 @@
           "module": "h2o.estimators.xgboost",
           "min_rows_applicability": 0,
           "max_cols_applicability": 50,
+          "only_standardize": false,
           "enabled": false,
           "types": [
             {
@@ -1874,7 +1880,7 @@
                 "type": "float"
               },
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -2076,6 +2082,7 @@
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -2277,7 +2284,7 @@
                 "type": "boolean"
               },
               "max_runtime_secs": {
-                "value": 0,
+                "value": 600,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -2286,8 +2293,8 @@
             },
             "sampling":{
               "balance_classes": {
-                "value": false,
-                "seleccionable": false,
+                "value": true,
+                "seleccionable": true,
                 "type": "boolean"
               },
               "activation": {
@@ -2583,6 +2590,7 @@
           "module": "h2o.estimators.kmeans",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -2756,7 +2764,7 @@
         "master": "local",
         "nthreads": 4,
         "spark_warehouse_dir": "/Data/Data/spark_warehouse",
-        "spark.executor.memory": "8G",
+        "spark.executor.memory": "6G",
         "spark.driver.memory": "2G",
         "start_spark": true,
         "save_model": "NATIVE",
@@ -2782,6 +2790,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -2910,6 +2919,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -3059,6 +3069,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -3192,6 +3203,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -3340,6 +3352,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -3488,6 +3501,7 @@
           "module": "pyspark.ml.classification",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -3596,6 +3610,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -3734,6 +3749,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -3882,6 +3898,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -4024,6 +4041,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -4163,6 +4181,7 @@
           "module": "pyspark.ml.regression",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -4291,6 +4310,7 @@
           "module": "pyspark.ml.clustering",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -4388,6 +4408,7 @@
           "module": "pyspark.ml.clustering",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
+          "only_standardize": true,
           "enabled": true,
           "types": [
             {
@@ -4676,7 +4697,7 @@
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.001,
-        "multi_cardinality_limit": 10
+        "multi_cardinality_limit": 5
       },
       "h2o": {
         "nfold_limit": 8,
@@ -4769,7 +4790,7 @@
   },
   "common": {
     "version" : "1.1.2",
-    "test_frame_ratio" : 0.9,
+    "test_frame_ratio" : 0.8,
     "workflow_summary_dir": "summary",
     "execution_tree_dir": "execution_tree",
     "minimal_test_split": 200

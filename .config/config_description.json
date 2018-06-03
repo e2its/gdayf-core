@@ -88,6 +88,9 @@
         "max_cols_applicability": {
           "description": "Max columns limit on models selection. null Disable"
         },
+        "only_standardize": {
+          "description": "Enable/disable non standardize (dual) model analysis"
+        },
         "enabled": {
           "description": "Enable/disable model selection"
         },
@@ -445,7 +448,7 @@
         "multi_limit": {
           "description": "% rate in decimal format to determine when apply multinomial analysis instead regression analysis"
         },
-        "multi_limit": {
+        "multi_cardinality_limit": {
           "description": "max cardinality in natural format to determine when apply multinomial analysis instead regression analysis"
         }
       },
