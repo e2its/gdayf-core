@@ -42,7 +42,7 @@ if __name__ == "__main__":
         result = controller.get_external_model(recomendations[0], 'mojo')
 
         #controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='cdistance')
-        print(controller.table_model_list(recomendations[0]['model_id'], recomendations, metric='cdistance'))
+        print(controller.table_model_list(ar_list=recomendations, metric='cdistance'))
 
         controller.clean_handlers()
     del controller

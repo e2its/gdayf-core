@@ -15,14 +15,13 @@ from collections import OrderedDict
 import json
 from os import path, makedirs
 from shutil import copyfile
-from  gdayf.core import experiment_context
 
 
 ## Class Getting the config file place on default location and load all parameters on an internal variables
 # named self._config on OrderedDict() format
 class LoadConfig(object):
-    '''_config = None
-    _configfile = None'''
+    _config = None
+    _configfile = None
 
     ## Constructor
     def __init__(self, user_id='PoC_gDayF'):
@@ -42,7 +41,7 @@ class LoadConfig(object):
         # @var _configfile protected member variable to store configfile path
         self._configfile = user_configfile
         if path.exists(self._configfile):
-            with open(configfile, 'rt') as f:
+            with open(self._configfile, 'rt') as f:
                 try: 
                     self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')
                 except IOError:
@@ -67,8 +66,8 @@ class LoadConfig(object):
 ## Class Getting the config file place on default location and load all labels
 # named self._config on OrderedDict() format
 class LoadLabels(object):
-    '''_config = None
-    _configfile = None'''
+    _config = None
+    _configfile = None
 
     ## Constructor
     def __init__(self, lang='en'):

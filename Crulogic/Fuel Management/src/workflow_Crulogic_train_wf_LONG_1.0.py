@@ -8,7 +8,7 @@ if __name__ == "__main__":
     source_data.append("Crulogic-17-18.csv")
 
     workflow_data = list()
-    workflow_data.append("/Data/e2its-dayf.svn/gdayf/branches/1.1.2-mrazul/Crulogic/Fuel Management/workflow/")
+    workflow_data.append("/Data/e2its-dayf.svn/gdayf/branches/1.1.2.1-mrazul/Crulogic/Fuel Management/workflow/")
     workflow_data.append("CRULOGIC_workflow-LONG-1.0.json")
 
     workflow = Workflow(user_id='Crulogic')

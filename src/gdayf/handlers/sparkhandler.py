@@ -62,8 +62,6 @@ from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
 from gdayf.metrics.anomaliesmetricmetadata import AnomaliesMetricMetadata
 from gdayf.metrics.clusteringmetricmetadata import ClusteringMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
-from gdayf.conf.loadconfig import LoadConfig
-from gdayf.conf.loadconfig import LoadLabels
 from gdayf.common.dfmetada import DFMetada
 from gdayf.common.utils import get_model_ns
 from gdayf.common.armetadata import ArMetadata
@@ -98,8 +96,8 @@ class sparkHandler(object):
         self._tolerance = self._config['frameworks'][self._framework]['conf']['tolerance']
         self._model_base = None
         self._spark_session = None
-        self._persistence = PersistenceHandler()
-        self._logging = LogsHandler(__name__)
+        self._persistence = PersistenceHandler(self._ec)
+        self._logging = LogsHandler(self._ec, __name__)
         self._frame_list = list()
 
     ## Destructor
@@ -177,7 +175,6 @@ class sparkHandler(object):
             return False
         else:
             return True
-
 
     ## Generate list of models_id for internal crossvalidation objects_
     # @param self object pointer
@@ -560,7 +557,7 @@ class sparkHandler(object):
             data_norm = dataframe.copy(deep=True)
             self._logging.log_exec(self._ec.get_id_analysis(),
                                    self._spark_session.sparkContext.applicationId, self._labels["exec_norm"], str(base_ns))
-            normalizer = Normalizer()
+            normalizer = Normalizer(self._ec)
             if not exist_objective:
                 base_ns = normalizer.filter_objective_base(normalizemd=base_ns)
             if filtering == 'STANDARDIZE':
@@ -588,7 +585,7 @@ class sparkHandler(object):
     def define_special_spark_naive_norm(self, df_metadata):
         self._logging.log_exec(self._ec.get_id_analysis(),
                                self._spark_session.sparkContext.applicationId, self._labels["def_naive_norm"])
-        normalizer = Normalizer()
+        normalizer = Normalizer(self._ec)
         aux_ns = normalizer.define_special_spark_naive_norm(dataframe_metadata=df_metadata)
         del normalizer
         return aux_ns
@@ -652,7 +649,7 @@ class sparkHandler(object):
                 norm_executed = norm_executed | aux_norm_executed
 
         if base_ar['round'] == 1:
-            aux_ns = Normalizer().define_ignored_columns(data_normalized, objective_column)
+            aux_ns = Normalizer(self._ec).define_ignored_columns(data_normalized, objective_column)
             if aux_ns is not None:
                 base_ns.extend(aux_ns)
 
@@ -733,7 +730,7 @@ class sparkHandler(object):
         invalid_types = ['string']
         transformation_chain = list()
         column_chain = list()
-        norm = Normalizer()
+        norm = Normalizer(self._ec)
         ignored_columns = norm.ignored_columns(base_ns)
         decoder = None
         for element in training_frame.dtypes:
@@ -837,7 +834,6 @@ class sparkHandler(object):
             # Filling whole json ar.json
             final_ar_model['ignored_parameters'], \
                 final_ar_model['full_parameters_stack'] = self._generate_params(modeldef=modeldef)
-
 
             self._logging.log_info(analysis_id,
                                    self._spark_session.sparkContext.applicationId, self._labels["tmodel"],
@@ -1050,7 +1046,6 @@ class sparkHandler(object):
 
         fw = get_model_fw(armetadata)
         model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
-        analysis_id = armetadata['model_id']
 
         load_fail, from_disk = self._get_model(base_ar=armetadata, base_model_id=model_id, remove_model=from_disk)
         if load_fail:
@@ -1073,8 +1068,8 @@ class sparkHandler(object):
 
         remove_model = False
         model_timestamp = str(time.time())
-
-        analysis_id = self._ec.set_id_analysis(base_ar['model_id'])
+        self._ec.set_id_analysis(base_ar['model_id'])
+        analysis_id = self._ec.get_id_analysis()
         base_model_id = base_ar['model_parameters']['spark']['parameters']['model_id']['value'] + self._get_ext()
         model_id = base_model_id + '_' + model_timestamp
         antype = base_ar['model_parameters']['spark']['types'][0]['type']
@@ -1086,7 +1081,7 @@ class sparkHandler(object):
         load_fails, remove_model = self._get_model(base_ar, base_model_id, remove_model)
 
         if load_fails or self._model_base is None:
-            self._logging.log_critical(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
+            self._logging.log_critical(analysis_id, self._spark_session.sparkContext.applicationId,
                                        self._labels["no_models"], base_model_id)
             base_ar['status'] = self._labels['failed_op']  # Default Failed Operation Code
             return None
@@ -1214,10 +1209,10 @@ class sparkHandler(object):
         # writing ar.json file
         generate_json_path(base_ar)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
-        self._logging.log_exec(self._ec.get_id_analysis(),
+        self._logging.log_exec(analysis_id,
                                self._spark_session.sparkContext.applicationId,
                                self._labels["model_stored"], model_id)
-        self._logging.log_info(self._ec.get_id_analysis(),
+        self._logging.log_info(analysis_id,
                                self._spark_session.sparkContext.applicationId,
                                self._labels["end"], model_id)
         for handler in self._logging.logger.handlers:
@@ -1230,19 +1225,7 @@ class sparkHandler(object):
             prediction_dataframe = prediction_dataframe.withColumnRenamed("predictedLabel", "prediction")
 
         command = list()
-        col_sep = False
-        '''command.append("prediction_dataframe.select(")
-        for element in columns:
-            if not col_sep:
-                command.append('\"' + element + '\"')
-                col_sep = True
-            else:
-                command.append(',')
-                command.append('\"' + element + '\"')
-        command.append(', \"prediction\"')
-        if antype in ['binomial', 'multinomial']:
-            command.append(', \"probability\"')
-        command.append(").toPandas()")'''
+        #col_sep = False
 
         command.append("prediction_dataframe.select(")
         command.append('\"prediction\"')
@@ -1252,10 +1235,9 @@ class sparkHandler(object):
 
         presults = eval("".join(command))
         prediction =predict_frame.copy()
-        prediction['prediction'] = presults.loc[:,'prediction']
+        prediction['prediction'] = presults.loc[:, 'prediction']
         if antype in ['binomial', 'multinomial']:
-            prediction['probability'] = presults.loc[:,'probability']
-
+            prediction['probability'] = presults.loc[:, 'probability']
 
         return prediction, base_ar
 
@@ -1271,17 +1253,17 @@ class sparkHandler(object):
         return load_fails, remove_model
 
     ## Method to remove list of model from disk
-    # @param arlist List of ArMetadata
+    # @param self Object pointer
+    #  @param arlist List of ArMetadata
     # @return remove_fails True/False
-    @staticmethod
-    def remove_models(arlist):
+    def remove_models(self, arlist):
         remove_fails = False
         try:
             assert isinstance(arlist, list)
         except AssertionError:
             return remove_fails
 
-        persistence = PersistenceHandler()
+        persistence = PersistenceHandler(self._ec)
         for ar_metadata in arlist:
             try:
                 assert isinstance(ar_metadata['load_path'], list)

@@ -24,7 +24,7 @@ from gdayf.common.utils import get_model_fw
 class StorageMetadata (list):
     ## Constructor
     # return empty list of StoragMetadata
-    def __init__(self,):
+    def __init__(self):
         list.__init__(self)
 
     ## class used to add storage locations to StorageMetadata. use list().append method to include correct media and

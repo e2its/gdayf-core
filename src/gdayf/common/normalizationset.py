@@ -31,10 +31,11 @@ class NormalizationSet (OrderedDict):
 
     ## Method oriented to establish base Normalization [Metadata]
     # @param self  object pointer
-    def set_base(self):
+    def set_base(self, datetime=True):
         self.reset()
         self['type'] = "normalization"
         self['class'] = "base"
+        self['datetime'] = datetime
         self['objective']['value'] = OrderedDict()
 
     ## Method oriented to establish ignore_column Normalization [Metadata]

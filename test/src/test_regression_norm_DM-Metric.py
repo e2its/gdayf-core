@@ -20,9 +20,7 @@ if __name__ == "__main__":
                                                           amode=POC, metric='test_rmse', deep_impact=2)
 
         #controller.save_models(recomendations, mode=EACH_BEST)
-        controller.reconstruct_execution_tree(arlist=None, metric='test_rmse', store=True,
-                                              user=controller.user_id,
-                                              experiment=recomendations[0]['model_id'])
+        controller.reconstruct_execution_tree(arlist=None, metric='test_rmse', store=True)
         controller.remove_models(recomendations, mode=EACH_BEST)
 
         #Prediction
@@ -51,7 +49,7 @@ if __name__ == "__main__":
         #result = controller.get_external_model(recomendations[0], 'mojo')
 
         #controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy')
-        print(controller.table_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy'))
+        print(controller.table_model_list(ar_list=recomendations, metric='test_accuracy'))
 
         controller.clean_handlers()
     del controller

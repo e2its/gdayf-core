@@ -44,6 +44,7 @@ class Controller(object):
 
     ## Constructor
     def __init__(self, e_c=None, user_id='PoC_gDayF', workflow_id='default'):
+        self.timestamp = str(time())
         if e_c is None:
             if workflow_id == 'default':
                 self._ec = E_C(user_id=user_id, workflow_id=workflow_id + '_' + self.timestamp)
@@ -53,13 +54,13 @@ class Controller(object):
             self._ec = e_c
         self._config = self._ec.config.get_config()
         self._labels = self._ec.labels.get_config()['messages']['controller']
-        self._logging = LogsHandler()
+        self._logging = LogsHandler(self._ec)
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
         self.model_handler = OrderedDict()
         self.adviser = importlib.import_module(self._config['optimizer']['adviser_classpath'])
         self._logging.log_info('gDayF', "Controller", self._labels["loading_adviser"],
                                self._config['optimizer']['adviser_classpath'])
-        self.timestamp = str(time())
+
 
     ## Method leading configurations coherence checks
     # @param self object pointer
@@ -165,7 +166,7 @@ class Controller(object):
     # @param grants Octal grants format
     # @return True if OK / False if wrong
     def _coherence_fs_checks(self, storage, grants):
-        persistence = PersistenceHandler()
+        persistence = PersistenceHandler(self._ec)
         try:
             if persistence.mkdir(type=storage['type'], path=str(storage['value']), grants=grants):
                 return False
@@ -225,7 +226,7 @@ class Controller(object):
         elif model_file is not None:
             try:
                 #json_file = open(model_file)
-                persistence = PersistenceHandler()
+                persistence = PersistenceHandler(self._ec)
                 _, base_ar = persistence.get_ar_from_engine(model_file)
                 del persistence
                 '''base_ar = deep_ordered_copy(load(json_file))
@@ -263,8 +264,7 @@ class Controller(object):
         prediction_frame = None
         try:
             prediction_frame, _ = self.model_handler[fw]['handler'].predict(predict_frame=pd_dataset,
-                                                                        base_ar=base_ar,
-                                                                        user=self._ec.get_id_user())
+                                                                            base_ar=base_ar)
         except TypeError:
             self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
 
@@ -287,15 +287,15 @@ class Controller(object):
         try:
             if self.model_handler[fw]['handler'] is None:
                 if fw == 'h2o':
-                    self.model_handler[fw]['handler'] = H2OHandler()
+                    self.model_handler[fw]['handler'] = H2OHandler(e_c=self._ec)
                 elif fw == 'spark':
-                    self.model_handler[fw]['handler'] = sparkHandler()
+                    self.model_handler[fw]['handler'] = sparkHandler(e_c=self._ec)
         except KeyError:
             self.model_handler[fw] = OrderedDict()
             if fw == 'h2o':
-                self.model_handler[fw]['handler'] = H2OHandler()
+                self.model_handler[fw]['handler'] = H2OHandler(e_c=self._ec)
             elif fw == 'spark':
-                self.model_handler[fw]['handler'] = sparkHandler()
+                self.model_handler[fw]['handler'] = sparkHandler(e_c=self._ec)
             self.model_handler[fw]['initiated'] = False
         if not self.model_handler[fw]['handler'].is_alive():
             initiated = self.model_handler[fw]['handler'].connect()
@@ -310,7 +310,7 @@ class Controller(object):
                 self._logging.log_exec('gDayF', "Controller", self._labels["cleaning"], fw)
                 if each_handlers['initiated']:
                     if fw == 'h2o':
-                        H2OHandler().shutdown_cluster()
+                        H2OHandler(e_c=self._ec).shutdown_cluster()
                         self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
 
     ## Method leading and controlling analysis's executions on all frameworks
@@ -384,7 +384,8 @@ class Controller(object):
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
         
         self._ec.set_id_analysis(self._ec.get_id_user() + '_' + id_datapath + '_' + str(time()))
-        adviser = self.adviser.AdviserAStar(metric=metric,
+        adviser = self.adviser.AdviserAStar(e_c=self._ec,
+                                            metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
                                             hash_dataframe=hash_dataframe)
 
@@ -422,13 +423,13 @@ class Controller(object):
                                                                             adviser.analysis_recommendation_order)
             adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
 
-        self._logging.log_info(self._ec.get_id_analysis,'controller',
+        self._logging.log_info(self._ec.get_id_analysis(),'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_info(self._ec.get_id_analysis,'controller',
+        self._logging.log_info(self._ec.get_id_analysis(),'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
 
-        self._logging.log_exec(self._ec.get_id_analysis, 'controller', self._labels["end"])
+        self._logging.log_exec(self._ec.get_id_analysis(), 'controller', self._labels["end"])
 
         self.clean_handlers()
 
@@ -445,37 +446,37 @@ class Controller(object):
         ordered_list = self.priorize_list(arlist=ar_list, metric=metric)
         for model in ordered_list:
             if best_check:
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["best_model"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["best_model"],
                                        model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
                 best_check = False
             else:
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["res_model"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["res_model"],
                                        model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'])
 
-            self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["round_reach"], model['round'])
+            self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["round_reach"], model['round'])
             if model["normalizations_set"] is None:
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["norm_app"], [])
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["norm_app"], [])
             else:
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["norm_app"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["norm_app"],
                                        model["normalizations_set"])
 
             if metric in ACCURACY_METRICS or metric in REGRESSION_METRICS:
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["ametric_order"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["ametric_order"],
                                        model['metrics']['accuracy'])
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["pmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['train']['RMSE'])
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["pmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['test']['RMSE'])
             if metric in CLUSTERING_METRICS:
                 try:
-                    self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["ckmetric_order"],
+                    self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["ckmetric_order"],
                                        model['metrics']['execution']['train']['k'])
                 except KeyError:
-                    self._logging.log_info(self._ec.get_id_analysis,'controller', self._labels["ckmetric_order"],
+                    self._logging.log_info(self._ec.get_id_analysis(),'controller', self._labels["ckmetric_order"],
                                        "0")
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["ctmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["ctmetric_order"],
                                        model['metrics']['execution']['train']['tot_withinss'])
-                self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["cbmetric_order"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["cbmetric_order"],
                                        model['metrics']['execution']['train']['betweenss'])
 
     ## Method oriented to log leaderboard against selected metrics on dataframe
@@ -579,7 +580,8 @@ class Controller(object):
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
         self._ec.set_id_analysis(self._ec.get_id_user() + '_' + id_datapath + '_' + str(time()))
-        adviser = self.adviser.AdviserAStar(metric=metric,
+        adviser = self.adviser.AdviserAStar(e_c=self._ec,
+                                            metric=metric,
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
                                             hash_dataframe=hash_dataframe)
 
@@ -609,14 +611,14 @@ class Controller(object):
                                                                             adviser.analysis_recommendation_order)
             adviser.analysis_specific(dataframe_metadata=df, list_ar_metadata=adviser.analysis_recommendation_order)
 
-        self._logging.log_info(self._ec.get_id_analysis, 'controller',
+        self._logging.log_info(self._ec.get_id_analysis(), 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_info(self._ec.get_id_analysis, 'controller',
+        self._logging.log_info(self._ec.get_id_analysis(), 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
         self.log_model_list(adviser.adviser.analysis_recommendation_order, metric)
 
-        self._logging.log_info(self._ec.get_id_analysis, 'controller', self._labels["end"])
+        self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["end"])
 
         self.clean_handlers()
 
@@ -724,7 +726,7 @@ class Controller(object):
             self._logging.log_critical('gDayF', 'controller', self._labels["failed_model"])
             return None
         elif self._ec.get_id_analysis() is not None and self._ec.get_id_user() != 'guest':
-            new_arlist = PersistenceHandler().recover_experiment_mongoDB(user=self._ec.get_id_user())
+            new_arlist = PersistenceHandler(self._ec).recover_experiment_mongoDB()
         else:
             analysis_id = arlist[0]['model_id']
             new_arlist = arlist
@@ -768,7 +770,7 @@ class Controller(object):
                         found = True
                     counter += 1
                 if not found:
-                    self._logging.log_debug(self._ec.get_id_analysis, 'controller', self._labels['fail_reconstruct'],
+                    self._logging.log_debug(self._ec.get_id_analysis(), 'controller', self._labels['fail_reconstruct'],
                                             model_id)
             level += 1
 
@@ -782,7 +784,7 @@ class Controller(object):
             datafile.append('/')
             datafile.append(self._ec.get_id_user())
             datafile.append('/')
-            datafile.append(self.workflow_id)
+            datafile.append(self._ec.get_id_workflow())
             datafile.append('/')
             datafile.append(self._config['common']['execution_tree_dir'])
             datafile.append('/')
@@ -794,7 +796,7 @@ class Controller(object):
 
             storage = StorageMetadata()
             storage.append(value=''.join(datafile), fstype=fstype)
-            PersistenceHandler().store_json(storage, root)
+            PersistenceHandler(self._ec).store_json(storage, root)
         return root
 
     ##Method oriented to priorize ARlist
@@ -804,8 +806,8 @@ class Controller(object):
     # @param  metric ['accuracy', 'combined', 'test_accuracy', 'rmse']
     # @return OrderedDict() with execution tree data Analysis
     def priorize_list(self, arlist, metric):
-        adviser = self.adviser.AdviserAStar(e_c= self._ec, metric=metric)
-        ordered_list = adviser.priorize_models(adviser.arlist)
+        adviser = self.adviser.AdviserAStar(e_c=self._ec, metric=metric)
+        ordered_list = adviser.priorize_models(arlist)
         del adviser
         return ordered_list
 
@@ -814,7 +816,7 @@ class Controller(object):
     # @param path FilePath
     # @return operation status (0 success /1 error, ArMetadata/None)
     def get_ar_from_engine(self, path):
-        persistence = PersistenceHandler()
+        persistence = PersistenceHandler(self._ec)
         failed, armetadata = persistence.get_ar_from_engine(path=path)
         del persistence
         return failed, armetadata

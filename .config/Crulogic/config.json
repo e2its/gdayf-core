@@ -2769,7 +2769,7 @@
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
-        "enabled" : false,
+        "enabled" : true,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -4789,7 +4789,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.1.2",
+    "version" : "1.1.2.1",
     "test_frame_ratio" : 0.8,
     "workflow_summary_dir": "summary",
     "execution_tree_dir": "execution_tree",

@@ -35,7 +35,7 @@ class Workflow(object):
         self._ec = E_C(user_id=user_id)
         self._config = self._ec.config.get_config()
         self._labels = self._ec.labels.get_config()['messages']['workflow']
-        self._logging = LogsHandler()
+        self._logging = LogsHandler(self._ec)
         self.timestamp = str(time())
 
 
@@ -50,7 +50,7 @@ class Workflow(object):
     def workflow(self, datapath, workflow, prefix=None, save_models=EACH_BEST):
 
         if isinstance(workflow, str):
-            file = open(workflow, 'r'),
+            file = open(workflow, 'r')
             wf = load(file, object_hook=OrderedDict)
             if self._ec.get_id_workflow() == 'default':
                 self._ec.set_id_workflow(Path(workflow).stem + '_' + self.timestamp)
@@ -146,9 +146,8 @@ class Workflow(object):
                             controller.reconstruct_execution_tree(recomendations, metric=fe_parameters['metric'],
                                                                   store=True)
 
-
-                            model_id = recomendations[0]['model_id']
-                            table_model_list = controller.table_model_list(model_id, recomendations,
+                            #model_id = recomendations[0]['model_id']
+                            table_model_list = controller.table_model_list(ar_list=recomendations,
                                                                            metric=eval(fe_parameters['metric']))
                             self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                                    table_model_list.to_string(justify="left"))
@@ -213,8 +212,8 @@ class Workflow(object):
                     controller.reconstruct_execution_tree(recomendations, metric=wf['parameters']['metric'], store=True)
 
                     model_id = recomendations[0]['model_id']
-                    table_model_list = controller.table_model_list(model_id, recomendations,
-                                                      metric=eval(wf['parameters']['metric']))
+                    table_model_list = controller.table_model_list(ar_list=recomendations,
+                                                                   metric=eval(wf['parameters']['metric']))
                     self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                            table_model_list.to_string(justify="left"))
 
@@ -245,7 +244,8 @@ class Workflow(object):
 
                     if wf['Next'] is not None and prediction_frame is not None:
                         try:
-                            self.workflow(prediction_frame, wf['Next'], pfix, save_models=save_models)
+                            self.workflow(datapath=prediction_frame, workflow=wf['Next'],
+                                          prefix=pfix, save_models=save_models)
                         except Exception as oexecution_error:
                             self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
@@ -383,7 +383,7 @@ class Workflow(object):
                         self.replicate_file('predict', filename=filename)
                     if wf['Next'] is not None and prediction_frame is not None:
                         try:
-                            self.workflow(prediction_frame, wf['Next'], pfix)
+                            self.workflow(datapath=prediction_frame, workflow=wf['Next'], prefix=pfix)
                         except Exception as oexecution_error:
                             self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
@@ -432,9 +432,8 @@ class Workflow(object):
                 source_data.append(mode)
                 source_data.append('/')
 
-                PersistenceHandler().mkdir(type=each_storage_type['type'],
-                                           path=''.join(source_data),
-                                           grants=self._config['storage']['grants'])
+                PersistenceHandler(self._ec).mkdir(type=each_storage_type['type'],
+                                                   path=''.join(source_data), grants=self._config['storage']['grants'])
                 source_data.append(filename)
                 source_data.append('.' + filetype)
 
@@ -447,7 +446,7 @@ class Workflow(object):
     # @return  None if no localfs primary path found . Abosulute path if true
     def replicate_file(self, mode, filename):
         load_storage = StorageMetadata().get_json_path()
-        persistence = PersistenceHandler()
+        persistence = PersistenceHandler(self._ec)
         for each_storage_type in load_storage:
             if each_storage_type['type'] in ['localfs', 'hdfs']:
                 source_data = list()

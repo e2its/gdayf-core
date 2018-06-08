@@ -2,7 +2,7 @@ if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
     from gdayf.common.constants import *
-    from pprint import pprint
+    from pandas import set_option
 
     source_data = list()
     source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
@@ -18,12 +18,8 @@ if __name__ == "__main__":
                                                           objective_column='ATYPE',
                                                           amode=FAST, metric='combined_accuracy', deep_impact=3)
 
-        controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='combined_accuracy', accuracy=True)
-        #controller.save_models(recomendations, mode=EACH_BEST)
-        execution_tree = controller.reconstruct_execution_tree(arlist=None, metric='combined_accuracy', store=False,
-                                                               user=controller.user_id,
-                                                               experiment=recomendations[0]['model_id'])
-        controller.remove_models(recomendations, mode=EACH_BEST)
+        controller.reconstruct_execution_tree(metric='test_accuracy', store=True)
+        controller.remove_models(arlist=recomendations, mode=EACH_BEST)
 
         # Prediction
         source_data = list()
@@ -40,12 +36,19 @@ if __name__ == "__main__":
             print(prediction_frame[['ATYPE', 'prediction']])
 
         # Save Pojo
+        controller = Controller()
         result = controller.get_external_model(recomendations[0], 'pojo')
-        print(result)
 
         # Save Mojo
+        controller = Controller()
         result = controller.get_external_model(recomendations[0], 'mojo')
-        print(result)
 
+        set_option('display.height', 1000)
+        set_option('display.max_rows', 500)
+        set_option('display.max_columns', 500)
+        set_option('display.width', 1000)
+
+        print(controller.table_model_list(ar_list=recomendations, metric='combined_accuracy'))
         controller.clean_handlers()
     del controller
+

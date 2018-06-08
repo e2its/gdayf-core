@@ -106,12 +106,3 @@ class LogsHandler (object):
     # @return None (event logging)
     def log_debug(self, trigger, session, message, add_message=''):
         self.logger.debug(self._compose_log_record(trigger, session, message, add_message))
-
-if __name__ == "__main__":
-    logging = LogsHandler(__name__)
-    logging.log_debug('logging', '234567', 'Prueba')
-    logging.log_info('logging', '234567','Prueba')
-    logging.log_exec('logging', '234567','Prueba')
-    logging.log_warning('logging', '234567','Prueba')
-    logging.log_error('logging', '234567','Prueba')
-    logging.log_critical('logging', '234567','Prueba')

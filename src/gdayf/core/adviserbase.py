@@ -50,9 +50,9 @@ class Adviser(object):
 
     def __init__(self, e_c, deep_impact=5, metric='accuracy', dataframe_name='', hash_dataframe=''):
         self._ec = e_c
-        self._labels = self._ec.config.get_config()['messages']['adviser']
-        self._config = self._ec.labels.get_config()['optimizer']
-        self._logging = LogsHandler()
+        self._labels = self._ec.labels.get_config()['messages']['adviser']
+        self._config = self._ec.config.get_config()['optimizer']
+        self._logging = LogsHandler(self._ec)
         self.timestamp = time()
         self.an_objective = None
         self.deep_impact = deep_impact
@@ -403,7 +403,7 @@ class Adviser(object):
         fw_model_list = self.get_candidate_models(self.an_objective, amode, increment=increment)
 
         aux_model_list = list()
-        norm = Normalizer()
+        norm = Normalizer(self._ec)
         #modified 11/09/2017
         #minimal_nmd = [norm.define_minimal_norm(objective_column=objective_column)]
         minimal_nmd = norm.define_minimal_norm(dataframe_metadata=dataframe_metadata,
@@ -422,7 +422,7 @@ class Adviser(object):
         if nmd is not None:
             nmdlist = list()
             for fw, model, _ in fw_model_list:
-                if minimal_nmd[0] is not None:
+                if minimal_nmd is not None and len(minimal_nmd) > 0:
                     whole_nmd = deepcopy(minimal_nmd)
                     whole_nmd.extend(deepcopy(nmd))
                     nmdlist.append((fw, model, whole_nmd))
@@ -433,14 +433,14 @@ class Adviser(object):
 
         for fw, model_params, norm_sets in fw_model_list:
             #Included 26/05/2018: Changeset: "only_standardize"
-            if not(norm_sets is not None and compare_sorted_list_dict(norm_sets, minimal_nmd)
+            if not(norm_sets is not None and len(norm_sets) > 0 and compare_sorted_list_dict(norm_sets, minimal_nmd) \
                    and model_params['only_standardize'])\
-               or (norm_sets is None and  model_params['only_standardize']):
+               or ((norm_sets is None or len(norm_sets) == 0) and model_params['only_standardize']):
                 ar_structure = ArMetadata()
                 ar_structure['model_id'] = self._ec.get_id_analysis()
                 ar_structure['version'] = version
                 ar_structure['user_id'] = self._ec.get_id_user()
-                ar_structure['workflow_id'] = self.self._ec.get_id_workflow()
+                ar_structure['workflow_id'] = self._ec.get_id_workflow()
                 ar_structure['objective_column'] = objective_column
                 ar_structure['timestamp'] = self.timestamp
                 ar_structure['normalizations_set'] = norm_sets
@@ -469,7 +469,7 @@ class Adviser(object):
     # @param objective_column string indicating objective column
     # @return ArType or None if objective_column not found
     def get_analysis_objective(self, dataframe_metadata, objective_column):
-        config = LoadConfig().get_config()['optimizer']['AdviserStart_rules']['common']
+        config = self._config['AdviserStart_rules']['common']
         for each_column in dataframe_metadata['columns']:
             if each_column['name'] == objective_column:
                 if int(each_column['cardinality']) == 2:
@@ -489,13 +489,13 @@ class Adviser(object):
     # @param df_metadata DfMetada
     # @return float increment
     def get_size_increment(self, df_metadata):
-        base = LoadConfig().get_config()['optimizer']['common']['base_increment']
+        base = self._config['common']['base_increment']
         increment = 1.0
         variabilizations = df_metadata['rowcount'] * df_metadata['cols']
         for _ , pvalue in base.items():
             if variabilizations > pvalue['base'] and increment < pvalue['increment']:
                 increment = pvalue['increment']
-        self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["inc_application"],
+        self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar', self._labels["inc_application"],
                                increment)
         return increment
 
@@ -544,13 +544,13 @@ class Adviser(object):
             fw = model_list[iterator][0]
             model = model_list[iterator][1]
             if fw_config[fw]['conf']['min_rows_enabled'] and (nrows < model['min_rows_applicability']):
-                self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'rows < ' +
                                        str(model['min_rows_applicability']))
                 exclude_model.append(model_list[iterator])
             if fw_config[fw]['conf']['max_cols_enabled'] and model['max_cols_applicability'] is not None \
                     and(ncols > model['max_cols_applicability']):
-                self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["exc_applicability"],
+                self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar', self._labels["exc_applicability"],
                                        model['model'] + ' - ' + 'cols > ' +
                                        str(model['max_cols_applicability']))
                 exclude_model.append(model_list[iterator])
@@ -747,8 +747,8 @@ class Adviser(object):
         if not self.is_executed(vector):
             model_list.append(model)
             self.analyzed_models.append(vector)
-            self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["new_vector"], str(vector))
+            self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar', self._labels["new_vector"], str(vector))
         else:
             self.excluded_models.append(vector)
-            self._logging.log_info(self._ec.get_id_analysis, 'AdviserAStar', self._labels["exc_vector"], str(vector))
+            self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar', self._labels["exc_vector"], str(vector))
 

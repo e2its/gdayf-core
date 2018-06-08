@@ -222,7 +222,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "col_sample_rate": {
@@ -533,7 +533,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "alpha": {
@@ -943,7 +943,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "activation": {
@@ -1431,7 +1431,7 @@
               },
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "col_sample_rate_change_per_level": {
@@ -1680,7 +1680,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               }
             },
@@ -2082,7 +2082,7 @@
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "only_standardize": true,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -2294,7 +2294,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "activation": {
@@ -2769,7 +2769,7 @@
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
-        "enabled" : false,
+        "enabled" : true,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -4789,7 +4789,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.1.2",
+    "version" : "1.1.2.1",
     "test_frame_ratio" : 0.8,
     "workflow_summary_dir": "summary",
     "execution_tree_dir": "execution_tree",

@@ -76,8 +76,8 @@ def compare_list_ordered_dict(list1, list2):
 # @param list2 List of Dict
 # @return True if equals false in other case
 def compare_sorted_list_dict(list1, list2):
-    if list1[0] is None or list2[0] is None:
-        return list1[0] is None and list2[0] is None
+    if list1 is None or list2 is None:
+        return list1 is None and list2 is None
     elif len(list1) != len(list2):
         return False
     else:

@@ -15,12 +15,12 @@ from gdayf.conf.loadconfig import LoadConfig
 from gdayf.conf.loadconfig import LoadLabels
 from time import time
 
-class Experiment_Context(object):
 
+class Experiment_Context(object):
     def __init__(self, user_id='PoC_gDayF', workflow_id='default', lang='en'):
         self.id_user = user_id
         self.timestamp = str(time())
-        self.workflow_id = workflow_id
+        self.id_workflow = workflow_id
         self.config = LoadConfig(user_id=self.id_user)
         self.labels = LoadLabels(lang=lang)
         self.id_analysis = None

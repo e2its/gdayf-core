@@ -26,10 +26,12 @@ from copy import deepcopy
 class Normalizer (object):
 
     ## Constructor
-    def __init__(self):
-        self._config = LoadConfig().get_config()['normalizer']
-        self._labels = LoadLabels().get_config()['messages']['normalizer']
-        self._logging = LogsHandler(__name__)
+    # @param e_c context pointer
+    def __init__(self, e_c):
+        self._ec = e_c
+        self._config = self._ec.config.get_config()['normalizer']
+        self._labels = self._ec.labels.get_config()['messages']['normalizer']
+        self._logging = LogsHandler(self._ec, __name__)
 
     ## Method oriented to specificate data_normalizations
     # @param dataframe_metadata DFMetadata()
@@ -166,7 +168,7 @@ class Normalizer (object):
             for description in columns:
                 col = description['name']
                 if description['type'] == "object" and self._config['base_normalization_enabled']:
-                    normoption.set_base()
+                    normoption.set_base(datetime=False)
                     norms.append({col: normoption.copy()})
             return norms.copy()
         else:
@@ -254,7 +256,7 @@ class Normalizer (object):
                         dataframe.loc[:, col] = self.normalizeBase(dataframe.loc[:, col])
                         self._logging.log_info('gDayF', "Normalizer", self._labels["applying"],
                                                col + ' - ' + norms['class'])
-                        if dataframe[col].dtype == '<M8[ns]':
+                        if dataframe[col].dtype == '<M8[ns]' and norms['datetime']:
                             dataframe = self.normalizeDateTime(dataframe=dataframe, date_column=col)
                             if self._config['datetime_columns_management'] is not None \
                                     and self._config['datetime_columns_management']['enable']:
