@@ -149,7 +149,7 @@ class PersistenceHandler(object):
     def remove_file(self, load_path):
         global_op = 0
 
-        storage_metadata = StorageMetadata()
+        storage_metadata = StorageMetadata(self._ec)
         for each_storage_type in load_path:
             if each_storage_type['type'] == 'localfs':
                 result, storage = self._remove_file_to_localfs(each_storage_type)

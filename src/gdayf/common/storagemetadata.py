@@ -13,7 +13,6 @@ Copyright (C) e2its - All Rights Reserved
 '''
 
 from gdayf.common.utils import hash_key
-from gdayf.conf.loadconfig import LoadConfig
 from collections import OrderedDict
 from os import path
 from gdayf.common.utils import get_model_fw
@@ -24,7 +23,10 @@ from gdayf.common.utils import get_model_fw
 class StorageMetadata (list):
     ## Constructor
     # return empty list of StoragMetadata
-    def __init__(self):
+    def __init__(self, e_c):
+        self._ec = e_c
+        self._config = self._ec.config.get_config()
+        #self._labels = self._ec.labels.get_config()['messages']['controller']
         list.__init__(self)
 
     ## class used to add storage locations to StorageMetadata. use list().append method to include correct media and
@@ -33,7 +35,7 @@ class StorageMetadata (list):
     # @param self object pointer location (optional)
     # @param value type full file path (string)
     # @param fstype in ['localfs', 'hdfs', 'mongoDB'] default value 'localfs'
-    # @param hash_type in  ['MD5','SHA256'] default value 'MD5'
+    # @param hash_type in  ['MD5','SHA256'] , default value 'MD5'
     # @return None
     def append(self, value, fstype='localfs', hash_type='MD5'):
         try:
@@ -55,34 +57,29 @@ class StorageMetadata (list):
 
     ## method used to get relative load path from config.json
     # @return relative path string
-    @staticmethod
-    def get_load_path():
-        return LoadConfig().get_config()['storage']['load_path']
+    def get_load_path(self):
+        return self._config['storage']['load_path']
 
     ## method used to get relative log path from config.json
     # @return relative path string
-    @staticmethod
-    def get_log_path():
-        return LoadConfig().get_config()['storage']['log_path']
+    def get_log_path(self):
+        return self._config['storage']['log_path']
 
     ## method used to get relative json path from config.json
     # @param self object pointer location (optional)
     # @return relative path string
-    @staticmethod
-    def get_json_path():
-        return LoadConfig().get_config()['storage']['json_path']
+    def get_json_path(self):
+        return self._config['storage']['json_path']
 
-
-## Function to Generate json StorageMetadata for Armetadata
+## Method to Generate json StorageMetadata for Armetadata
 # @param armetadata structure to be stored
-
-def generate_json_path(armetadata):
-    config = LoadConfig().get_config()
+def generate_json_path(e_c, armetadata):
+    config = e_c.config.get_config()
     fw = get_model_fw(armetadata)
 
     model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
     compress = config['persistence']['compress_json']
-    json_storage = StorageMetadata()
+    json_storage = StorageMetadata(e_c)
     for each_storage_type in json_storage.get_json_path():
         if each_storage_type['type'] in ['localfs', 'hdfs']:
             primary_path = config['storage'][each_storage_type['type']]['value']

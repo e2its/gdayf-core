@@ -25,13 +25,11 @@ class Experiment_Context(object):
         self.labels = LoadLabels(lang=lang)
         self.id_analysis = None
 
-
     ## Method used to set global variable id_user used to propagate user_id to all modules
     # @param self object pointer
     # @param value User id value
     def set_id_user(self, value):
         self.id_user = value
-
 
     ## Method used to get global variable id_user used to recover user_id in all modules
     # @param self object pointer
@@ -39,12 +37,10 @@ class Experiment_Context(object):
     def get_id_user(self):
         return self.id_user
 
-
     ## Method used to set global variable id_workflow used to propagate workflow_id to all modules
     # @param value User id value
     def set_id_workflow(self, value):
         self.id_workflow = value
-
 
     ## Method used to get global variable id_workflow used to recover workflow_id in all modules
     # @param model ArMetadata
@@ -56,7 +52,6 @@ class Experiment_Context(object):
     # @param value User id value
     def set_id_analysis(self, value):
         self.id_analysis = value
-
 
     ## Method used to get global variable id_workflow used to recover workflow_id in all modules
     # @param model ArMetadata

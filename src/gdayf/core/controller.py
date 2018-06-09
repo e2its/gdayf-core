@@ -80,7 +80,7 @@ class Controller(object):
         ''' Checking primary Json storage Paths'''
         primary = False
         #if storage_conf['primary_path'] in ['localfs', 'hdfs']:
-        for storage in StorageMetadata().get_json_path():
+        for storage in StorageMetadata(self._ec).get_json_path():
             if storage_conf['primary_path'] == storage['type']:
                 primary = True
             if storage['type'] == 'mongoDB':
@@ -106,7 +106,7 @@ class Controller(object):
 
         ''' Checking Load storage Paths'''
         at_least_on = False
-        for storage in StorageMetadata().get_load_path():
+        for storage in StorageMetadata(self._ec).get_load_path():
             if storage['type'] == 'mongoDB':
                 self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
                                        str(storage))
@@ -133,7 +133,7 @@ class Controller(object):
 
         ''' Checking log storage Paths'''
         at_least_on = False
-        for storage in StorageMetadata().get_log_path():
+        for storage in StorageMetadata(self._ec).get_log_path():
             if storage['type'] == 'mongoDB':
                 self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
                                        str(storage))
@@ -794,7 +794,7 @@ class Controller(object):
             if self._config['persistence']['compress_json']:
                 datafile.append('.gz')
 
-            storage = StorageMetadata()
+            storage = StorageMetadata(self._ec)
             storage.append(value=''.join(datafile), fstype=fstype)
             PersistenceHandler(self._ec).store_json(storage, root)
         return root

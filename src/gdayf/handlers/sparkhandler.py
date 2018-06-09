@@ -51,7 +51,6 @@ except ImportError as e:
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
-from gdayf.common.storagemetadata import generate_json_path
 from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
@@ -68,6 +67,7 @@ from gdayf.common.armetadata import ArMetadata
 from gdayf.models.parametersmetadata import ParameterMetadata
 from gdayf.normalizer.normalizer import Normalizer
 from gdayf.common.utils import get_model_fw
+from gdayf.common.storagemetadata import generate_json_path
 
 
 class sparkHandler(object):
@@ -966,7 +966,7 @@ class sparkHandler(object):
             final_ar_model['metrics']['execution']['test']['betweenss'] = 1e+16
 
         finally:
-            generate_json_path(final_ar_model)
+            generate_json_path(self._ec, final_ar_model)
             self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
             self._logging.log_info(analysis_id,
@@ -994,7 +994,7 @@ class sparkHandler(object):
         #Updating status
         armetadata['status'] = self._labels["success_op"]
         # Generating load_path
-        load_storage = StorageMetadata()
+        load_storage = StorageMetadata(self._ec)
         for each_storage_type in load_storage.get_load_path():
             source_data = list()
             primary_path = self._config['storage'][each_storage_type['type']]['value']
@@ -1207,7 +1207,7 @@ class sparkHandler(object):
         base_ar['status'] = self._labels['success_op']
 
         # writing ar.json file
-        generate_json_path(base_ar)
+        generate_json_path(self._ec, base_ar)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
         self._logging.log_exec(analysis_id,
                                self._spark_session.sparkContext.applicationId,

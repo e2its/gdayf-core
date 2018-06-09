@@ -15,12 +15,6 @@ Copyright (C) e2its - All Rights Reserved
 from collections import OrderedDict
 from copy import deepcopy
 from json import dumps
-from gdayf.common.dfmetada import DFMetada
-from gdayf.common.normalizationset import NormalizationSet
-from gdayf.common.storagemetadata import StorageMetadata
-from gdayf.metrics.metricmetadata import MetricMetadata
-from gdayf.metrics.executionmetriccollection import ExecutionMetricCollection
-from gdayf.models.frameworkmetadata import FrameworkMetadata
 from gdayf.common.utils import get_model_fw
 
 

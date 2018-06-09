@@ -415,7 +415,7 @@ class Workflow(object):
     # @param filetype file type
     # @return  None if no localfs primary path found . Abosulute path if true
     def storage_path(self, mode, filename, filetype):
-        load_storage = StorageMetadata()
+        load_storage = StorageMetadata(self._ec)
 
         for each_storage_type in load_storage.get_load_path():
             if each_storage_type['type'] == 'localfs':
@@ -445,7 +445,7 @@ class Workflow(object):
     # @param filename filename
     # @return  None if no localfs primary path found . Abosulute path if true
     def replicate_file(self, mode, filename):
-        load_storage = StorageMetadata().get_json_path()
+        load_storage = StorageMetadata(self._ec).get_json_path()
         persistence = PersistenceHandler(self._ec)
         for each_storage_type in load_storage:
             if each_storage_type['type'] in ['localfs', 'hdfs']:

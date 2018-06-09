@@ -52,7 +52,6 @@ from h2o.estimators.kmeans import H2OKMeansEstimator
 from gdayf.common.normalizationset import NormalizationSet
 from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
-from gdayf.common.storagemetadata import generate_json_path
 from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
@@ -69,6 +68,7 @@ from gdayf.common.armetadata import ArMetadata
 from gdayf.models.parametersmetadata import ParameterMetadata
 from gdayf.normalizer.normalizer import Normalizer
 from gdayf.common.utils import get_model_fw
+from gdayf.common.storagemetadata import generate_json_path
 
 
 class H2OHandler(object):
@@ -186,7 +186,7 @@ class H2OHandler(object):
             self._logging.log_critical(self._h2o_session.session_id,
                                        self._labels["no_models"], ar_metadata)
             return None
-        load_storage = StorageMetadata()
+        load_storage = StorageMetadata(self._ec)
         for each_storage_type in load_storage.get_load_path():
             if each_storage_type['type'] == 'localfs':
                 source_data = list()
@@ -916,7 +916,7 @@ class H2OHandler(object):
 
         # Generating model
         if self._debug:
-            final_ar_model['log_path'] = StorageMetadata()
+            final_ar_model['log_path'] = StorageMetadata(self._ec)
             for each_storage_type in final_ar_model['log_path'].get_log_path():
                 log_path = base_path + each_storage_type['value'] + '/' + model_id + '.log'
                 final_ar_model['log_path'].append(value=log_path, fstype=each_storage_type['type'],
@@ -1089,7 +1089,7 @@ class H2OHandler(object):
             final_ar_model['metrics']['execution']['test']['tot_withinss'] = 1e+16
             final_ar_model['metrics']['execution']['test']['betweenss'] = 1e+16
 
-        generate_json_path(final_ar_model)
+        generate_json_path(self._ec, final_ar_model)
         self._persistence.store_json(storage_json=final_ar_model['json_path'], ar_json=final_ar_model)
 
         self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["model_stored"], model_id)
@@ -1135,7 +1135,7 @@ class H2OHandler(object):
         #Updating status
         armetadata['status'] = self._labels["success_op"]
         # Generating load_path
-        load_storage = StorageMetadata()
+        load_storage = StorageMetadata(self._ec)
         for each_storage_type in load_storage.get_load_path():
             source_data = list()
             primary_path = self._config['storage'][each_storage_type['type']]['value']
@@ -1377,7 +1377,7 @@ class H2OHandler(object):
         base_ar['status'] = self._labels['success_op']
 
         # writing ar.json file
-        generate_json_path(base_ar)
+        generate_json_path(self._ec, base_ar)
         self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
         self._logging.log_exec(self._ec.get_id_analysis(), self._h2o_session.session_id, self._labels["model_stored"], model_id)
         self._logging.log_info(self._ec.get_id_analysis(), self._h2o_session.session_id, self._labels["end"], model_id)
