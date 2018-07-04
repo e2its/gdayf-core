@@ -699,10 +699,10 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 500,
+          "min_rows_applicability": 5000,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -4696,7 +4696,7 @@
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.001,
+        "multi_limit" : 0.005,
         "multi_cardinality_limit": 5
       },
       "h2o": {
@@ -4785,8 +4785,8 @@
     }
   },
   "dfmetadata":{
-    "correlation_threshold": 0.7,
-    "cardinality_limit": 40
+    "correlation_threshold": 0.2,
+    "cardinality_limit": 80
   },
   "common": {
     "version" : "1.1.2.1",

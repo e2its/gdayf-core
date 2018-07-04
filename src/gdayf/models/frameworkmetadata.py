@@ -19,9 +19,10 @@ from gdayf.conf.loadconfig import LoadConfig
 ## Generate Framework base Class and base members
 class FrameworkMetadata (OrderedDict):
     ## Constructor
-    def __init__(self):
+    def __init__(self, e_c):
         # Load default parameters for Models as OrderedDict
-        config = LoadConfig().get_config()['frameworks']
+        self._ec = e_c
+        config = self._ec.config.get_config()['frameworks']
         for key, value in config.items():
             self[key] = value
 

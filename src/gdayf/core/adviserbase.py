@@ -461,7 +461,7 @@ class Adviser(object):
     # @param self object pointer
     # @return FrameWorkMetadata
     def load_frameworks(self):
-        return FrameworkMetadata()
+        return FrameworkMetadata(self._ec)
 
     ## Method oriented to analyze DFmetadata and select analysis objective
     # @param self object pointer
