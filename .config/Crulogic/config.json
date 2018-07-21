@@ -381,7 +381,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 500,
+          "min_rows_applicability": 2500,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": true,
@@ -699,7 +699,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 5000,
+          "min_rows_applicability": 10000,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": false,
@@ -2769,7 +2769,7 @@
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
-        "enabled" : true,
+        "enabled" : false,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -3213,7 +3213,7 @@
             },
             {
               "type": "multinomial",
-              "active": false,
+              "active": true,
               "valued": "['number',''enum']"
             },
             {
@@ -4696,8 +4696,8 @@
     "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.005,
-        "multi_cardinality_limit": 5
+        "multi_limit" : 0.01,
+        "multi_cardinality_limit": 25
       },
       "h2o": {
         "nfold_limit": 8,

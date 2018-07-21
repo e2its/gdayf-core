@@ -484,10 +484,23 @@ class AdviserAStar(Adviser):
                         model_aux['parameters']['regParam']['value'] = elastic['value']
                         self.safe_append(model_list, new_armetadata)
 
-                new_armetadata = armetadata.copy_template()
-                model_aux = new_armetadata['model_parameters']['spark']
-                model_aux['parameters']['maxDepth']['value'] *= max_depth_increment
-                self.safe_append(model_list, new_armetadata)
+                try:
+                    if model['parameters']['maxIter']['value'] \
+                            >= scoring_metric['totalIterations'][0] and \
+                               scoring_metric['totalIterations'][0] <= max_interactions_increment:
+
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['spark']
+                        model_aux['parameters']['maxIter']['value'] *= interactions_increment
+                        self.safe_append(model_list, new_armetadata)
+                except KeyError:
+                    if model['parameters']['maxIter']['value'] \
+                            <= max_interactions_increment:
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['spark']
+                        model_aux['parameters']['maxIter']['value'] *= interactions_increment
+                        self.safe_append(model_list, new_armetadata)
+
                 new_armetadata = armetadata.copy_template()
                 model_aux = new_armetadata['model_parameters']['spark']
                 model_aux['parameters']['aggregationDepth']['value'] *= aggregationDepth_increment
@@ -591,10 +604,16 @@ class AdviserAStar(Adviser):
                         / min_rows_increment, 0)
                     self.safe_append(model_list, new_armetadata)
 
-                if scoring_metric['max_depth'][0] >= model['parameters']['maxDepth']['value']:
+                # 05/07/2018. Included platform base restriction maxDepth <=30
+                if scoring_metric['max_depth'][0] >= model['parameters']['maxDepth']['value'] \
+                        and model['parameters']['maxDepth']['value'] != 30:
                     new_armetadata = armetadata.copy_template()
                     model_aux = new_armetadata['model_parameters']['spark']
-                    model_aux['parameters']['maxDepth']['value'] *= max_depth_increment
+                    if model_aux['parameters']['maxDepth']['value'] * max_depth_increment > 30:
+                        model_aux['parameters']['maxDepth']['value'] = 30
+                    else:
+                        model_aux['parameters']['maxDepth']['value'] *= max_depth_increment
+
                     self.safe_append(model_list, new_armetadata)
 
                 if scoring_metric['trees'][0] >= model['parameters']['maxIter']['value']:

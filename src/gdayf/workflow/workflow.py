@@ -61,13 +61,15 @@ class Workflow(object):
 
         for wkey, wvalue in wf.items():
             if prefix is None:
-                prefix = xstr(wvalue['parameters']['objective_column'])
+                _prefix = xstr(wvalue['parameters']['objective_column'])
+            else:
+                _prefix = prefix
             if wvalue['parameters']['mode'] == "train":
                 self.train_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
-                                    prefix=prefix, save_models=save_models)
+                                    prefix=_prefix, save_models=save_models)
             elif wvalue['parameters']['mode'] == "predict":
                 self.predict_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
-                                      prefix=prefix, save_models=save_models)
+                                      prefix=_prefix, save_models=save_models)
             else:
                 self._logging.log_info('gDayF', "Workflow", self._labels["nothing_to_do"])
 
