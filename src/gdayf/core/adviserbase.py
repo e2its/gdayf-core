@@ -16,7 +16,6 @@ Copyright (C) e2its - All Rights Reserved
 from gdayf.models.frameworkmetadata import FrameworkMetadata
 from gdayf.common.armetadata import ArMetadata
 from gdayf.normalizer.normalizer import Normalizer
-from gdayf.conf.loadconfig import LoadConfig
 from gdayf.models.atypesmetadata import ATypesMetadata
 from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
 from gdayf.models.h2omodelmetadata import H2OModelMetadata
@@ -358,7 +357,7 @@ class Adviser(object):
     # @param dataframe_metadata DFMetadata()
     # @param list_ar_metadata
     def base_specific(self, dataframe_metadata, list_ar_metadata):
-        version = LoadConfig().get_config()['common']['version']
+        version = self._ec.config.get_config()['common']['version']
         for ar_metadata in list_ar_metadata:
 
             ar_structure = ArMetadata()
@@ -394,7 +393,7 @@ class Adviser(object):
     # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @param objective_column string indicating objective column
     def base_iteration(self, amode, dataframe_metadata, objective_column):
-        version = LoadConfig().get_config()['common']['version']
+        version = self._ec.config.get_config()['common']['version']
         supervised = True
         if objective_column is None:
             supervised = False
@@ -515,7 +514,7 @@ class Adviser(object):
                     if each_base_model['enabled']:
                         for each_type in each_base_model['types']:
                             if each_type['active'] and each_type['type'] == atype[0]['type']:
-                                modelbase = H2OModelMetadata()
+                                modelbase = H2OModelMetadata(self._ec)
                                 model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
                                 wfw.models.append(model)
                                 model_list.append((fw, model, None))
@@ -525,7 +524,7 @@ class Adviser(object):
                     if each_base_model['enabled']:
                         for each_type in each_base_model['types']:
                             if each_type['active'] and each_type['type'] == atype[0]['type']:
-                                modelbase = sparkModelMetadata()
+                                modelbase = sparkModelMetadata(self._ec)
                                 model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
                                 wfw.models.append(model)
                                 model_list.append((fw, model, None))
@@ -538,7 +537,7 @@ class Adviser(object):
     # @param ncols number of cols of dataframe
     # @return implicit List[ArMetadata]
     def applicability(self, model_list, nrows, ncols):
-        fw_config = LoadConfig().get_config()['frameworks']
+        fw_config = self._ec.config.get_config()['frameworks']
         exclude_model = list()
         for iterator in range(0, len(model_list)):
             fw = model_list[iterator][0]

@@ -699,10 +699,10 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 10000,
+          "min_rows_applicability": 50000,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",

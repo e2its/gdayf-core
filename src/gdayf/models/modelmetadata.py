@@ -20,10 +20,11 @@ from collections import OrderedDict
 ## Generate Model base Class and base members
 class ModelMetadata(object):
     ## Constructor
-    def __init__(self):
+    def __init__(self, e_c):
         # @var _config
         # Load default parameters for Models
-        self._config = LoadConfig().get_config()['frameworks']
+        self._ec = e_c
+        self._config = self._ec.config.get_config()['frameworks']
         # @var model
         #  Initialized model to None
         self.model = OrderedDict()

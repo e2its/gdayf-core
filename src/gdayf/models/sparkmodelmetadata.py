@@ -21,8 +21,8 @@ from time import time
 ## Generate spark Model base Class and initialize base members
 class sparkModelMetadata(ModelMetadata):
     ## Constructor
-    def __init__(self):
-        ModelMetadata.__init__(self)
+    def __init__(self, e_c):
+        ModelMetadata.__init__(self, e_c)
         # @var _config
         # Initialized _config to spark all models default values
         self._optimizable_scale_params = self._config['spark']['conf']['optimizable_scale_params']

@@ -21,8 +21,8 @@ from time import time
 ## Generate H2O Model base Class and initialize base members
 class H2OModelMetadata(ModelMetadata):
     ## Constructor
-    def __init__(self):
-        ModelMetadata.__init__(self)
+    def __init__(self, e_c):
+        ModelMetadata.__init__(self, e_c)
         # @var _config
         # Initialized _config to h2o all models default values
         self._optimizable_scale_params = self._config['h2o']['conf']['optimizable_scale_params']
@@ -97,40 +97,4 @@ class H2OModelMetadata(ModelMetadata):
         self.model['parameters']['seed']['value'] = int(ts)
         return self.model
 
-
-if __name__ == "__main__":
-    from json import dumps
-    m = H2OModelMetadata()
-    models = ['H2ODeepLearningEstimator', 'H2OGradientBoostingEstimator',
-              'H2OGeneralizedLinearEstimator', 'H2ORandomForestEstimator']
-    amodes = [POC, NORMAL]
-    atypes = [
-                [
-                    {
-                      "type": "binomial",
-                      "active": True,
-                      "valued": "enum"
-                    }
-                  ],
-                [
-                    {
-                        "type": "multinomial",
-                        "active": True,
-                        "valued": "enum"
-                    }
-                ],
-                [
-                    {
-                        "type": "regression",
-                        "active": True,
-                        "valued": "float64"
-                    }
-                ]
-    ]
-    for each_model in models:
-        for atype in atypes:
-            for amode in amodes:
-                modelbase = H2OModelMetadata()
-                print (amode)
-                print(dumps(modelbase.generate_models(each_model, atype, amode),indent=4))
 
