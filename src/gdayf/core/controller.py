@@ -685,7 +685,7 @@ class Controller(object):
 
     ## Method leading and controlling model removing from server
     # @param self object pointer
-    # @param mode to be keeped in memory [BEST, BEST_3, EACH_BEST, ALL]
+    # @param mode to be keeped in memory [BEST, BEST_3, EACH_BEST, ALL,NONE]
     # @param  arlist List of armetadata
     def remove_models(self, arlist, mode=ALL):
         if mode == BEST:

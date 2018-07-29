@@ -21,6 +21,7 @@ BEST = 0
 BEST_3 = 1
 EACH_BEST = 2
 ALL = 3
+NONE = -1
 DTYPES = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 FTYPES = ['float', 'float16', 'float32', 'float64']
 ITYPES = ['int', 'int16', 'int32', 'int64']

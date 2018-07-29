@@ -4685,7 +4685,7 @@
     "special_spark_naive_offset" : 2.0,
     "datetime_columns_management": {
       "enable": true,
-      "filter": ["day","month","year","weekday","weeknumber","hour", "minute","second", "microsecond"],
+      "filter": ["weekday","weeknumber"],
       "ignore_original": true
     }
   },

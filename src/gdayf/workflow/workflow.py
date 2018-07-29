@@ -44,10 +44,10 @@ class Workflow(object):
     # @param e_c experiment_configuration
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param workflow String Path indicating train workflow definition path
-    # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
+    # @param remove_models [BEST, BEST_3, EACH_BEST, ALL]
     # @param prefix value
 
-    def workflow(self, datapath, workflow, prefix=None, save_models=EACH_BEST):
+    def workflow(self, datapath, workflow, prefix=None, remove_models=EACH_BEST):
 
         if isinstance(workflow, str):
             file = open(workflow, 'r')
@@ -66,10 +66,10 @@ class Workflow(object):
                 _prefix = prefix
             if wvalue['parameters']['mode'] == "train":
                 self.train_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
-                                    prefix=_prefix, save_models=save_models)
+                                    prefix=_prefix, remove_models=remove_models)
             elif wvalue['parameters']['mode'] == "predict":
                 self.predict_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
-                                      prefix=_prefix, save_models=save_models)
+                                      prefix=_prefix, remove_models=remove_models)
             else:
                 self._logging.log_info('gDayF', "Workflow", self._labels["nothing_to_do"])
 
@@ -79,9 +79,9 @@ class Workflow(object):
     # @param wkey Step name
     # @param workflow String Path indicating train workflow definition path
     # @param prefix value
-    # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
+    # @param remove_models [BEST, BEST_3, EACH_BEST, ALL]
 
-    def train_workflow(self, datapath, wkey, workflow, prefix='main', save_models=EACH_BEST):
+    def train_workflow(self, datapath, wkey, workflow, prefix='main', remove_models=EACH_BEST):
         set_option('display.max_rows', 500)
         set_option('display.max_columns', 500)
         set_option('display.width', 1000)
@@ -144,7 +144,7 @@ class Workflow(object):
                             self._logging.log_info('gDayF', "Workflow", self._labels["desc_operation"],
                                                    ''.join(source_parameters))
                             status, recomendations = eval(''.join(source_parameters))
-                            controller.remove_models(recomendations, mode=save_models)
+                            controller.remove_models(recomendations, mode=remove_models)
                             controller.reconstruct_execution_tree(recomendations, metric=fe_parameters['metric'],
                                                                   store=True)
 
@@ -181,7 +181,7 @@ class Workflow(object):
 
                             try:
                                 if fe_next is not None and prediction_frame is not None:
-                                    self.workflow(prediction_frame, fe_next, pfix, save_models=save_models)
+                                    self.workflow(prediction_frame, fe_next, pfix, remove_models=remove_models)
                             except Exception as oexecution_error:
                                 self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
             else:
@@ -210,7 +210,7 @@ class Workflow(object):
                     self._logging.log_info('gDayF', "Workflow", self._labels["desc_operation"],
                                            ''.join(source_parameters))
                     status, recomendations = eval(''.join(source_parameters))
-                    controller.remove_models(recomendations, mode=save_models)
+                    controller.remove_models(recomendations, mode=remove_models)
                     controller.reconstruct_execution_tree(recomendations, metric=wf['parameters']['metric'], store=True)
 
                     model_id = recomendations[0]['model_id']
@@ -247,7 +247,7 @@ class Workflow(object):
                     if wf['Next'] is not None and prediction_frame is not None:
                         try:
                             self.workflow(datapath=prediction_frame, workflow=wf['Next'],
-                                          prefix=pfix, save_models=save_models)
+                                          prefix=pfix, remove_models=remove_models)
                         except Exception as oexecution_error:
                             self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
@@ -261,10 +261,10 @@ class Workflow(object):
     # @param datapath String Path indicating file to be analyzed or Dataframe
     # @param wkey Step name
     # @param workflow String Path indicating test workflow definition path
-    # @param save_models [BEST, BEST_3, EACH_BEST, ALL]
+    # @param remove_models [BEST, BEST_3, EACH_BEST, ALL]
     # @param prefix value
 
-    def predict_workflow(self, datapath, wkey, workflow, prefix='main', workflow_id='default', save_models=EACH_BEST):
+    def predict_workflow(self, datapath, wkey, workflow, prefix='main', workflow_id='default', remove_models=EACH_BEST):
         set_option('display.height', 1000)
         set_option('display.max_rows', 500)
         set_option('display.max_columns', 500)
