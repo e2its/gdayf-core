@@ -660,32 +660,32 @@ class H2OHandler(object):
         analysis_id = self._ec.get_id_analysis()
         if atype in ['binomial', 'multinomial']:
             if training_frame is not None:
-                if isinstance(training_frame[objective_column], (int, float)):
+                if training_frame[objective_column].types[objective_column] in DTYPES:
                     training_frame[objective_column] = training_frame[objective_column].asfactor()
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id,
+                    self._logging.log_info(analysis_id, self._h2o_session.session_id,
                                            self._labels["factoring"],
                                            ' train : ' + objective_column)
                 else:
                     training_frame[objective_column] = training_frame[objective_column].ascharacter().asfactor()
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
+                    self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
                                            ' train : ' + objective_column)
             if valid_frame is not None:
-                if isinstance(valid_frame[objective_column], (int, float)):
+                if  valid_frame[objective_column].types[objective_column] in DTYPES:
                     valid_frame[objective_column] = valid_frame[objective_column].asfactor()
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
+                    self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
                                            ' validation : ' + objective_column)
                 else:
                     valid_frame[objective_column] = valid_frame[objective_column].ascharacter().asfactor()
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
+                    self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
                                            ' validation : ' + objective_column)
             if predict_frame is not None and objective_column in predict_frame.columns:
-                if isinstance(predict_frame[objective_column], (int, float)):
+                if  predict_frame[objective_column].types[objective_column] in DTYPES:
                     predict_frame[objective_column] = predict_frame[objective_column].asfactor()
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
+                    self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
                                            ' predict : ' + objective_column)
                 else:
                     predict_frame[objective_column] = predict_frame[objective_column].ascharacter().asfactor()
-                    self._logging.log_exec(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
+                    self._logging.log_info(analysis_id, self._h2o_session.session_id, self._labels["factoring"],
                                            ' predict : ' + objective_column)
 
     ## Method to execute normalizations base on params

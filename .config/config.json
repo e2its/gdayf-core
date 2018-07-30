@@ -1555,7 +1555,7 @@
             },
             {
               "type": "multinomial",
-              "active": true,
+              "active": false,
               "valued": "enum"
             },
             {

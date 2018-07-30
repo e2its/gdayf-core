@@ -16,6 +16,7 @@ from gdayf.common.utils import hash_key
 from collections import OrderedDict
 from os import path
 from gdayf.common.utils import get_model_fw
+from copy import deepcopy
 
 
 ## Class storage metadata
@@ -58,20 +59,21 @@ class StorageMetadata (list):
     ## method used to get relative load path from config.json
     # @return relative path string
     def get_load_path(self):
-        return self._config['storage']['load_path']
+        return deepcopy(self._config['storage']['load_path'])
 
     ## method used to get relative log path from config.json
     # @return relative path string
     def get_log_path(self):
-        return self._config['storage']['log_path']
+        return deepcopy(self._config['storage']['log_path'])
 
     ## method used to get relative json path from config.json
     # @param self object pointer location (optional)
     # @return relative path string
     def get_json_path(self):
-        return self._config['storage']['json_path']
+        return deepcopy(self._config['storage']['json_path'])
 
 ## Method to Generate json StorageMetadata for Armetadata
+# @param e_c context pointer
 # @param armetadata structure to be stored
 def generate_json_path(e_c, armetadata):
     config = e_c.config.get_config()
@@ -80,6 +82,7 @@ def generate_json_path(e_c, armetadata):
     model_id = armetadata['model_parameters'][fw]['parameters']['model_id']['value']
     compress = config['persistence']['compress_json']
     json_storage = StorageMetadata(e_c)
+
     for each_storage_type in json_storage.get_json_path():
         if each_storage_type['type'] in ['localfs', 'hdfs']:
             primary_path = config['storage'][each_storage_type['type']]['value']
@@ -111,6 +114,7 @@ def generate_json_path(e_c, armetadata):
             json_path += ''.join(specific_data)
             json_storage.append(value=json_path, fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])
+
         else:
             json_storage.append(value=armetadata['user_id'], fstype=each_storage_type['type'],
                                 hash_type=each_storage_type['hash_type'])

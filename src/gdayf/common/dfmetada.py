@@ -96,9 +96,9 @@ class DFMetada(OrderedDict):
         self['correlation'] = dataframe.corr().to_dict()
         for key, value in deepcopy(self['correlation']).items():
             for subkey, subvalue in value.items():
-                if (self._config['correlation_threshold'] >= subvalue >= -self._config['correlation_threshold']) \
-                        or key == subkey or isnan(subvalue):
+                if (self._config['correlation_threshold'] > abs(subvalue)) or key == subkey or isnan(subvalue):
                     self['correlation'][key].pop(subkey)
+        self['covariance'] = dataframe.cov().to_dict()
         return self
 
     def pop(self, key, default=None):

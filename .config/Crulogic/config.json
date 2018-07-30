@@ -1,13 +1,13 @@
 {
   "persistence": {
-    "compress_json": true
+    "compress_json": false
 },
   "frameworks": {
     "h2o": {
       "conf": {
         "download_dir": "downloads",
         "url": "http://127.0.0.1:54321",
-        "nthreads": 6,
+        "nthreads": 4,
         "ice_root": "/Data/Data/logs",
         "max_mem_size": "8G",
         "start_h2o": true,
@@ -26,7 +26,7 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"]
+        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations"]
       },
       "models": [
         {
@@ -129,7 +129,7 @@
                 "type": "boolean"
               } ,
               "min_rows": {
-                  "value": 8.0,
+                  "value": 16.0,
                   "seleccionable": true,
                   "type": "float"
               }
@@ -177,7 +177,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -383,7 +383,7 @@
           "module": "h2o.estimators.glm",
           "min_rows_applicability": 2500,
           "max_cols_applicability": null,
-          "only_standardize": true,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -883,17 +883,17 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
               "classification_stop": {
-                "value": 0.0001,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
               "regression_stop": {
-                "value": 0.0001,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1333,7 +1333,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                "value": 8.0,
+                "value": 16.0,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -1381,7 +1381,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1555,7 +1555,7 @@
             },
             {
               "type": "multinomial",
-              "active": true,
+              "active": false,
               "valued": "enum"
             },
             {
@@ -1875,7 +1875,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.000001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -2264,17 +2264,17 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.00005,
+                "value": 0.000001,
                 "seleccionable": false,
                 "type": "float"
               },
               "classification_stop": {
-                "value": 0.0001,
+                "value": 0.000001,
                 "seleccionable": false,
                 "type": "float"
               },
               "regression_stop": {
-                "value": 0.0001,
+                "value": 0.000001,
                 "seleccionable": false,
                 "type": "float"
               },
@@ -2781,7 +2781,7 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"]
+        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees"]
       },
       "models": [
         {
@@ -4692,22 +4692,22 @@
   "optimizer": {
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
-    "adviser_L2_wide": 3,
-    "adviser_normal_wide": 2,
+    "adviser_L2_wide": 4,
+    "adviser_normal_wide": 3,
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.01,
-        "multi_cardinality_limit": 25
+        "multi_cardinality_limit": 5
       },
       "h2o": {
         "nfold_limit": 8,
-        "min_rows_limit": 4,
+        "min_rows_limit": 3,
         "cols_breakdown": 200,
         "nfold_increment": 2,
-        "min_rows_increment": 2,
+        "min_rows_increment": 1.5,
         "max_interactions_rows_breakdown": 1000,
         "max_interactions_increment": 1000,
-        "max_depth_increment": 2,
+        "max_depth_increment": 1.5,
         "ntrees_increment": 2,
         "dpl_rcount_limit": 100000,
         "dpl_divisor": 500,
@@ -4738,11 +4738,11 @@
         "clustering_increment": 2.0
       },
       "spark": {
-        "min_rows_limit": 4,
-        "min_rows_increment": 2,
+        "min_rows_limit": 3,
+        "min_rows_increment": 1.5,
         "max_interactions_increment": 1000,
         "interactions_increment": 2,
-        "max_depth_increment": 2,
+        "max_depth_increment": 1.5,
         "ntrees_increment": 2,
         "aggregationDepth_increment": 2,
         "stepSize" : [
@@ -4763,22 +4763,22 @@
         ],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "initstep_increment": 2,
+        "initstep_increment": 1.5,
         "clustering_increment": 2.0
       }
     },
     "common": {
       "base_increment": {
         "small": {
-          "base": 20000,
+          "base": 200000,
           "increment": 2.0
         },
         "medium": {
-          "base": 5000000,
+          "base": 2000000,
           "increment": 4.0
         },
         "large": {
-          "base": 50000000,
+          "base": 20000000,
           "increment": 8.0
         }
       }

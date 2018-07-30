@@ -14,7 +14,7 @@ Copyright (C) e2its - All Rights Reserved
 
 from json import dump, dumps, load, loads
 from collections import OrderedDict
-import mmap
+import codecs
 from os import path as ospath, chmod, remove
 from os import path
 from shutil import rmtree, copy2
@@ -255,8 +255,9 @@ class PersistenceHandler(object):
                 json_bytes = json_str.encode('utf-8')
                 file.write(json_bytes)
             else:
-                file = open(storage_json['value'], 'w')
-                dump(ar_json, file, indent=4)
+                # file = open(storage_json['value'], 'w')
+                file = codecs.open(storage_json['value'], 'w', encoding='utf-8')
+                dump(ar_json, file, indent=4, ensure_ascii=False)
             file.close()
             chmod(storage_json['value'], int(self._config['grants'], 8))
             return 0
@@ -289,7 +290,8 @@ class PersistenceHandler(object):
                              data=gzip.compress(json_bytes),
                              overwrite=True)
             else:
-                client.write(storage_json['value'], data=dumps(ar_json, indent=4), encoding='utf-8', overwrite=True)
+                client.write(storage_json['value'], data=dumps(ar_json, indent=4, ensure_ascii=False),
+                             encoding='utf-8', overwrite=True)
             return 0
         except HdfsError as hexecution_error:
             print(repr(hexecution_error))
@@ -469,6 +471,7 @@ class PersistenceHandler(object):
                         json_str = json_bytes.decode('utf-8')
                         ar_metadata = loads(json_str, object_hook=OrderedDict)
                     else:
+                        #Bug pending
                         file = open(path, 'r')
                         ar_metadata = load(file, object_hook=OrderedDict)
                     file.close()

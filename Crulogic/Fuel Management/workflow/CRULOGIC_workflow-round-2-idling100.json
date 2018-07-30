@@ -1,0 +1,124 @@
+{
+  "idling100-M-global":{
+    "model" : "",
+    "parameters": {
+      "amode":"FAST",
+      "mode" : "train",
+      "objective_column": "idling100-M",
+      "metric": "combined_accuracy",
+      "deep_impact": 5
+    },
+    "data":{
+      "filtered_columns":
+      [
+        "Optima_level",
+        "Engine-worktime",
+        "Braking100",
+        "Strong-braking100",
+        "Strong-Acel100",
+        "idling100",
+        "Out-speed",
+        "Out-engine",
+        "Rollout100",
+        "SDS",
+        "SDS-slopes",
+        "SDS-Anticipation",
+        "SDS-brakes",
+        "SDS-Gear",
+        "Fuel",
+        "Fuel-idling",
+        "idling-time",
+        "Distance-remol",
+        "Cruise-Control",
+        "Avg-speed",
+        "Max-speed",
+        "Max-rpm",
+        "Rollout",
+        "Braking",
+        "Strong-braking",
+        "out-rpm",
+        "Out-Speed-N",
+        "Out-engine-N",
+        "Avg-fuel",
+        "Cruise-Control-M",
+        "Braking100-N",
+        "out-rpm-N",
+        "Strong-Acel100-N",
+        "Strong-braking100-N",
+        "Rollout100-M",
+        "Rollout100-N",
+        "Cruise-Control-N",
+        "Idling100-N",
+        "Avg-Fuel-M"
+      ],
+      "filtered_data": null,
+      "for_each":null
+    },
+    "Next": null
+  },
+  "idling100-M-cluster":{
+    "model" : "",
+    "parameters": {
+      "amode":"FAST",
+      "mode" : "train",
+      "objective_column": "idling100-M",
+      "metric": "combined_accuracy",
+      "deep_impact": 5
+    },
+    "data":{
+      "filtered_columns":
+      [
+        "Optima_level",
+        "Engine-worktime",
+        "Braking100",
+        "Strong-braking100",
+        "Strong-Acel100",
+        "idling100",
+        "Out-speed",
+        "Out-engine",
+        "Rollout100",
+        "SDS",
+        "SDS-slopes",
+        "SDS-Anticipation",
+        "SDS-brakes",
+        "SDS-Gear",
+        "Fuel",
+        "Fuel-idling",
+        "idling-time",
+        "Distance-remol",
+        "Cruise-Control",
+        "Avg-speed",
+        "Max-speed",
+        "Max-rpm",
+        "Rollout",
+        "Braking",
+        "Strong-braking",
+        "out-rpm",
+        "Out-Speed-N",
+        "Out-engine-N",
+        "Avg-fuel",
+        "Cruise-Control-M",
+        "Braking100-N",
+        "out-rpm-N",
+        "Strong-Acel100-N",
+        "Strong-braking100-N",
+        "Rollout100-M",
+        "Rollout100-N",
+        "Cruise-Control-N",
+        "Idling100-N",
+        "Avg-Fuel-M",
+        "Avg-fuel-cluster",
+        "Distance-remol-N"
+      ],
+      "filtered_data": null,
+      "for_each": "Cluster",
+      "for_each_exclusions":null
+    },
+    "Next": null
+  }
+}
+
+
+
+
+

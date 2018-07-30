@@ -1,6 +1,6 @@
 {
   "persistence": {
-    "compress_json": true
+    "compress_json": false
 },
   "frameworks": {
     "h2o": {

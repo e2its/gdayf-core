@@ -471,14 +471,18 @@ class Adviser(object):
         config = self._config['AdviserStart_rules']['common']
         for each_column in dataframe_metadata['columns']:
             if each_column['name'] == objective_column:
-                if int(each_column['cardinality']) == 2:
+                if each_column['missed'] != 0:
+                    cardinality = int(each_column['cardinality']) - 1
+                else:
+                    cardinality = int(each_column['cardinality'])
+                if (cardinality == 2):
                     return ATypesMetadata(binomial=True)
-                if each_column['type'] not in DTYPES:
-                    if int(each_column['cardinality']) > 2:
+                elif each_column['type'] not in DTYPES:
+                    if cardinality > 2:
                         return ATypesMetadata(multinomial=True)
-                elif int(each_column['cardinality']) <= (dataframe_metadata['rowcount']*config['multi_limit'])\
-                        and int(each_column['cardinality']) <= config['multi_cardinality_limit']:
-                    return ATypesMetadata(multinomial=True)
+                elif cardinality <= config['multi_cardinality_limit'] \
+                        and cardinality <= (dataframe_metadata['rowcount']*config['multi_limit']):
+                        return ATypesMetadata(multinomial=True)
                 else:
                     return ATypesMetadata(regression=True)
         return None
@@ -491,7 +495,7 @@ class Adviser(object):
         base = self._config['common']['base_increment']
         increment = 1.0
         variabilizations = df_metadata['rowcount'] * df_metadata['cols']
-        for _ , pvalue in base.items():
+        for _, pvalue in base.items():
             if variabilizations > pvalue['base'] and increment < pvalue['increment']:
                 increment = pvalue['increment']
         self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar', self._labels["inc_application"],
