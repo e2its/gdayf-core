@@ -12,7 +12,7 @@ Copyright (C) e2its - All Rights Reserved
  * Written by e2its <e2its.es@gmail.com>, 2016-2018
 '''
 
-from json import dumps
+from json import dumps, load
 from collections import OrderedDict
 from gdayf.common.constants import DTYPES
 from gdayf.conf.loadconfig import LoadConfig
@@ -20,6 +20,7 @@ from copy import deepcopy
 from pandas import cut
 from hashlib import md5 as md5
 from numpy import isnan
+from os import path
 import operator
 
 
@@ -30,7 +31,21 @@ class DFMetada(OrderedDict):
     # Generate an empty DFMetada class with all elements initialized to correct types
     def __init__(self):
         OrderedDict.__init__(self)
-        self._config = LoadConfig().get_config()["dfmetadata"]
+        self._config = None
+        configpath = path.join(path.dirname(__file__), '../../../.config')
+        configfile = path.join(configpath, 'config.json')
+
+        # @var _configfile protected member variable to store configfile path
+        self._configfile = configfile
+        if path.exists(self._configfile):
+            with open(configfile, 'rt') as f:
+                try:
+                    self._config = load(f, object_hook=OrderedDict, encoding='utf8')["dfmetadata"]
+                except IOError:
+                    raise IOError
+        else:
+            raise IOError
+
         self['type'] = None
         self['rowcount'] = None
         self['cols'] = None
@@ -125,9 +140,16 @@ if __name__ == "__main__":
     from gdayf.handlers.inputhandler import inputHandlerCSV
     from pandas import concat
     import operator
+    from gdayf.core.experiment_context import Experiment_Context
+    from os import path
+    from gdayf.common.constants import *
+
+    e_c = Experiment_Context(user_id='Crulogic')
+
     source_data = list()
-    source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
-    source_data.append("ARM-Metric-test.csv")
+    source_data.append(path.join(path.dirname(__file__),
+                                 '../../../../../source data/Transformados-PDI/Crulogic-2017/'))
+    source_data.append("Crulogic-17-18.csv")
 
     pd_train_dataset = inputHandlerCSV().inputCSV(''.join(source_data))
 

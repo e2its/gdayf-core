@@ -14,7 +14,7 @@ if __name__ == "__main__":
     workflow_data.append(path.join(path.dirname(__file__), '../workflow/'))
     workflow_data.append("CRULOGIC_workflow-round-2-Avg-fuel-params.json")
 
-    workflow = Workflow(user_id='Crulogic')
+    workflow = Workflow(user_id='Crulogic-r2')
     workflow.workflow(datapath=''.join(source_data), workflow=''.join(workflow_data),
                       remove_models=EACH_BEST, prefix='filtered-data')
     del workflow
@@ -24,7 +24,7 @@ if __name__ == "__main__":
                                  '../../../../../source data/Transformados-PDI/Crulogic-2017/'))
     source_data.append("Crulogic-17-18-Optima.csv")
 
-    workflow = Workflow(user_id='Crulogic')
+    workflow = Workflow(user_id='Crulogic-r2')
     workflow.workflow(datapath=''.join(source_data), workflow=''.join(workflow_data),
                       remove_models=EACH_BEST, prefix='Optima-data')
     del workflow

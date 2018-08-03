@@ -1,16 +1,17 @@
 {
-  "Strong-braking100-N-global":{
+  "Strong-braking100-B-global":{
     "model" : "",
     "parameters": {
       "amode":"FAST",
       "mode" : "train",
-      "objective_column": "Strong-braking100-N",
+      "objective_column": "Strong-braking100-B",
       "metric": "combined_accuracy",
       "deep_impact": 5
     },
     "data":{
         "filtered_columns":
         [
+          "Avg-fuel",
           "Optima_level",
           "Engine-worktime",
           "Braking100",
@@ -37,19 +38,12 @@
           "Braking",
           "Strong-braking",
           "out-rpm",
-          "Out-Speed-N",
-          "Out-engine-N",
-          "Avg-fuel",
-          "Cruise-Control-M",
+          "Strong-Acel100-B",
+          "out-rpm-B",
           "Braking100-N",
-          "out-rpm-N",
-          "idling100-M",
-          "Strong-Acel100-N",
-          "Rollout100-M",
           "Rollout100-N",
-          "Cruise-Control-N",
           "Idling100-N",
-          "Avg-Fuel-M"
+          "Cruise-Control-N"
         ],
         "filtered_data": null,
         "for_each":null,
@@ -58,18 +52,19 @@
     },
     "Next": null
   },
-  "Strong-braking100-N-cluster":{
+  "Strong-braking100-B-cluster":{
     "model" : "",
     "parameters": {
       "amode":"FAST",
       "mode" : "train",
-      "objective_column": "Strong-braking100-N",
+      "objective_column": "Strong-braking100-B",
       "metric": "combined_accuracy",
       "deep_impact": 5
     },
     "data":{
         "filtered_columns":
         [
+          "Avg-fuel",
           "Optima_level",
           "Engine-worktime",
           "Braking100",
@@ -96,21 +91,12 @@
           "Braking",
           "Strong-braking",
           "out-rpm",
-          "Out-Speed-N",
-          "Out-engine-N",
-          "Avg-fuel",
-          "Cruise-Control-M",
+          "Strong-Acel100-B",
+          "out-rpm-B",
           "Braking100-N",
-          "out-rpm-N",
-          "idling100-M",
-          "Strong-Acel100-N",
-          "Rollout100-M",
           "Rollout100-N",
-          "Cruise-Control-N",
           "Idling100-N",
-          "Avg-Fuel-M",
-          "Avg-fuel-cluster",
-          "Distance-remol-N"
+          "Cruise-Control-N"
         ],
         "filtered_data": null,
         "for_each": "Cluster",

@@ -44,13 +44,7 @@
         "Rollout",
         "Braking",
         "Strong-braking",
-        "out-rpm",
-        "Out-Speed-N",
-        "Out-engine-N",
-        "Rollout100-N",
-        "Cruise-Control-N",
-        "Idling100-N",
-        "Avg-Fuel-M"
+        "out-rpm"
       ],
       "filtered_data": null,
       "for_each": "Cluster",
@@ -103,13 +97,7 @@
         "Rollout",
         "Braking",
         "Strong-braking",
-        "out-rpm",
-        "Out-Speed-N",
-        "Out-engine-N",
-        "Rollout100-N",
-        "Cruise-Control-N",
-        "Idling100-N",
-        "Avg-Fuel-M"
+        "out-rpm"
       ],
       "filtered_data": null,
       "for_each": null

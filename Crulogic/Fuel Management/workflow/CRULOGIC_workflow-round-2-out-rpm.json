@@ -1,15 +1,15 @@
 {
-  "Cruise-Control-N-global": {
-    "model": "",
+  "out-rpm-B-global":{
+    "model" : "",
     "parameters": {
-      "amode": "FAST",
-      "mode": "train",
-      "objective_column": "Cruise-Control-N",
+      "amode":"FAST",
+      "mode" : "train",
+      "objective_column": "out-rpm-B",
       "metric": "combined_accuracy",
       "deep_impact": 5
     },
     "data":{
-        "filtered_columns":
+      "filtered_columns":
         [
           "Avg-fuel",
           "Optima_level",
@@ -40,27 +40,27 @@
           "out-rpm",
           "Strong-Acel100-B",
           "Strong-braking100-B",
-          "out-rpm-B",
           "Braking100-N",
           "Rollout100-N",
-          "Idling100-N"
+          "Idling100-N",
+          "Cruise-Control-N"
         ],
-        "filtered_data": null,
-         "for_each":null
+      "filtered_data": null,
+      "for_each":null
     },
-  "Next": null
+    "Next": null
   },
-  "Cruise-Control-N-cluster": {
-    "model": "",
+  "out-rpm-B-cluster":{
+    "model" : "",
     "parameters": {
-      "amode": "FAST",
-      "mode": "train",
-      "objective_column": "Cruise-Control-N",
+      "amode":"FAST",
+      "mode" : "train",
+      "objective_column": "out-rpm-B",
       "metric": "combined_accuracy",
       "deep_impact": 5
     },
     "data":{
-        "filtered_columns":
+      "filtered_columns":
         [
           "Avg-fuel",
           "Optima_level",
@@ -91,16 +91,16 @@
           "out-rpm",
           "Strong-Acel100-B",
           "Strong-braking100-B",
-          "out-rpm-B",
           "Braking100-N",
           "Rollout100-N",
-          "Idling100-N"
+          "Idling100-N",
+          "Cruise-Control-N"
         ],
-        "filtered_data": null,
-        "for_each": "Cluster",
-        "for_each_exclusions":null
+      "filtered_data": null,
+      "for_each": "Cluster",
+      "for_each_exclusions":null
     },
-  "Next": null
+    "Next": null
   }
 }
 

@@ -78,7 +78,8 @@ class Adviser(object):
                                self._labels["ana_type"],
                                str(atype) + ' (' + str(self.deepness) + ')')
         if supervised:
-            self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
+            if self.deepness == 1:
+                self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
             if atype == POC:
                 return self.analysispoc(dataframe_metadata, objective_column, amode=FAST)
             if atype in [FAST, NORMAL]:
