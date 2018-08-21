@@ -10,7 +10,8 @@
     },
     "data": {
       "filtered_columns": [
-        "Optima_level",
+        "Good_level",
+        "Bad_level",
         "Date",
         "Driver",
         "Distance",
@@ -63,7 +64,8 @@
     },
     "data": {
       "filtered_columns": [
-        "Optima_level",
+        "Good_Level",
+        "Bad_Level",
         "Date",
         "Driver",
         "Distance",

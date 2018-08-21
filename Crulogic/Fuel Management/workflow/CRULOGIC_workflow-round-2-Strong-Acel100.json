@@ -12,7 +12,9 @@
       "filtered_columns":
         [
           "Avg-fuel",
-          "Optima_level",
+          "Good_Level",
+          "Bad_Level",
+          "Cluster",
           "Engine-worktime",
           "Braking100",
           "Strong-braking100",
@@ -64,7 +66,8 @@
       "filtered_columns":
         [
           "Avg-fuel",
-          "Optima_level",
+          "Good_Level",
+          "Bad_Level",
           "Engine-worktime",
           "Braking100",
           "Strong-braking100",

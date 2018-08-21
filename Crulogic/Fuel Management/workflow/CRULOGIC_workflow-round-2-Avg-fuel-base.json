@@ -10,7 +10,8 @@
     },
     "data": {
       "filtered_columns": [
-          "Optima_level",
+          "Good_Level",
+          "Bad_Level",
           "Driver",
           "Engine-worktime",
           "Braking100",
@@ -55,7 +56,9 @@
     },
     "data": {
       "filtered_columns":     [
-          "Optima_level",
+          "Good_Level",
+          "Bad_Level",
+          "Cluster",
           "Driver",
           "Engine-worktime",
           "Braking100",
