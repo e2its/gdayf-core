@@ -660,6 +660,8 @@ class Controller(object):
                                           model['normalizations_set']))
         elif mode == ALL:
             model_list = arlist
+        elif mode == NONE:
+            model_list = list()
         for fw in self._config['frameworks'].keys():
                 self.init_handler(fw)
                 for each_model in model_list:
@@ -704,6 +706,8 @@ class Controller(object):
                     model_list.append(model)
         elif mode == ALL:
             model_list = arlist
+        elif mode == NONE:
+            model_list = list()
         fw_list = list()
         for models in model_list:
             if get_model_fw(models) not in fw_list:
