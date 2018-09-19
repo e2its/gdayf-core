@@ -1,5 +1,5 @@
 {
-  "Avg-speed-cluster-train-rmse": {
+  "a1": {
     "model": "",
     "parameters": {
       "amode": "NORMAL",
@@ -52,7 +52,7 @@
     },
     "Next":
     {
-      "Avg-fuel-cluster": {
+      "train_rmse": {
         "model": "",
         "parameters": {
           "amode": "NORMAL",
@@ -107,7 +107,7 @@
       }
     }
   },
-  "Avg-speed-cluster-test-rmse": {
+  "c2": {
     "model": "",
     "parameters": {
       "amode": "NORMAL",
@@ -160,7 +160,7 @@
     },
     "Next":
     {
-      "Avg-fuel-cluster": {
+      "test_rmse": {
         "model": "",
         "parameters": {
           "amode": "NORMAL",
@@ -215,7 +215,7 @@
       }
     }
   },
-  "Avg-speed-cluster-train-accuracy": {
+  "c3": {
     "model": "",
     "parameters": {
       "amode": "NORMAL",
@@ -268,7 +268,7 @@
     },
     "Next":
     {
-      "Avg-fuel-cluster": {
+      "train_accuracy": {
         "model": "",
         "parameters": {
           "amode": "NORMAL",
@@ -323,7 +323,7 @@
       }
     }
   },
-  "Avg-speed-cluster-test-accuracy": {
+  "c4": {
     "model": "",
     "parameters": {
       "amode": "NORMAL",
@@ -376,7 +376,7 @@
     },
     "Next":
     {
-      "Avg-fuel-cluster": {
+      "test_accuracy": {
         "model": "",
         "parameters": {
           "amode": "NORMAL",

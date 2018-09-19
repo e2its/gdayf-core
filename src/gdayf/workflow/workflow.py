@@ -61,9 +61,11 @@ class Workflow(object):
 
         for wkey, wvalue in wf.items():
             if prefix is None:
-                _prefix = xstr(wvalue['parameters']['objective_column'])
+                #_prefix = xstr(wvalue['parameters']['objective_column'])
+                _prefix = xstr(wvalue['parameters']['objective_column']) + '_' + wkey
             else:
-                _prefix = prefix
+                #_prefix = prefix + '_' + xstr(wvalue['parameters']['objective_column'])
+                _prefix = prefix + '_' + xstr(wvalue['parameters']['objective_column']) + '_' + wkey
             if wvalue['parameters']['mode'] == "train":
                 self.train_workflow(datapath=datapath, wkey=wkey, workflow=wvalue,
                                     prefix=_prefix, remove_models=remove_models)
@@ -154,7 +156,8 @@ class Workflow(object):
                             self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                                    table_model_list.to_string(justify="left"))
 
-                            filename = self.storage_path('train', wkey + '_' + str(pfix) + '_' + 'train_performance'
+                            #filename = self.storage_path('train', wkey + '_' + str(pfix) + '_' + 'train_performance'
+                            filename = self.storage_path('train', str(pfix) + '_' + 'train_performance'
                                                          , 'xls')
                             table_model_list.to_excel(filename, index=False, sheet_name='performance')
                             self.replicate_file('train', filename=filename)
@@ -170,8 +173,9 @@ class Workflow(object):
                                 self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                                        prediction_frame.to_string(index_names=False, justify="left"))
 
-                                filename = self.storage_path('train', wkey + '_'
-                                                             + str(pfix) + '_' + 'prediction', 'xls')
+                                '''filename = self.storage_path('train', wkey + '_'
+                                                             + str(pfix) + '_' + 'prediction', 'xls')'''
+                                filename = self.storage_path('train', str(pfix) + '_' + 'prediction', 'xls')
                                 prediction_frame.to_excel(filename, index=False, sheet_name='train_prediction')
                                 self.replicate_file('train', filename=filename)
 
@@ -219,8 +223,9 @@ class Workflow(object):
                     self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                            table_model_list.to_string(justify="left"))
 
-                    filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
-                                                 + 'train_performance', 'xls')
+                    '''filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
+                                                 + 'train_performance', 'xls')'''
+                    filename = self.storage_path('train', str(pfix) + '_' + 'train_performance', 'xls')
                     table_model_list.to_excel(filename, index=False, sheet_name="performace")
                     self.replicate_file('train', filename=filename)
 
@@ -235,8 +240,9 @@ class Workflow(object):
                         self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                                prediction_frame.to_string(index_names=False, justify="left"))
 
-                        filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
-                                                     + 'prediction', 'xls')
+                        '''filename = self.storage_path('train', wkey + '_' + str(pfix) + '_'
+                                                     + 'prediction', 'xls')'''
+                        filename = self.storage_path('train', str(pfix) + '_' + 'prediction', 'xls')
                         prediction_frame.to_excel(filename, index=False, sheet_name="train_prediction")
                         self.replicate_file('train', filename=filename)
 
@@ -329,20 +335,24 @@ class Workflow(object):
 
                             try:
                                 if isinstance(prediction_frame, DataFrame):
-                                    filename = self.storage_path('predict', wkey + '_'
-                                                        + str(pfix) + '_' + 'prediction', 'xls')
+                                    '''filename = self.storage_path('predict', wkey + '_'
+                                                        + str(pfix) + '_' + 'prediction', 'xls')'''
+                                    filename = self.storage_path('predict', str(pfix) + '_' + 'prediction', 'xls')
                                     prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
                                     self.replicate_file('predict', filename=filename)
                                 else:
                                     for ikey, ivalue in prediction_frame['columns'].items():
                                         ppDF = decode_ordered_dict_to_dataframe(ivalue)
                                         if isinstance(ppDF, DataFrame):
-                                            filename = self.storage_path('predict', wkey + '_'
-                                                          + str(pfix) + '_' + 'prediction_' + ikey, 'xls')
+                                            '''filename = self.storage_path('predict', wkey + '_'
+                                                          + str(pfix) + '_' + 'prediction_' + ikey, 'xls')'''
+                                            filename = self.storage_path('predict',
+                                                            + str(pfix) + '_' + 'prediction_' + ikey, 'xls')
                                             ppDF.to_excel(filename, index=False, sheet_name="prediction")
                                             self.replicate_file('predict', filename=filename)
-                                    filename = self.storage_path('predict', wkey + '_'
-                                              + str(each) + '_' + 'prediction', 'json')
+                                    '''filename = self.storage_path('predict', wkey + '_'
+                                              + str(each) + '_' + 'prediction', 'json')'''
+                                    filename = self.storage_path('predict', str(each) + '_' + 'prediction', 'json')
                                     with open(filename, 'w') as f:
                                         f.write(dumps(prediction_frame['global_mse']))
                                     self.replicate_file('predict', filename=filename)
@@ -366,20 +376,18 @@ class Workflow(object):
                     self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                            prediction_frame.to_string(index_names=False, justify="left"))
                     if isinstance(prediction_frame, DataFrame):
-                        filename = self.storage_path('predict', wkey + '_prediction', 'xls')
+                        filename = self.storage_path('predict', str(pfix) + '_prediction', 'xls')
                         prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
                         self.replicate_file('predict', filename=filename)
                     else:
                         for ikey, ivalue in prediction_frame['columns'].items():
                             ppDF = decode_ordered_dict_to_dataframe(ivalue)
                             if isinstance(ppDF, DataFrame):
-                                filename = self.storage_path('predict', wkey + '_'
-                                                             + str(pfix) + '_' + 'prediction_' + ikey, 'xls')
+                                filename = self.storage_path('predict', str(pfix) + '_' + 'prediction_' + ikey, 'xls')
                                 ppDF.to_excel(filename, index=False, sheet_name="prediction")
                                 self.replicate_file('predict', filename=filename)
 
-                        filename = self.storage_path('predict', wkey + '_'
-                                                     + str(pfix) + '_' + '_prediction', 'json')
+                        filename = self.storage_path('predict', str(pfix) + '_' + '_prediction', 'json')
                         with open(filename, 'w') as f:
                             f.write(dumps(prediction_frame))
                         self.replicate_file('predict', filename=filename)

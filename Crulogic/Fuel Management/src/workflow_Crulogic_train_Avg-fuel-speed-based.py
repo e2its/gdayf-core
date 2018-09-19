@@ -16,6 +16,6 @@ if __name__ == "__main__":
 
     workflow = Workflow(user_id='Crulogic-r2')
     workflow.workflow(datapath=''.join(source_data), workflow=''.join(workflow_data),
-                      remove_models=NONE, prefix='filtered-data')
+                      remove_models=NONE, prefix=None)
     del workflow
 
