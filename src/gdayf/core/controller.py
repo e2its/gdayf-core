@@ -61,7 +61,6 @@ class Controller(object):
         self._logging.log_info('gDayF', "Controller", self._labels["loading_adviser"],
                                self._config['optimizer']['adviser_classpath'])
 
-
     ## Method leading configurations coherence checks
     # @param self object pointer
     # @return True if OK / False if wrong
