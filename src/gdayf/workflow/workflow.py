@@ -361,7 +361,7 @@ class Workflow(object):
                                                        prediction_frame)
                             try:
                                 if fe_next is not None and prediction_frame is not None:
-                                    self.workflow(prediction_frame, fe_next, pfix)
+                                    self.workflow(prediction_frame, fe_next, pfix, remove_models=remove_models)
                             except Exception as oexecution_error:
                                 self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
                 else:
@@ -393,7 +393,8 @@ class Workflow(object):
                         self.replicate_file('predict', filename=filename)
                     if wf['Next'] is not None and prediction_frame is not None:
                         try:
-                            self.workflow(datapath=prediction_frame, workflow=wf['Next'], prefix=pfix)
+                            self.workflow(datapath=prediction_frame, workflow=wf['Next'], prefix=pfix,
+                                          remove_models=remove_models)
                         except Exception as oexecution_error:
                             self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
