@@ -113,6 +113,7 @@ class PersistenceHandler(object):
             del client
 
         return 0, None
+
     ## Protected method used to store a file on ['hdfs']
     #Not implemented yet !!
     # using mmap structure to manage multi-persistence features
@@ -139,13 +140,11 @@ class PersistenceHandler(object):
 
         return 0, hash_key(hash_type=storage_json['hash_type'], filename=storage_json['value'])
 
-
     ## Method used to remove a file on one persistence system ['localfs',' hdfs']
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param ar_metadata model_structure
     # @return global_op state (0 success) (n number of errors)
-
     def remove_file(self, load_path):
         global_op = 0
 
