@@ -28,6 +28,7 @@ import mimetypes
 from hdfs import InsecureClient as Client, HdfsError
 from pymongo import MongoClient
 from pymongo.errors import *
+#from pymongo import *
 from copy import deepcopy
 import bson
 from bson.codec_options import CodecOptions
@@ -40,6 +41,7 @@ class PersistenceHandler(object):
     def __init__(self, e_c):
         self._ec = e_c
         self._config = self._ec.config.get_config()['storage']
+        self._persistence = self._ec.config.get_config()['persistence']
 
     ## Method used to store a file on one persistence system ['localfs', ' hdfs']
     # using mmap structure to manage multi-persistence features
@@ -244,7 +246,7 @@ class PersistenceHandler(object):
     # @param ar_json file ArMetadata Class or OrderedDict() compatible object
     # @return global_op status (0 success) (1 error)
     def _store_json_to_localfs(self, storage_json, ar_json):
-        compress = LoadConfig().get_config()['persistence']['compress_json']
+        compress = self._persistence['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
             self._mkdir_localfs(path=path.dirname(storage_json['value']), grants=int(self._config['grants'], 8))
@@ -276,7 +278,7 @@ class PersistenceHandler(object):
         if client is None:
             client = Client(url=self._config['hdfs']['url'])
             remove_client = True
-        compress = LoadConfig().get_config()['persistence']['compress_json']
+        compress = self._persistence['compress_json']
         #if not ospath.exists(storage_json['value']):
         try:
             self._mkdir_hdfs(path=path.dirname(storage_json['value']),
@@ -333,7 +335,8 @@ class PersistenceHandler(object):
             query = {"$and": cond}
 
             count = collection.find(query).count()
-            new_ar_json = deepcopy(ar_json)
+            #new_ar_json = deepcopy(ar_json)
+            new_ar_json = OrderedDict(ar_json)
             if count == 1:
                 collection.delete_one(query)
                 collection.insert(new_ar_json, check_keys=False)

@@ -169,6 +169,9 @@
         "enabled": {
           "description": "Enable/disable Apache Spark engine"
         },
+        "log": {
+          "description": "Establish py4j.logging level Apache Spark engine"
+        },
         "min_rows_enabled": {
           "description": "Enable/disable min rows limit on models selection"
         },
@@ -327,6 +330,9 @@
     },
     "primary_path": {
       "description": "Primary path for storage. localfs|hdfs|mongoDB"
+    },
+    "localfs_debug_mode": {
+      "description": "Enable/Disable localfs logging"
     },
     "grants": {
       "description": "file grants in decimal format (755)",

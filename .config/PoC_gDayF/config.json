@@ -36,7 +36,7 @@
           "min_rows_applicability": 0,
           "max_cols_applicability": 50,
           "only_standardize": false,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -384,7 +384,7 @@
           "min_rows_applicability": 500,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -699,7 +699,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 500,
+          "min_rows_applicability": 0,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": true,
@@ -790,7 +790,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [75, 50],
+                "value": [120],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -959,7 +959,7 @@
                 "type": "float"
               },
               "hidden_dropout_ratios": {
-                "value": [0.025, 0.025],
+                "value": [0.025],
                 "seleccionable": true,
                 "type": "List[float]"
               },
@@ -1240,7 +1240,7 @@
           "min_rows_applicability": 0,
           "max_cols_applicability": 50,
           "only_standardize": false,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -1546,7 +1546,7 @@
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": true,
+          "enabled": false,
           "types": [
             {
               "type": "binomial",
@@ -2770,6 +2770,7 @@
         "save_model": "NATIVE",
         "tolerance": 0.01,
         "enabled" : false,
+        "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -4646,13 +4647,17 @@
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
-    "primary_path": "localfs",
+    "primary_path": "hdfs",
+    "localfs_debug_mode": false,
     "grants": "755",
     "load_path": [
       {"value": "models" , "type":"hdfs",
         "hash_value": null, "hash_type":"MD5"
       },
       {"value": "models" , "type":"localfs",
+        "hash_value": null, "hash_type":"SHA256"
+      },
+      {"value": "models2" , "type":"localfs",
         "hash_value": null, "hash_type":"SHA256"
       }
     ],
@@ -4664,6 +4669,9 @@
     "json_path" : [
       {"value": "json" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "json2" , "type":"localfs",
+        "hash_value": null, "hash_type":"SHA256"
       },
       {"value": "json" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"

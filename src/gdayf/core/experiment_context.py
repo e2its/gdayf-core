@@ -24,6 +24,7 @@ class Experiment_Context(object):
         self.config = LoadConfig(user_id=self.id_user)
         self.labels = LoadLabels(lang=lang)
         self.id_analysis = None
+        self.spark_temporal_data_frames = dict()
 
     ## Method used to set global variable id_user used to propagate user_id to all modules
     # @param self object pointer

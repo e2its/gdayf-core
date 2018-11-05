@@ -226,7 +226,7 @@
                 "type": "boolean"
               },
               "col_sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -241,7 +241,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -790,7 +790,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [75, 50],
+                "value": [150],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -959,7 +959,7 @@
                 "type": "float"
               },
               "hidden_dropout_ratios": {
-                "value": [0.025, 0.025],
+                "value": [0.025],
                 "seleccionable": true,
                 "type": "List[float]"
               },
@@ -1441,11 +1441,11 @@
               },
               "col_sample_rate_per_tree": {
                 "value": 0.9,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -2770,6 +2770,7 @@
         "save_model": "NATIVE",
         "tolerance": 0.01,
         "enabled" : false,
+        "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -4646,7 +4647,8 @@
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
-    "primary_path": "localfs",
+    "primary_path": "hdfs",
+    "localfs_debug_mode": true,
     "grants": "755",
     "load_path": [
       {"value": "models" , "type":"hdfs",

@@ -57,8 +57,9 @@ class ArMetadata (OrderedDict):
     
     ## Get ArMetadata and make a base copy of main parameters to get an ArMetadata structure to be analyzed
     # @param self object pointer
+    # @increment increment to be applied to new_model['round']
     # @return OrderedDict() structure associated to json file with indent 4 and encoding utf-8
-    def copy_template(self):
+    def copy_template(self, increment=1):
         new_model = ArMetadata()
         new_model['model_id'] = deepcopy(self['model_id'])
         new_model['version'] = deepcopy(self['version'])
@@ -67,7 +68,7 @@ class ArMetadata (OrderedDict):
         new_model['type'] = deepcopy(self['type'])
         new_model['objective_column'] = deepcopy(self['objective_column'])
         new_model['timestamp'] = deepcopy(self['timestamp'])
-        new_model['round'] = self['round'] + 1
+        new_model['round'] = self['round'] + increment
         new_model['execution_seconds'] = 0.0
         new_model['tolerance'] = 0.0
         new_model['predecessor'] = self['model_parameters'][get_model_fw(self)]['parameters']['model_id']['value']

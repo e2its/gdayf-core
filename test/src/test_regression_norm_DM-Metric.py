@@ -17,7 +17,7 @@ if __name__ == "__main__":
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=pd_dataset,
                                                           objective_column='Weather_Temperature',
-                                                          amode=POC, metric='test_rmse', deep_impact=2)
+                                                          amode=POC, metric='test_rmse', deep_impact=5)
 
         #controller.save_models(recomendations, mode=EACH_BEST)
         controller.reconstruct_execution_tree(arlist=None, metric='test_rmse', store=True)

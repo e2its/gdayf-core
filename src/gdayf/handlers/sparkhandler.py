@@ -18,7 +18,6 @@ Copyright (C) e2its - All Rights Reserved
 import copy
 import json
 import time
-import sys
 from collections import OrderedDict as OrderedDict
 from pandas import DataFrame as DataFrame
 from hashlib import md5 as md5
@@ -98,7 +97,7 @@ class sparkHandler(object):
         self._spark_session = None
         self._persistence = PersistenceHandler(self._ec)
         self._logging = LogsHandler(self._ec, __name__)
-        self._frame_list = list()
+        self._frame_list = self._ec.spark_temporal_data_frames
 
     ## Destructor
     def __del__(self):
@@ -141,14 +140,15 @@ class sparkHandler(object):
                 .appName('job_gdayf_'+self.url+'_' + time.strftime("%b-%d-%Y_%H:%M:%S-%z", time.localtime())) \
                 .config("spark.executor.memory", self.spark_executor_mem) \
                 .config("spark.driver.memory", self.spark_driver_mem) \
-                .config("spark_warehouse_dir", self.spark_warehouse_dir)
+                .config("spark.sql.warehouse.dir", self.spark_warehouse_dir)
 
             self._spark_session = spark.getOrCreate()
-            self._spark_session.spark.sparkContext.setLogLevel("INFO")
+            log4j = self._spark_session.sparkContext._jvm.org.apache.log4j
+            log4j.LogManager.getRootLogger().setLevel(eval(self._config['frameworks'][self._framework]['conf']['log']))
 
-        except Py4JJavaError:
+        except Py4JJavaError as connection_error:
             self._logging.log_critical('gDayF', "sparkHandler", self._labels["failed_conn"])
-            raise Exception
+            raise connection_error
         finally:
             self._logging.log_info('gDayF', "sparkHandler", self._labels["start"])
             self._logging.log_info('gDayF', "sparkHandler", self._labels["framework"], self._framework)
@@ -176,7 +176,7 @@ class sparkHandler(object):
         else:
             return True
 
-    ## Generate list of models_id for internal crossvalidation objects_
+    ## Not Used: Generate list of models_id for internal crossvalidation objects_
     # @param self object pointer
     # @param model_id base id_model
     # @param nfols number of cv buckets
@@ -193,7 +193,7 @@ class sparkHandler(object):
     def get_external_model(self, ar_metadata, type):
         return False
 
-    ## Load a model in sparkCluster from disk
+    ## Not Used: Load a model in sparkCluster from disk
     # @param self object pointer
     # @param ar_metadata ArMetadata stored model
     # @return implicit self._model_base / None on Error
@@ -232,7 +232,7 @@ class sparkHandler(object):
             counter_storage += 1
         return load_fails
 
-    ## Remove used dataframes during analysis execution_
+    ## Not Used: Remove used dataframes during analysis execution_
     # @param self object pointer
     # Not implemented
     def delete_frames(self):
@@ -615,14 +615,14 @@ class sparkHandler(object):
         if objective_column is None:
            supervised = False
 
-        valid_frame = None
+        #valid_frame = None
         test_frame = None
 
 
         if "test_frame" in kwargs.keys():
-            test_frame = kwargs['test_frame']
+            test_pframe = kwargs['test_frame']
         else:
-            test_frame = None
+            test_pframe = None
 
         base_ns = get_model_ns(base_ar)
         modelid = base_ar['model_parameters']['spark']['model']
@@ -679,22 +679,19 @@ class sparkHandler(object):
                                        self._spark_session.sparkContext.applicationId,
                                        self._labels["cor_struct"],
                                        str(data_initial['correlation']))
-            if test_frame is not None:
-                test_frame, _, test_hash_value, _, _ = self.execute_normalization(dataframe=test_frame, base_ns=base_ns,
+            if test_pframe is not None:
+                test_pframe, _, test_hash_value, _, _ = self.execute_normalization(dataframe=test_pframe, base_ns=base_ns,
                                                                     model_id=modelid, filtering=filtering,
                                                                     exist_objective=True)
 
-        training_frame = self._spark_session.createDataFrame(training_pframe).cache()
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["parsing_to_spark"],
-                               'training_frame(' + str(training_frame.count()) + ')')
+        training_frame = self._get_dataframe(pframe=training_pframe, hash_value=train_hash_value, type="train")
 
         if "test_frame" in kwargs.keys():
-            test_frame = self._spark_session.createDataFrame(test_frame).cache()
+            '''test_frame = self._spark_session.createDataFrame(test_frame).cache()
             self._logging.log_info(analysis_id, self._spark_session.sparkContext.applicationId,
                                    self._labels["parsing_to_spark"],
-                                   'test_frame (' + str(test_frame.count()) + ')')
+                                   'test_frame (' + str(test_frame.count()) + ')')'''
+            test_frame = self._get_dataframe(pframe=test_pframe, hash_value=test_hash_value, type="test")
 
         if supervised and artype == 'regression':
             # Initializing base structures
@@ -981,6 +978,29 @@ class sparkHandler(object):
             for handler in self._logging.logger.handlers:
                 handler.flush()
         return analysis_id, final_ar_model
+
+    ## Method to parse and reuse Spark Dataframes
+    # @param pframe Pandas DataFrame
+    # @param hash_value pframe hash_value to check identity
+    # @param type ["train" ,"predict"]  to check usability
+    def _get_dataframe(self, pframe, hash_value, type):
+
+        if self._frame_list.get(hash_value) is None or self._frame_list[hash_value].get(type) is None:
+            frame = self._spark_session.createDataFrame(pframe).cache()
+            self._logging.log_info(self._ec.get_id_analysis(),
+                                   self._spark_session.sparkContext.applicationId,
+                                   self._labels["parsing_to_spark"],
+                                   type + '_frame(' + str(frame.count()) + ')')
+            if self._frame_list.get(hash_value) is None:
+                self._frame_list[hash_value] = dict()
+            self._frame_list[hash_value][type] = frame
+        else:
+            frame = self._frame_list[hash_value][type]
+            self._logging.log_info(self._ec.get_id_analysis(),
+                                   self._spark_session.sparkContext.applicationId,
+                                   self._labels["getting_from_spark"],
+                                   type + '_frame(' + str(frame.count()) + ')')
+        return frame
 
     ## Method to save model to persistence layer from armetadata
     # @param armetadata structure to be stored

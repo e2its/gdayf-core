@@ -337,7 +337,8 @@ class Workflow(object):
                                 if isinstance(prediction_frame, DataFrame):
                                     '''filename = self.storage_path('predict', wkey + '_'
                                                         + str(pfix) + '_' + 'prediction', 'xls')'''
-                                    filename = self.storage_path('predict', str(pfix) + '_' + 'prediction', 'xls')
+                                    filename = self.storage_path('predict', str(pfix) + '_' +
+                                                                 str(self.timestamp) + '_' + 'prediction', 'xls')
                                     prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
                                     self.replicate_file('predict', filename=filename)
                                 else:
@@ -346,13 +347,17 @@ class Workflow(object):
                                         if isinstance(ppDF, DataFrame):
                                             '''filename = self.storage_path('predict', wkey + '_'
                                                           + str(pfix) + '_' + 'prediction_' + ikey, 'xls')'''
-                                            filename = self.storage_path('predict',
-                                                            + str(pfix) + '_' + 'prediction_' + ikey, 'xls')
+                                            filename = self.storage_path('predict', str(pfix) + '_' +
+                                                                         str(self.timestamp) + '_' +
+                                                                         'prediction_' + ikey, 'xls')
                                             ppDF.to_excel(filename, index=False, sheet_name="prediction")
                                             self.replicate_file('predict', filename=filename)
                                     '''filename = self.storage_path('predict', wkey + '_'
-                                              + str(each) + '_' + 'prediction', 'json')'''
-                                    filename = self.storage_path('predict', str(each) + '_' + 'prediction', 'json')
+                                              + str(each) + '_' + 'prediction', 'json')
+                                    filename = self.storage_path('predict', str(each) + '_' + 
+                                                                 str(self.timestamp) + '_' + 'prediction', 'json')'''
+                                    filename = self.storage_path('predict', str(pfix) + '_' +
+                                                                 str(self.timestamp) + '_' + '_prediction', 'json')
                                     with open(filename, 'w') as f:
                                         f.write(dumps(prediction_frame['global_mse']))
                                     self.replicate_file('predict', filename=filename)
@@ -376,18 +381,21 @@ class Workflow(object):
                     self._logging.log_info('gDayF', 'workflow', self._labels["results"]+'\n',
                                            prediction_frame.to_string(index_names=False, justify="left"))
                     if isinstance(prediction_frame, DataFrame):
-                        filename = self.storage_path('predict', str(pfix) + '_prediction', 'xls')
+                        filename = self.storage_path('predict', str(pfix) +
+                                                     str(self.timestamp) + '_' + '_prediction', 'xls')
                         prediction_frame.to_excel(filename, index=False, sheet_name="prediction")
                         self.replicate_file('predict', filename=filename)
                     else:
                         for ikey, ivalue in prediction_frame['columns'].items():
                             ppDF = decode_ordered_dict_to_dataframe(ivalue)
                             if isinstance(ppDF, DataFrame):
-                                filename = self.storage_path('predict', str(pfix) + '_' + 'prediction_' + ikey, 'xls')
+                                filename = self.storage_path('predict', str(pfix) + '_' +
+                                                             str(self.timestamp) + '_' + 'prediction_' + ikey, 'xls')
                                 ppDF.to_excel(filename, index=False, sheet_name="prediction")
                                 self.replicate_file('predict', filename=filename)
 
-                        filename = self.storage_path('predict', str(pfix) + '_' + '_prediction', 'json')
+                        filename = self.storage_path('predict', str(pfix) + '_' +
+                                                     str(self.timestamp) + '_' + '_prediction', 'json')
                         with open(filename, 'w') as f:
                             f.write(dumps(prediction_frame))
                         self.replicate_file('predict', filename=filename)

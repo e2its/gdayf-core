@@ -59,7 +59,7 @@ class StorageMetadata (list):
     ## method used to get relative load path from config.json
     # @return relative path string
     def get_load_path(self):
-        return deepcopy(self._config['storage']['load_path'])
+        return self.exclude_debug_fs(deepcopy(self._config['storage']['load_path']))
 
     ## method used to get relative log path from config.json
     # @return relative path string
@@ -70,7 +70,19 @@ class StorageMetadata (list):
     # @param self object pointer location (optional)
     # @return relative path string
     def get_json_path(self):
-        return deepcopy(self._config['storage']['json_path'])
+        return self.exclude_debug_fs(deepcopy(self._config['storage']['json_path']))
+
+    ## method used to exclude localfs in non-debug modes
+    def exclude_debug_fs(self, storage_metadata):
+        equals = list()
+        if not self._config['storage']['localfs_debug_mode']:
+            for each_storage in storage_metadata:
+                if each_storage['type'] == 'localfs':
+                    equals.append(each_storage)
+            for deleter in equals:
+                storage_metadata.remove(deleter)
+
+        return storage_metadata
 
 ## Method to Generate json StorageMetadata for Armetadata
 # @param e_c context pointer

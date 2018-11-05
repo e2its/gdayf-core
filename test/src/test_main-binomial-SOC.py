@@ -11,7 +11,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='HomeWin',
-                                                          amode=FAST, metric='combined_accuracy', deep_impact=3)
+                                                          amode=FAST, metric='combined_accuracy', deep_impact=5)
 
         controller.reconstruct_execution_tree(metric='test_accuracy', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)
@@ -26,7 +26,11 @@ if __name__ == "__main__":
         print(recomendations[0]['load_path'][0]['value'])
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                       model_file=recomendations[0]['json_path'][0]['value'])
-        print(prediction_frame[['HomeWin', 'predict', 'p0', 'p1']])
+
+        if 'predict' in prediction_frame.columns.values:
+            print(prediction_frame[['HomeWin', 'predict', 'p0', 'p1']])
+        elif 'prediction' in prediction_frame.columns.values:
+            print(prediction_frame[['HomeWin', 'prediction', 'p0', 'p1']])
 
         # controller = Controller()
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),

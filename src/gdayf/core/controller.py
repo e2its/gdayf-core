@@ -147,7 +147,7 @@ class Controller(object):
             elif storage['type'] == 'hdfs':
                 if not hdfs:
                     self._logging.log_critical('gDayF', "Controller", self._labels["failed_log"],
-                                           str(storage))
+                                                str(storage))
                     return False
                 else:
                     at_least_on = at_least_on or True
@@ -310,6 +310,11 @@ class Controller(object):
                 if each_handlers['initiated']:
                     if fw == 'h2o':
                         H2OHandler(e_c=self._ec).shutdown_cluster()
+                        self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
+                    if fw == 'spark':
+                        del self._ec.spark_temporal_data_frames
+                        self._ec.spark_temporal_data_frames = dict()
+                        sparkHandler(e_c=self._ec).shutdown_cluster()
                         self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
 
     ## Method leading and controlling analysis's executions on all frameworks

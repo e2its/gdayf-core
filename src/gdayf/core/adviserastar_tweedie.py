@@ -188,29 +188,44 @@ class AdviserAStar(Adviser):
                         epochs = model['parameters']['epochs']['value']
 
                     if self.deepness == 2:
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['h2o']
                         if armetadata['data_initial']['rowcount'] > dpl_rcount_limit:
-                            hidden = [round(armetadata['data_initial']['rowcount'] / (dpl_divisor * 0.5)),
-                                      round(armetadata['data_initial']['rowcount'] / (dpl_divisor * self.deep_impact))]
+                            model_aux['parameters']['hidden']['value'] = \
+                                round(armetadata['data_initial']['rowcount'] / (dpl_divisor * 0.5))
                         else:
-                            hidden = model['parameters']['hidden']['value']
-                        drop_out = model['parameters']['hidden_dropout_ratios']['value'] = [h_dropout_ratio,
-                                                                                            h_dropout_ratio]
+                            model_aux['parameters']['hidden']['value'][0] = \
+                                round(model['parameters']['hidden']['value'][0] * wider_increment)
+                        self.safe_append(model_list, new_armetadata)
+
                         for learning in rho_conf:
-                            new_armetadata = armetadata.copy_template()
+                            new_armetadata = new_armetadata.copy_template(increment=0)
+
                             model_aux = new_armetadata['model_parameters']['h2o']
                             model_aux['parameters']['rho']['value'] = learning['learn']
                             model_aux['parameters']['epsilon']['value'] = learning['improvement']
-                            model_aux['parameters']['hidden']['value'] = [hidden[0], hidden[1]]
-                            model_aux['parameters']['hidden_dropout_ratios']['value'] = drop_out
                             model_aux['parameters']['epochs']['value'] = epochs
                             self.safe_append(model_list, new_armetadata)
 
-                            new_armetadata = armetadata.copy_template()
+                        new_armetadata = armetadata.copy_template()
+                        model_aux = new_armetadata['model_parameters']['h2o']
+
+                        if armetadata['data_initial']['rowcount'] > dpl_rcount_limit:
+                            model_aux['parameters']['hidden']['value'] = \
+                                [round(armetadata['data_initial']['rowcount'] / (dpl_divisor * 0.5)),
+                                 round(armetadata['data_initial']['rowcount'] / (dpl_divisor * self.deep_impact))]
+                        else:
+                            model_aux['parameters']['hidden']['value'] = [model['parameters']['hidden']['value'][0],
+                                                                         round(model['parameters']['hidden']['value'][0]
+                                                                            / wider_increment)]
+                        model_aux['parameters']['hidden_dropout_ratios']['value'] = [h_dropout_ratio, h_dropout_ratio]
+                        self.safe_append(model_list, new_armetadata)
+
+                        for learning in rho_conf:
+                            new_armetadata = new_armetadata.copy_template(increment=0)
                             model_aux = new_armetadata['model_parameters']['h2o']
                             model_aux['parameters']['rho']['value'] = learning['learn']
                             model_aux['parameters']['epsilon']['value'] = learning['improvement']
-                            model_aux['parameters']['hidden']['value'] = [hidden[1], hidden[0]]
-                            model_aux['parameters']['hidden_dropout_ratios']['value'] = drop_out
                             model_aux['parameters']['epochs']['value'] = epochs
                             self.safe_append(model_list, new_armetadata)
 
@@ -255,16 +270,22 @@ class AdviserAStar(Adviser):
                         if len(armetadata['model_parameters']['h2o']['parameters']['hidden']['value']) < 4:
                             new_armetadata = armetadata.copy_template()
                             model_aux = new_armetadata['model_parameters']['h2o']
-                            if model_aux['parameters']['hidden']['value'][0] > model_aux['parameters']['hidden']['value'][
-                                1]:
+
+                            if len(model_aux['parameters']['hidden']['value']) > 1  \
+                                and model_aux['parameters']['hidden']['value'][0] > \
+                                model_aux['parameters']['hidden']['value'][1]:
                                 model_aux['parameters']['hidden']['value'].insert(0,
-                                                                                  round(model_aux['parameters']['hidden'][
-                                                                                            'value'][0] * deeper_increment))
+                                           round(model_aux['parameters']['hidden']['value'][0] * deeper_increment))
                                 model_aux['parameters']['hidden_dropout_ratios']['value'].insert(0, h_dropout_ratio)
-                            else:
+                            elif len(model_aux['parameters']['hidden']['value']) > 1 \
+                                    and model_aux['parameters']['hidden']['value'][0] < \
+                                    model_aux['parameters']['hidden']['value'][1]:
                                 model_aux['parameters']['hidden']['value'].append(
                                     round(model_aux['parameters']['hidden']['value'][-1] * deeper_increment))
                                 model_aux['parameters']['hidden_dropout_ratios']['value'].append(h_dropout_ratio)
+                            elif len(model_aux['parameters']['hidden']['value']) == 1:
+                                model_aux['parameters']['hidden']['value'][0] = \
+                                    round(model_aux['parameters']['hidden']['value'][0] * deeper_increment)
 
                             model_aux['parameters']['epochs']['value'] = epochs
                             self.safe_append(model_list, new_armetadata)
