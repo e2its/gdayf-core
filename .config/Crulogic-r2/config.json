@@ -222,7 +222,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "col_sample_rate": {
@@ -533,7 +533,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "alpha": {
@@ -943,7 +943,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "activation": {
@@ -1431,7 +1431,7 @@
               },
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "col_sample_rate_change_per_level": {
@@ -1445,7 +1445,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 1.0,
+                "value": 0.8,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -1680,7 +1680,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               }
             },
@@ -2294,7 +2294,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "activation": {
@@ -4675,12 +4675,6 @@
       }
     ],
     "prediction_path" : [
-      {"value": "prediction" , "type":"localfs",
-        "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "prediction" , "type":"hdfs",
-        "hash_value": null, "hash_type":"SHA256"
-      },
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }

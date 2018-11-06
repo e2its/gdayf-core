@@ -568,7 +568,7 @@ class H2OHandler(object):
             self._frame_list.append(temp_anomalies.frame_id)
             if temp_anomalies.nrows > 0:
                 anomalies['columns'][col] = json.loads(temp_anomalies.as_data_frame(use_pandas=True)
-                                                       .to_json(orient='split'), object_pairs_hook=OrderedDict)
+                                                       .to_json(orient='records'), object_pairs_hook=OrderedDict)
 
         anomalies['global_mse'] = OrderedDict()
         if anomalies_thresholds['global_mse']['max'] < 0:
@@ -593,7 +593,7 @@ class H2OHandler(object):
         self._frame_list.append(temp_anomalies.frame_id)
         if temp_anomalies.nrows > 0:
             anomalies['global_mse'] = json.loads(temp_anomalies.as_data_frame(use_pandas=True).
-                                                 to_json(orient='split'), object_pairs_hook=OrderedDict)
+                                                 to_json(orient='records'), object_pairs_hook=OrderedDict)
 
         H2Oremove(self._get_temporal_objects_ids(model_id=self._model_base.model_id, nfolds=None))
 

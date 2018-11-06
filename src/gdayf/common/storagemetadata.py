@@ -57,31 +57,38 @@ class StorageMetadata (list):
             super(StorageMetadata, self).append(value)
 
     ## method used to get relative load path from config.json
+    # @param self object pointer location (optional)
+    # @param include enable localfs
     # @return relative path string
-    def get_load_path(self):
-        return self.exclude_debug_fs(deepcopy(self._config['storage']['load_path']))
+    def get_load_path(self, include=False):
+        return self.exclude_debug_fs(deepcopy(self._config['storage']['load_path']), include=include)
 
     ## method used to get relative log path from config.json
+    # @param self object pointer location (optional)
     # @return relative path string
     def get_log_path(self):
         return deepcopy(self._config['storage']['log_path'])
 
     ## method used to get relative json path from config.json
     # @param self object pointer location (optional)
+    # @param include enable localfs
     # @return relative path string
-    def get_json_path(self):
-        return self.exclude_debug_fs(deepcopy(self._config['storage']['json_path']))
+    def get_json_path(self, include=False):
+        return self.exclude_debug_fs(deepcopy(self._config['storage']['json_path']), include=include)
 
     ## method used to get relative prediction path from config.json
     # @param self object pointer location (optional)
+    # @param include enable localfs
     # @return relative path string
-    def get_prediction_path(self):
-        return self.exclude_debug_fs(deepcopy(self._config['storage']['prediction_path']))
+    def get_prediction_path(self, include=False):
+        return self.exclude_debug_fs(deepcopy(self._config['storage']['prediction_path']), include=include)
 
     ## method used to exclude localfs in non-debug modes
-    def exclude_debug_fs(self, storage_metadata):
+    # @param storage_metadata StorageMetadata object
+    # @param include enable localfs
+    def exclude_debug_fs(self, storage_metadata, include=False):
         equals = list()
-        if not self._config['storage']['localfs_debug_mode']:
+        if not self._config['storage']['localfs_debug_mode'] and not include:
             for each_storage in storage_metadata:
                 if each_storage['type'] == 'localfs':
                     equals.append(each_storage)

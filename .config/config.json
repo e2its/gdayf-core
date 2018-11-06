@@ -1445,7 +1445,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 1.0,
+                "value": 0.8,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },

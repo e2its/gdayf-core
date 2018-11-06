@@ -439,8 +439,11 @@ class Workflow(object):
     # @return  None if no localfs primary path found . Abosulute path if true
     def storage_path(self, mode, filename, filetype):
         load_storage = StorageMetadata(self._ec)
-
-        for each_storage_type in load_storage.get_load_path():
+        if self._config['common']['workflow_summary_enabled']:
+            include = True
+        else:
+            include = False
+        for each_storage_type in load_storage.get_load_path(include=include):
             if each_storage_type['type'] == 'localfs':
                 source_data = list()
                 primary_path = self._config['storage'][each_storage_type['type']]['value']
