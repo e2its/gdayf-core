@@ -226,17 +226,27 @@ class PersistenceHandler(object):
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param ar_json file ArMetadata Class or OrderedDict() compatible object
+    # @param other file OrderedDict() compatible object to be stored
     # @return global_op status (0 success) (n number of errors)
-    def store_json(self, storage_json, ar_json):
+    def store_json(self, storage_json, ar_json, other=None):
         '''assert isinstance(storage_json, StorageMetadata)'''
         global_op = 0
         for each_storage_type in storage_json:
             if each_storage_type['type'] == 'localfs':
-                global_op += self._store_json_to_localfs(each_storage_type, ar_json)
+                if other is None:
+                    global_op += self._store_json_to_localfs(each_storage_type, ar_json)
+                else:
+                    global_op += self._store_json_to_localfs(each_storage_type, other)
             elif each_storage_type['type'] == 'hdfs':
-                global_op += self._store_json_to_hdfs(each_storage_type, ar_json)
+                if other is None:
+                    global_op += self._store_json_to_hdfs(each_storage_type, ar_json)
+                else:
+                    global_op += self._store_json_to_hdfs(each_storage_type, other)
             elif each_storage_type['type'] == 'mongoDB':
-                global_op += self._store_json_to_mongoDB(each_storage_type, ar_json)
+                if other is None:
+                    global_op += self._store_json_to_mongoDB(each_storage_type, ar_json)
+                else:
+                    global_op += self._store_other_to_mongoDB(each_storage_type, other)
         return global_op
 
     ## Protected method used to store a json on ['localfs'] persistence system
@@ -244,6 +254,7 @@ class PersistenceHandler(object):
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param ar_json file ArMetadata Class or OrderedDict() compatible object
+    # @param prediction file OrderedDict() compatible object
     # @return global_op status (0 success) (1 error)
     def _store_json_to_localfs(self, storage_json, ar_json):
         compress = self._persistence['compress_json']
@@ -272,6 +283,7 @@ class PersistenceHandler(object):
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
     # @param ar_json file ArMetadata Class or OrderedDict() compatible object
     # @param client Cliente HDFS
+    # @param prediction file OrderedDict() compatible object
     # @return operation status (0 success) (1 error)
     def _store_json_to_hdfs(self, storage_json, ar_json, client=None):
         remove_client = False
@@ -307,7 +319,7 @@ class PersistenceHandler(object):
             if remove_client:
                 del client
 
-    ## Protected method used to store a json on ['mongoDB'] persistence system
+    ## Protected method used to store an ar_json on ['mongoDB'] persistence system
     # oriented to store full Analysis_results json but useful on whole json
     # @param self object pointer
     # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
@@ -335,7 +347,6 @@ class PersistenceHandler(object):
             query = {"$and": cond}
 
             count = collection.find(query).count()
-            #new_ar_json = deepcopy(ar_json)
             new_ar_json = OrderedDict(ar_json)
             if count == 1:
                 collection.delete_one(query)
@@ -350,6 +361,40 @@ class PersistenceHandler(object):
         finally:
             if remove_client:
                 client.close()
+
+    ## Protected method used to store a dayf compatible_json on ['mongoDB'] persistence system
+    # oriented to store full Analysis_results json but useful on whole json
+    # @param self object pointer
+    # @param storage_json (list of storagemetadata objects or OrderedDict() compatible objects)
+    # @param other file  dayf compatible_json OrderedDict() object
+    # @param client Cliente MongoClient()
+    # @return operation status (0 success) (1 error)
+    def _store_other_to_mongoDB(self, storage_json, other, client=None):
+
+        remove_client = False
+        if client is None or not isinstance(client(MongoClient)):
+            try:
+                client = MongoClient(host=self._config['mongoDB']['url'],
+                                     port=int(self._config['mongoDB']['port']),
+                                     document_class=OrderedDict)
+                remove_client = True
+            except ConnectionFailure as cexecution_error:
+                print(repr(cexecution_error))
+                return 1
+        try:
+            db = client[self._config['mongoDB']['value']]
+            collection = db[self._ec.get_id_user() + '_' + storage_json['value']]
+            new_ar_json = OrderedDict(other)
+            try:
+                collection.insert(new_ar_json, check_keys=False)
+                return 0
+            except Exception as execution_error:
+                print(repr(execution_error))
+                return 1
+        finally:
+            if remove_client:
+                client.close()
+
 
     ## Method used to recover an experiment as [ar_metadata]
     # oriented to store full Analysis_results json but useful on whole json

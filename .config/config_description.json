@@ -666,6 +666,9 @@
     "test_frame_ratio": {
           "description": "% split in decimal mode for test Dataframe"
     },
+    "workflow_summary_enabled": {
+          "description": "Enable csv summary dataset for workflows on fs"
+        },
     "workflow_summary_dir": {
           "description": "relative path for workflow csv summary dataset"
         },

@@ -11,9 +11,9 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                                                          amode=FAST, metric='train_rmse', deep_impact=8)
+                                                          amode=FAST, metric='test_r2', deep_impact=3)
 
-        controller.reconstruct_execution_tree(metric='train_rmse', store=True)
+        controller.reconstruct_execution_tree(metric='train_r2', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)
 
 
@@ -44,7 +44,7 @@ if __name__ == "__main__":
         set_option('display.max_columns', 500)
         set_option('display.width', 1000)
 
-        print(controller.table_model_list(ar_list=recomendations, metric='test_rmse'))
+        print(controller.table_model_list(ar_list=recomendations, metric='test_r2'))
         controller.clean_handlers()
     del controller
 

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
-                                                          amode=CLUSTERING, metric='cdistance', deep_impact=2,
+                                                          amode=CLUSTERING, metric='cdistance', deep_impact=4,
                                                           k=12, estimate_k=True)
 
         '''controller.save_models(recomendations, mode=EACH_BEST)'''

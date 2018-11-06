@@ -11,7 +11,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
-                                                          amode=ANOMALIES, metric='train_rmse', deep_impact=5)
+                                                          amode=ANOMALIES, metric='train_rmse', deep_impact=3)
 
         '''controller.save_models(recomendations, mode=EACH_BEST)'''
         controller.reconstruct_execution_tree(recomendations, metric='train-rmse')

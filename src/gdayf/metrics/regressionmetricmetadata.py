@@ -68,4 +68,6 @@ class RegressionMetricMetadata(MetricMetadata):
                 self['scoring_time'] = int(time.time() - start)
                 if isnan(self['RMSE']):
                     self['RMSE'] = 1e+16
+                if isnan(self['r2']):
+                    self['r2'] = 0
 

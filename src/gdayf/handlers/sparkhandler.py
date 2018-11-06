@@ -1226,38 +1226,62 @@ class sparkHandler(object):
 
         base_ar['status'] = self._labels['success_op']
 
-        # writing ar.json file
-        generate_json_path(self._ec, base_ar)
-        self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
-        self._logging.log_exec(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["model_stored"], model_id)
-        self._logging.log_info(analysis_id,
-                               self._spark_session.sparkContext.applicationId,
-                               self._labels["end"], model_id)
-        for handler in self._logging.logger.handlers:
-            handler.flush()
-
         if decoder is not None:
             labelConverter = IndexToString(inputCol="prediction", outputCol="predictedLabel",
                                            labels=decoder.labels)
             prediction_dataframe = labelConverter.transform(prediction_dataframe).drop("prediction")
-            prediction_dataframe = prediction_dataframe.withColumnRenamed("predictedLabel", "prediction")
+            prediction_dataframe = prediction_dataframe.withColumnRenamed("predictedLabel", "predict")
+        else:
+            prediction_dataframe = prediction_dataframe.withColumnRenamed("prediction", "predict")
 
         command = list()
-        #col_sep = False
-
         command.append("prediction_dataframe.select(")
-        command.append('\"prediction\"')
+        command.append('\"predict\"')
         if antype in ['binomial', 'multinomial']:
             command.append(', \"probability\"')
         command.append(").toPandas()")
 
         presults = eval("".join(command))
         prediction =predict_frame.copy()
-        prediction['prediction'] = presults.loc[:, 'prediction']
+        prediction['predict'] = presults.loc[:, 'predict']
         if antype in ['binomial', 'multinomial']:
             prediction['probability'] = presults.loc[:, 'probability']
+
+        # writing metadata predict.json file
+        prediction_json = OrderedDict()
+        prediction_json['metadata'] = OrderedDict()
+        prediction_json['metadata']['user_id'] = self._ec.get_id_user()
+        prediction_json['metadata']['timestamp'] = model_timestamp
+        prediction_json['metadata']['workflow_id'] = self._ec.get_id_workflow()
+        prediction_json['metadata']['analysis_id'] = self._ec.get_id_analysis()
+        prediction_json['metadata']['model_id'] = base_ar['model_parameters']['spark']['parameters']['model_id']['value']
+
+        # writing data predict.json file
+        prediction_json['data'] = OrderedDict()
+        if isinstance(prediction, DataFrame):
+            prediction_json['data'] = prediction.to_dict(orient='records')
+        else:
+            prediction_json['data'] = OrderedDict(prediction)
+
+        # writing file predict.json file
+        generate_json_path(self._ec, base_ar, 'prediction')
+        self._persistence.store_json(storage_json=base_ar['prediction_path'], ar_json=base_ar, other=prediction_json)
+        self._logging.log_exec(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["prediction_stored"], model_id)
+
+        # writing ar.json file
+        generate_json_path(self._ec, base_ar)
+        self._persistence.store_json(storage_json=base_ar['json_path'], ar_json=base_ar)
+        self._logging.log_exec(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["model_stored"], model_id)
+
+        self._logging.log_info(analysis_id,
+                               self._spark_session.sparkContext.applicationId,
+                               self._labels["end"], model_id)
+        for handler in self._logging.logger.handlers:
+            handler.flush()
 
         return prediction, base_ar
 

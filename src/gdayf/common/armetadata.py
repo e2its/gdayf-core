@@ -46,6 +46,7 @@ class ArMetadata (OrderedDict):
         self['full_parameters_stack'] = None
         self['log_path'] = None
         self['json_path'] = None
+        self['prediction_path'] = None
         self['predecessor'] = None
         self['status'] = -1
 
@@ -98,7 +99,7 @@ class ArMetadata (OrderedDict):
 def deep_ordered_copy(armetadata):
     new_model = ArMetadata()
     for key, value in armetadata.items():
-        if key not in ['load_path', 'json_path', 'load_path' ]:
+        if key not in ['load_path', 'json_path', 'load_path', 'prediction_path']:
             new_model[key] = deepcopy(value)
         else:
             if value is not None:

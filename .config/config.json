@@ -4149,7 +4149,7 @@
                 "type": "float[0;[1:Inf)]"
               },
               "solver": {
-                "value": "auto",
+                "value": "irls",
                 "seleccionable": true,
                 "type": "['irls']"
               }
@@ -4673,6 +4673,17 @@
       {"value": "" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
+    ],
+    "prediction_path" : [
+      {"value": "prediction" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "prediction" , "type":"hdfs",
+        "hash_value": null, "hash_type":"SHA256"
+      },
+      {"value": "prediction" , "type":"mongoDB",
+        "hash_value": null, "hash_type":"MD5"
+      }
     ]
   },
   "normalizer": {
@@ -4787,12 +4798,13 @@
     }
   },
   "dfmetadata":{
-    "correlation_threshold": 0.7,
+    "correlation_threshold": 0.5,
     "cardinality_limit": 40
   },
   "common": {
     "version" : "1.1.2.1",
     "test_frame_ratio" : 0.8,
+    "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",
     "execution_tree_dir": "execution_tree",
     "minimal_test_split": 200

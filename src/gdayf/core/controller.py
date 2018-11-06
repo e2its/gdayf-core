@@ -471,6 +471,10 @@ class Controller(object):
                                        model['metrics']['execution']['train']['RMSE'])
                 self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["pmetric_order"],
                                        model['metrics']['execution']['test']['RMSE'])
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["rmetric_order"],
+                                       model['metrics']['execution']['train']['r2'])
+                self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["rmetric_order"],
+                                       model['metrics']['execution']['test']['r2'])
             if metric in CLUSTERING_METRICS:
                 try:
                     self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["ckmetric_order"],
@@ -506,9 +510,12 @@ class Controller(object):
                          'combined_accuracy': model['metrics']['accuracy']['combined'],
                          'train_rmse': model['metrics']['execution']['train']['RMSE'],
                          'test_rmse': model['metrics']['execution']['test']['RMSE'],
+                         'train_r2': model['metrics']['execution']['train']['r2'],
+                         'test_r2': model['metrics']['execution']['test']['r2'],
                          'path': model['json_path'][0]['value']
                          }
                     )
+                # AutoEncoders metrics
                 except KeyError:
                     dataframe.append(
                         {'Model': model['model_parameters'][get_model_fw(model)]['parameters']['model_id']['value'],

@@ -72,6 +72,12 @@ class StorageMetadata (list):
     def get_json_path(self):
         return self.exclude_debug_fs(deepcopy(self._config['storage']['json_path']))
 
+    ## method used to get relative prediction path from config.json
+    # @param self object pointer location (optional)
+    # @return relative path string
+    def get_prediction_path(self):
+        return self.exclude_debug_fs(deepcopy(self._config['storage']['prediction_path']))
+
     ## method used to exclude localfs in non-debug modes
     def exclude_debug_fs(self, storage_metadata):
         equals = list()
@@ -87,7 +93,8 @@ class StorageMetadata (list):
 ## Method to Generate json StorageMetadata for Armetadata
 # @param e_c context pointer
 # @param armetadata structure to be stored
-def generate_json_path(e_c, armetadata):
+# @param json_type ['persistence','json']
+def generate_json_path(e_c, armetadata, json_type='json'):
     config = e_c.config.get_config()
     fw = get_model_fw(armetadata)
 
@@ -95,7 +102,8 @@ def generate_json_path(e_c, armetadata):
     compress = config['persistence']['compress_json']
     json_storage = StorageMetadata(e_c)
 
-    for each_storage_type in json_storage.get_json_path():
+    command = 'json_storage.get_' + json_type + '_path()'
+    for each_storage_type in eval(command):
         if each_storage_type['type'] in ['localfs', 'hdfs']:
             primary_path = config['storage'][each_storage_type['type']]['value']
             source_data = list()
@@ -128,7 +136,12 @@ def generate_json_path(e_c, armetadata):
                                 hash_type=each_storage_type['hash_type'])
 
         else:
-            json_storage.append(value=armetadata['user_id'], fstype=each_storage_type['type'],
-                                hash_type=each_storage_type['hash_type'])
+            if json_type == 'json':
+                json_storage.append(value=armetadata['user_id'], fstype=each_storage_type['type'],
+                                    hash_type=each_storage_type['hash_type'])
+            else:
+                json_storage.append(value=each_storage_type['value'], fstype=each_storage_type['type'],
+                                    hash_type=each_storage_type['hash_type'])
 
-    armetadata['json_path'] = json_storage
+    command = json_type + '_path'
+    armetadata[command] = json_storage

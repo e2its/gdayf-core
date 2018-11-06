@@ -25,9 +25,10 @@ NONE = -1
 DTYPES = ['int', 'float', 'int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 FTYPES = ['float', 'float16', 'float32', 'float64']
 ITYPES = ['int', 'int16', 'int32', 'int64']
-METRICS_TYPES = ['train_accuracy', 'test_accuracy', 'combined_accuracy', 'train_rmse', 'test_rmse', 'cdistance']
+METRICS_TYPES = ['train_accuracy', 'test_accuracy', 'combined_accuracy', 'train_rmse', 'test_rmse', 'cdistance',
+                 'train_r2', 'test_r2']
 ACCURACY_METRICS = ['train_accuracy', 'test_accuracy', 'combined_accuracy']
-REGRESSION_METRICS = ['train_rmse', 'test_rmse']
+REGRESSION_METRICS = ['train_rmse', 'test_rmse', 'train_r2', 'test_r2']
 CLUSTERING_METRICS = ['cdistance']
 NO_STANDARDIZE = ['']
 #NO_STANDARDIZE = ['H2ORandomForestEstimator', 'H2OGradientBoostingEstimator', '']

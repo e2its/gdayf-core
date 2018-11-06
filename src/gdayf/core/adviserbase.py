@@ -680,6 +680,42 @@ class Adviser(object):
         except KeyError:
             return 1e+16, 1e+16, 0.0
 
+    ##Method get train accuracy for generic model
+    # @param model
+    # @return accuracy metric, inverse rmse, objective or 0.0, 10e+8, objective if not exists
+    @staticmethod
+    def get_train_r2(model):
+        try:
+            return float(model['metrics']['execution']['train']['r2']),\
+                   1/float(model['metrics']['execution']['train']['RMSE']),\
+                   1.0
+        except ZeroDivisionError:
+            return float(model['metrics']['execution']['train']['r2']), \
+                   -1.0, \
+                   1.0
+        except KeyError:
+            return -1.0, -1.0, 1.0
+        except Exception:
+            return -1.0, -1.0, 1.0
+
+    ##Method get test accuracy for generic model
+    # @param model
+    # @return accuracy metric, inverse rmse, objective or 0.0, 10e+308, objective if not exists
+    @staticmethod
+    def get_test_r2(model):
+        try:
+            return float(model['metrics']['execution']['test']['r2']),\
+                   1/float(model['metrics']['execution']['test']['RMSE']),\
+                   1.0
+        except ZeroDivisionError:
+            return float(model['metrics']['execution']['test']['r2']), \
+                   -1.0, \
+                   1.0
+        except KeyError:
+            return -1.0, -1.0, 1.0
+        except Exception:
+            return -1.0, -1.0, 1.0
+
     ## Method managing scoring algorithm results
     # params: results for Handlers (gdayf.handlers)
     # @param model_list for models analyzed
@@ -697,6 +733,10 @@ class Adviser(object):
             return sorted(model_list, key=self.get_train_rmse)
         elif self.metric == 'test_rmse':
             return sorted(model_list, key=self.get_test_rmse)
+        elif self.metric == 'train_r2':
+            return sorted(model_list, key=self.get_train_r2, reverse=True)
+        elif self.metric == 'test_r2':
+            return sorted(model_list, key=self.get_test_r2, reverse=True)
         else:
             return model_list
 
