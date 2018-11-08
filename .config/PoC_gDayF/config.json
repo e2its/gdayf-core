@@ -15,7 +15,7 @@
         "save_model": "NATIVE",
         "autosaved": true,
         "tolerance": 0.01,
-        "enabled" : true,
+        "enabled" : false,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,

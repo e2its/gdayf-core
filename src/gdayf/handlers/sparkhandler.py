@@ -236,7 +236,11 @@ class sparkHandler(object):
     # @param self object pointer
     # Not implemented
     def delete_frames(self):
-        pass
+        for _, iterator in self._frame_list.items():
+            for _, sparkdataframe in iterator.items():
+                sparkdataframe.unpersist()
+        del self._ec.spark_temporal_data_frames
+        self._ec.spark_temporal_data_frames = dict()
 
     ## Generate base path to store all files [models, logs, json] relative to it
     # @param self object pointer

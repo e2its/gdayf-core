@@ -312,8 +312,8 @@ class Controller(object):
                         H2OHandler(e_c=self._ec).shutdown_cluster()
                         self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
                     if fw == 'spark':
-                        del self._ec.spark_temporal_data_frames
-                        self._ec.spark_temporal_data_frames = dict()
+                        #del self._ec.spark_temporal_data_frames
+                        #self._ec.spark_temporal_data_frames = dict()
                         sparkHandler(e_c=self._ec).shutdown_cluster()
                         self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
 
