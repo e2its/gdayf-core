@@ -2769,7 +2769,7 @@
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
-        "enabled" : false,
+        "enabled" : true,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
