@@ -226,11 +226,10 @@ class Controller(object):
             try:
                 #json_file = open(model_file)
                 persistence = PersistenceHandler(self._ec)
-                _, base_ar = persistence.get_ar_from_engine(model_file)
+                invalid, base_ar = persistence.get_ar_from_engine(model_file)
                 del persistence
-                '''base_ar = deep_ordered_copy(load(json_file))
-                json_file.close()'''
-                if base_ar is None:
+
+                if invalid:
                     self._logging.log_critical('gDayF', "Controller", self._labels["failed_model"], model_file)
                     return self._labels["failed_model"]
             except IOError as iexecution_error:

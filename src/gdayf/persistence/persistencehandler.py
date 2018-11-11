@@ -338,8 +338,9 @@ class PersistenceHandler(object):
                 print(repr(cexecution_error))
                 return 1
         try:
+            description = Path(storage_json['value']).parts
             db = client[self._config['mongoDB']['value']]
-            collection = db[storage_json['value']]
+            collection = db[description[1]]
             model_id = ar_json['model_parameters'][get_model_fw(ar_json)]['parameters']['model_id']['value']
             filter_cond = "model_parameters." + get_model_fw(ar_json) + ".parameters.model_id.value"
             cond = [{filter_cond: model_id}, {"type": ar_json['type']},
@@ -504,7 +505,7 @@ class PersistenceHandler(object):
 
     ## Method base to get an ArMetadata Structure from file
     # @param self object pointer
-    # @param path FilePath
+    # @param path FilePath for localfs or hdfs and /user_id/workflow_id/analysis_id/model_id for MongoDB
     # @return operation status (0 success /1 error, ArMetadata/None)
     def get_ar_from_engine(self, path):
         found = False
@@ -567,18 +568,21 @@ class PersistenceHandler(object):
                 try:
                     db = client[self._config['mongoDB']['value']]
                     description = Path(path).parts
-                    if description[1] is not None  \
+                    if description[1] is not None \
                             and description[2] is not None \
                             and description[3] is not None \
+                            and description[4] is not None \
                             and description[1] in db.collection_names():
 
                         collection = db[description[1]]
-                        query1 = {"$and": [{"model_id": description[2]},
+                        query1 = {"$and": [{"model_id": description[3]},
+                                           {"workflow_id": description[2]},
                                            {'type': 'train'}]
                                   }
                         for element in collection.find(query1):
+                            # Return the first element found
                             if element['model_parameters'][get_model_fw(element)]['parameters']['model_id']['value'] \
-                                    == description[3]:
+                                    == description[4]:
                                 element.pop('_id')
                                 print(element)
                                 return 0, element

@@ -144,7 +144,17 @@ def generate_json_path(e_c, armetadata, json_type='json'):
 
         else:
             if json_type == 'json':
-                json_storage.append(value=armetadata['user_id'], fstype=each_storage_type['type'],
+                source_data = list()
+                source_data.append('/')
+                source_data.append(armetadata['user_id'])
+                source_data.append('/')
+                source_data.append(armetadata['workflow_id'])
+                source_data.append('/')
+                source_data.append(armetadata['model_id'])
+                source_data.append('/')
+                source_data.append(model_id)
+                json_path = ''.join(source_data)
+                json_storage.append(value=json_path, fstype=each_storage_type['type'],
                                     hash_type=each_storage_type['hash_type'])
             else:
                 json_storage.append(value=each_storage_type['value'], fstype=each_storage_type['type'],
