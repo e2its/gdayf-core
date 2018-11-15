@@ -2,7 +2,7 @@
   "a1": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
@@ -12,6 +12,7 @@
       "filtered_columns":
       [
           "Good_Level",
+          "Avg-fuel",
           "Bad_Level",
           "Engine-worktime",
           "Braking100",
@@ -55,7 +56,7 @@
       "train_rmse": {
         "model": "",
         "parameters": {
-          "amode": "NORMAL",
+          "amode": "FAST",
           "mode": "train",
           "objective_column": "Avg-fuel",
           "metric": "train_rmse",
@@ -103,14 +104,15 @@
           "filtered_data": null,
           "for_each": null,
           "for_each_exclusions":null
-        }
+        },
+        "Next": null
       }
     }
   },
   "a2": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
@@ -152,7 +154,8 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster"
+          "V_Cluster",
+          "Avg-fuel"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -163,7 +166,7 @@
       "test_rmse": {
         "model": "",
         "parameters": {
-          "amode": "NORMAL",
+          "amode": "FAST",
           "mode": "train",
           "objective_column": "Avg-fuel",
           "metric": "test_rmse",
@@ -211,14 +214,15 @@
           "filtered_data": null,
           "for_each": null,
           "for_each_exclusions":null
-        }
+        },
+        "Next": null
       }
     }
   },
   "a3": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
@@ -260,7 +264,8 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster"
+          "V_Cluster",
+          "Avg-fuel"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -271,7 +276,7 @@
       "train_accuracy": {
         "model": "",
         "parameters": {
-          "amode": "NORMAL",
+          "amode": "FAST",
           "mode": "train",
           "objective_column": "Avg-fuel",
           "metric": "train_accuracy",
@@ -319,14 +324,15 @@
           "filtered_data": null,
           "for_each": null,
           "for_each_exclusions":null
-        }
+        },
+        "Next": null
       }
     }
   },
   "a4": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
@@ -368,7 +374,8 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster"
+          "V_Cluster",
+          "Avg-fuel"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -379,7 +386,7 @@
       "test_accuracy": {
         "model": "",
         "parameters": {
-          "amode": "NORMAL",
+          "amode": "FAST",
           "mode": "train",
           "objective_column": "Avg-fuel",
           "metric": "test_accuracy",
@@ -427,7 +434,8 @@
           "filtered_data": null,
           "for_each": null,
           "for_each_exclusions":null
-        }
+        },
+        "Next": null
       }
     }
   }

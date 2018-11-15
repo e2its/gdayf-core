@@ -2769,7 +2769,7 @@
         "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": 0.01,
-        "enabled" : true,
+        "enabled" : false,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
@@ -4700,7 +4700,7 @@
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
     "adviser_L2_wide": 4,
-    "adviser_normal_wide": 3,
+    "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.01,

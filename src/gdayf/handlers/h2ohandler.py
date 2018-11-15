@@ -264,7 +264,7 @@ class H2OHandler(object):
                     if self._model_base is not None:
                         load_fails = False
                 except H2OError:
-                    self._logging.log_error(self._ec.get_id_analysis(), self._h2o_session.session_id,
+                    self._logging.log_critical(self._ec.get_id_analysis(), self._h2o_session.session_id,
                                             self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
 
                 if ar_metadata['load_path'][counter_storage]['hash_value'] is not None:
@@ -641,7 +641,7 @@ class H2OHandler(object):
         try:
             struct_ar = OrderedDict(json.load(algorithm_description))
         except:
-            self._logging.log_error('gDayF', self._h2o_session.session_id(), self._labels["ar_error"])
+            self._logging.log_critical('gDayF', self._h2o_session.session_id(), self._labels["ar_error"])
             return ('Necesario cargar un modelo valid o ar.json valido')
         try:
             return struct_ar['metrics'][source][metric]
@@ -934,7 +934,7 @@ class H2OHandler(object):
 
         except OSError as execution_error:
             aborted = True
-            self._logging.log_error(analysis_id, self._h2o_session.session_id, self._labels["abort"],
+            self._logging.log_critical(analysis_id, self._h2o_session.session_id, self._labels["abort"],
                                    repr(execution_error))
             try:
                 H2Oremove(self._get_temporal_objects_ids(self._model_base.model_id,
@@ -1418,14 +1418,14 @@ class H2OHandler(object):
             if norm_executed:
                 H2Oremove(predict_frame)
         except H2OError:
-            self._logging.log_error(analysis_id,
+            self._logging.log_critical(analysis_id,
                                    self._h2o_session.session_id, self._labels["delete_frame"],
                                    self._model_base.model_id)
         try:
             if self._model_base is not None and remove_model:
                 H2Oremove(self._model_base.model_id)
         except H2OError:
-            self._logging.log_error(analysis_id,
+            self._logging.log_critical(analysis_id,
                                    self._h2o_session.session_id, self._labels["delete_objects"],
                                    self._model_base.model_id)
         H2Oapi("POST /3/GarbageCollect")

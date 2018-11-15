@@ -226,7 +226,7 @@ class sparkHandler(object):
                                                             ar_metadata['load_path'][counter_storage]['value'])
                                                    )
                 except Py4JJavaError:
-                    self._logging.log_error(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
+                    self._logging.log_critical(self._ec.get_id_analysis(), self._spark_session.sparkContext.applicationId,
                                             self._labels["abort"], ar_metadata['load_path'][counter_storage]['value'])
 
             counter_storage += 1
@@ -540,7 +540,7 @@ class sparkHandler(object):
         try:
             struct_ar = OrderedDict(json.load(algorithm_description))
         except:
-            self._logging.log_error('gDayF', self._spark_session.sparkContext.applicationId(), self._labels["ar_error"])
+            self._logging.log_critical('gDayF', self._spark_session.sparkContext.applicationId(), self._labels["ar_error"])
             return ('Necesario cargar un modelo valid o ar.json valido')
         try:
             return struct_ar['metrics'][source][metric]

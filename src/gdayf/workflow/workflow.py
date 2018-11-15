@@ -189,7 +189,7 @@ class Workflow(object):
                                 if fe_next is not None and prediction_frame is not None:
                                     self.workflow(prediction_frame, fe_next, pfix, remove_models=remove_models)
                             except Exception as oexecution_error:
-                                self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
+                                self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
             else:
                 aux_dataset = dataset
 
@@ -259,7 +259,7 @@ class Workflow(object):
                             self.workflow(datapath=prediction_frame, workflow=wf['Next'],
                                           prefix=pfix, remove_models=remove_models)
                         except Exception as oexecution_error:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
+                            self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
 
         controller.clean_handlers()
@@ -371,7 +371,7 @@ class Workflow(object):
                                 if fe_next is not None and prediction_frame is not None:
                                     self.workflow(prediction_frame, fe_next, pfix, remove_models=remove_models)
                             except Exception as oexecution_error:
-                                self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
+                                self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
                 else:
                     aux_dataset = dataset
 
@@ -408,7 +408,7 @@ class Workflow(object):
                             self.workflow(datapath=prediction_frame, workflow=wf['Next'], prefix=pfix,
                                           remove_models=remove_models)
                         except Exception as oexecution_error:
-                            self._logging.log_info('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
+                            self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
 
         controller.clean_handlers()
         del controller
