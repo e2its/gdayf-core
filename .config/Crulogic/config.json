@@ -14,9 +14,13 @@
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
-        "tolerance": 0.01,
+        "tolerance": {
+          "percentage" : 0.05,
+          "fixed" : 1,
+          "enable_fixed" : true
+        },
         "enabled" : true,
-        "min_rows_enabled": true,
+        "min_rows_enabled": false,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
@@ -222,11 +226,11 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "col_sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -241,7 +245,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -533,7 +537,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "alpha": {
@@ -790,7 +794,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [75, 50],
+                "value": [150],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -943,7 +947,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "activation": {
@@ -959,7 +963,7 @@
                 "type": "float"
               },
               "hidden_dropout_ratios": {
-                "value": [0.025, 0.025],
+                "value": [0.025],
                 "seleccionable": true,
                 "type": "List[float]"
               },
@@ -1431,7 +1435,7 @@
               },
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "col_sample_rate_change_per_level": {
@@ -1441,11 +1445,11 @@
               },
               "col_sample_rate_per_tree": {
                 "value": 0.9,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
+                "value": 0.8,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -1680,7 +1684,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               }
             },
@@ -2294,7 +2298,7 @@
             "sampling":{
               "balance_classes": {
                 "value": true,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "boolean"
               },
               "activation": {
@@ -2768,7 +2772,11 @@
         "spark.driver.memory": "2G",
         "start_spark": true,
         "save_model": "NATIVE",
-        "tolerance": 0.01,
+        "tolerance": {
+          "percentage" : 0.05,
+          "fixed" : 1,
+          "enable_fixed" : true
+        },
         "enabled" : false,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
@@ -4675,12 +4683,6 @@
       }
     ],
     "prediction_path" : [
-      {"value": "prediction" , "type":"localfs",
-        "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "prediction" , "type":"hdfs",
-        "hash_value": null, "hash_type":"SHA256"
-      },
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
@@ -4706,7 +4708,7 @@
     "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
     "adviser_class": "AdviserStart",
     "adviser_L2_wide": 4,
-    "adviser_normal_wide": 3,
+    "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
         "multi_limit" : 0.01,

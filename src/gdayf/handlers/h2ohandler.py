@@ -447,12 +447,17 @@ class H2OHandler(object):
         try:
             prediccion = self._model_base.predict(dataframe)
 
-            #if antype == 'regression' and prediccion.type('predict') == base_type:
             if antype == 'regression':
                 try:
                     fmin = eval("lambda x: x - " + str(tolerance/2))
                     fmax = eval("lambda x: x + " + str(tolerance/2))
-                    success = dataframe[objective].apply(fmin) <= prediccion['predict'] <= dataframe[objective].apply(fmax)
+                    success = (dataframe[objective].apply(fmin).asnumeric() <= \
+                              prediccion['predict'].asnumeric()) and \
+                              (prediccion['predict'].asnumeric() <= \
+                              dataframe[objective].apply(fmax).asnumeric())
+                    '''print (dataframe[objective].apply(fmin).show())
+                    print (' <=' + prediccion['predict'].show())
+                    print (' <=' + dataframe[objective].apply(fmax).show())'''
                     accuracy = "Valid"
                 except Exception:
                     accuracy = -1.0
@@ -482,10 +487,9 @@ class H2OHandler(object):
     # @param odataframe original H2OFrame
     # @param dataframe normalized H2OFrame
     # @param  antype Atypemetadata().get_artypes() values allowed
-    # @param  base type BugFix on regression with range mixing int and float
     # @param tolerance (optional) default value 0.0. Only for regression
     # @return float accuracy of model, prediction_dataframe
-    def _predict_accuracy(self, objective, odataframe, dataframe, antype, base_type, tolerance=0.0):
+    def _predict_accuracy(self, objective, odataframe, dataframe, antype, tolerance=0.0):
         accuracy = -1.0
         dataframe_cols = odataframe.columns
 
@@ -504,14 +508,14 @@ class H2OHandler(object):
         predictor_col = prediction_columns[0]
 
         if objective in dataframe.columns:
-            #if antype == 'regression' and prediccion.type(predictor_col) == base_type:
             if antype == 'regression':
                 try:
                     fmin = eval("lambda x: x - " + str(tolerance/2))
                     fmax = eval("lambda x: x + " + str(tolerance/2))
-                    success = prediccion[objective].apply(fmin).asnumeric() <= \
-                              prediccion[predictor_col] <= \
-                              prediccion[objective].apply(fmax).asnumeric()
+                    success = (prediccion[objective].apply(fmin).asnumeric() <= \
+                              prediccion[predictor_col].asnumeric()) and \
+                              (prediccion[predictor_col].asnumeric() <=
+                              prediccion[objective].apply(fmax).asnumeric())
                     accuracy = "Valid"
                 except Exception:
                     accuracy = 0.0
@@ -1332,8 +1336,7 @@ class H2OHandler(object):
                                                                         tolerance=tolerance, base_type=objective_type)'''
 
             accuracy, prediction_dataframe = self._predict_accuracy(objective_column, predict_frame, npredict_frame,
-                                                                    antype=antype,
-                                                                    tolerance=tolerance, base_type=objective_type)
+                                                                    antype=antype, tolerance=tolerance)
             self._frame_list.append(prediction_dataframe.frame_id)
 
             base_ar['execution_seconds'] = time.time() - start
@@ -1524,14 +1527,18 @@ def generate_commands_parameters(each_model, model_command, train_command, train
 # @param tolerance  float [0.0, 1.0]  (optional)
 # @return float value for tolerance
 def get_tolerance(columns, objective_column, tolerance=0.0):
-    min_val = None
-    max_val = None
-    for each_column in columns:
-        if each_column["name"] == objective_column and each_column["type"] in DTYPES:
-            min_val = float(each_column["min"])
-            max_val = float(each_column["max"])
-    if min_val is None or max_val is None:
-        threshold = 0
+    if isinstance(tolerance, dict):
+        if tolerance['enable_fixed']:
+            threshold = tolerance['fixed']
+        else:
+            min_val = None
+            max_val = None
+            for each_column in columns:
+                if each_column["name"] == objective_column and each_column["type"] in DTYPES:
+                    min_val = float(each_column["min"])
+                    max_val = float(each_column["max"])
+            if min_val is None or max_val is None:
+                threshold = tolerance['fixed']
     else:
-        threshold = (max_val - min_val) * tolerance
+        threshold = tolerance
     return threshold

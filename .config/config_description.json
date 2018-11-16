@@ -39,7 +39,16 @@
           "description": "Enable/disable H2O.ai automatic model execution savings. True on multi-engine working mode"
         },
         "tolerance": {
-          "description": "Regression tolerance threshold % in decinal format"
+          "description": "Regression tolerance threshold % in [0.0:1.0] format or fixed unit value",
+          "percentage": {
+            "description": "Set Regression tolerance threshold % in [0.0:1.0] format unit value"
+          },
+          "fixed": {
+            "description": "Regression tolerance threshold in fixed unit value"
+          },
+          "enable_fixed": {
+            "description": "Enable Regression tolerance threshold in fixed unit value"
+          }
         },
         "enabled": {
           "description": "Enable/disable H2O.ai engine"

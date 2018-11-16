@@ -45,11 +45,7 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster",
-          "distance_sap",
-          "GAINED_ELEV",
-          "LOSS_ELEV"
-
+          "V_Cluster"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -103,10 +99,7 @@
             "Rollout100-N",
             "Idling100-N",
             "Cruise-Control-N",
-            "V_Cluster",
-            "distance_sap",
-            "GAINED_ELEV",
-            "LOSS_ELEV"
+            "V_Cluster"
           ],
           "filtered_data": null,
           "for_each": null,
@@ -162,10 +155,7 @@
           "Idling100-N",
           "Cruise-Control-N",
           "V_Cluster",
-          "Avg-fuel",
-          "distance_sap",
-          "GAINED_ELEV",
-          "LOSS_ELEV"
+          "Avg-fuel"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -219,10 +209,7 @@
             "Rollout100-N",
             "Idling100-N",
             "Cruise-Control-N",
-            "V_Cluster",
-            "distance_sap",
-            "GAINED_ELEV",
-            "LOSS_ELEV"
+            "V_Cluster"
           ],
           "filtered_data": null,
           "for_each": null,
@@ -278,10 +265,7 @@
           "Idling100-N",
           "Cruise-Control-N",
           "V_Cluster",
-          "Avg-fuel",
-          "distance_sap",
-          "GAINED_ELEV",
-          "LOSS_ELEV"
+          "Avg-fuel"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -335,10 +319,7 @@
             "Rollout100-N",
             "Idling100-N",
             "Cruise-Control-N",
-            "V_Cluster",
-            "distance_sap",
-            "GAINED_ELEV",
-            "LOSS_ELEV"
+            "V_Cluster"
           ],
           "filtered_data": null,
           "for_each": null,
@@ -394,10 +375,7 @@
           "Idling100-N",
           "Cruise-Control-N",
           "V_Cluster",
-          "Avg-fuel",
-          "distance_sap",
-          "GAINED_ELEV",
-          "LOSS_ELEV"
+          "Avg-fuel"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -451,10 +429,7 @@
             "Rollout100-N",
             "Idling100-N",
             "Cruise-Control-N",
-            "V_Cluster",
-            "distance_sap",
-            "GAINED_ELEV",
-            "LOSS_ELEV"
+            "V_Cluster"
           ],
           "filtered_data": null,
           "for_each": null,

@@ -44,7 +44,7 @@ try:
     print("Successfully imported all Spark modules")
 except ImportError as e:
     print("Error importing Spark Modules", e)
-    sys.exit(1)
+    exit(1)
 
 
 from gdayf.common.normalizationset import NormalizationSet
@@ -1330,7 +1330,6 @@ class sparkHandler(object):
         del persistence
         return remove_fails
 
-
 ## auxiliary function (procedure) to generate model and train chain paramters to execute models
 # Modify model_command and train_command String to complete for eval()
 # @param each_model object pointer
@@ -1344,22 +1343,24 @@ def generate_commands_parameters(each_model, model_command):
                 if value is not None:
                     model_command.append(", %s=%s" % (key, value['value']))
 
-
 ## Auxiliary function to get the level of tolerance for regression analysis
 # @param columns list() of OrderedDict() [{Column description}]
 # @param objective_column String Column Objective
-# @param tolerance  float [0.0, 1.0]  (optional)
+# @param tolerance  float [0.0, 1.0]  (optional) or config tolerance Dict Structure
 # @return float value for tolerance
 def get_tolerance(columns, objective_column, tolerance=0.0):
-    min_val = None
-    max_val = None
-    for each_column in columns:
-        if each_column["name"] == objective_column and each_column["type"] in DTYPES:
-            min_val = float(each_column["min"])
-            max_val = float(each_column["max"])
-    if min_val is None or max_val is None:
-        threshold = 0
-
+    if isinstance(tolerance, dict):
+        if tolerance['enable_fixed']:
+            threshold = tolerance['fixed']
+        else:
+            min_val = None
+            max_val = None
+            for each_column in columns:
+                if each_column["name"] == objective_column and each_column["type"] in DTYPES:
+                    min_val = float(each_column["min"])
+                    max_val = float(each_column["max"])
+            if min_val is None or max_val is None:
+                threshold = 0
     else:
-        threshold = (max_val - min_val) * tolerance
+        threshold = tolerance
     return threshold

@@ -14,8 +14,12 @@
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
-        "tolerance": 0.01,
-        "enabled" : false,
+        "tolerance": {
+          "percentage" : 0.05,
+          "fixed" : 1,
+          "enable_fixed" : true
+        },
+        "enabled" : true,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -1204,7 +1208,7 @@
                 "type": "boolean"
               },
               "categorical_encoding": {
-                "value": "auto",
+                "value": "one_hot_internal",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -2768,8 +2772,12 @@
         "spark.driver.memory": "2G",
         "start_spark": true,
         "save_model": "NATIVE",
-        "tolerance": 0.01,
-        "enabled" : true,
+        "tolerance": {
+          "percentage" : 0.05,
+          "fixed" : 1,
+          "enable_fixed" : true
+        },
+        "enabled" : false,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
@@ -4648,7 +4656,7 @@
         "hash_value": null, "hash_type":"MD5"
       },
     "primary_path": "hdfs",
-    "localfs_debug_mode": false,
+    "localfs_debug_mode": true,
     "grants": "755",
     "load_path": [
       {"value": "models" , "type":"hdfs",
@@ -4808,7 +4816,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.1.2.1",
+    "version" : "1.1.3",
     "test_frame_ratio" : 0.8,
     "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",
