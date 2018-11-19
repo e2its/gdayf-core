@@ -230,12 +230,12 @@
                 "type": "boolean"
               },
               "col_sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
               "col_sample_rate_change_per_level": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": false,
                 "type": "float(0.0, 2.0)"
               },
@@ -245,7 +245,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -256,7 +256,7 @@
               },
               "max_abs_leafnode_pred": {
                 "value": 50,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               }
             },
@@ -703,7 +703,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 0,
+          "min_rows_applicability": 500,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": true,
@@ -794,7 +794,7 @@
                 "type": "int"
               },
               "hidden": {
-                "value": [120],
+                "value": [150],
                 "seleccionable": true,
                 "type": "List[int]"
               },
@@ -1444,8 +1444,8 @@
                 "type": "float(0.0, 2.0)"
               },
               "col_sample_rate_per_tree": {
-                "value": 0.9,
-                "seleccionable": true,
+                "value": 1.0,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
@@ -1550,7 +1550,7 @@
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -1559,7 +1559,7 @@
             },
             {
               "type": "multinomial",
-              "active": true,
+              "active": false,
               "valued": "enum"
             },
             {
@@ -2086,7 +2086,7 @@
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "only_standardize": true,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -2777,7 +2777,7 @@
           "fixed" : 1,
           "enable_fixed" : true
         },
-        "enabled" : false,
+        "enabled" : true,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
@@ -4656,16 +4656,13 @@
         "hash_value": null, "hash_type":"MD5"
       },
     "primary_path": "hdfs",
-    "localfs_debug_mode": true,
+    "localfs_debug_mode": false,
     "grants": "755",
     "load_path": [
       {"value": "models" , "type":"hdfs",
         "hash_value": null, "hash_type":"MD5"
       },
       {"value": "models" , "type":"localfs",
-        "hash_value": null, "hash_type":"SHA256"
-      },
-      {"value": "models2" , "type":"localfs",
         "hash_value": null, "hash_type":"SHA256"
       }
     ],
@@ -4677,9 +4674,6 @@
     "json_path" : [
       {"value": "json" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "json2" , "type":"localfs",
-        "hash_value": null, "hash_type":"SHA256"
       },
       {"value": "json" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"
@@ -4762,7 +4756,12 @@
         "nv_min_sdev": [1e-3],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "clustering_increment": 2.0
+        "clustering_increment": 2.0,
+        "sample_rate" : [
+          {"size":0.55},
+          {"size":0.68},
+          {"size":0.81}
+        ]
       },
       "spark": {
         "min_rows_limit": 4,
@@ -4812,7 +4811,7 @@
     }
   },
   "dfmetadata":{
-    "correlation_threshold": 0.7,
+    "correlation_threshold": 0.5,
     "cardinality_limit": 40
   },
   "common": {

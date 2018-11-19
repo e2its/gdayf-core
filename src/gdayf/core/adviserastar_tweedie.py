@@ -87,6 +87,7 @@ class AdviserAStar(Adviser):
                 nv_improvement = config['nv_improvement']
                 nv_divisor = config['nv_divisor']
                 clustering_increment = config['clustering_increment']
+                sample_rate = config['sample_rate']
 
                 if model['model'] == 'H2OGradientBoostingEstimator':
                     if (self.deepness == 2) and model['types'][0]['type'] == 'regression':
@@ -199,13 +200,13 @@ class AdviserAStar(Adviser):
                         self.safe_append(model_list, new_armetadata)
 
                         for learning in rho_conf:
-                            new_armetadata = new_armetadata.copy_template(increment=0)
+                                new_armetadata = new_armetadata.copy_template(increment=0)
 
-                            model_aux = new_armetadata['model_parameters']['h2o']
-                            model_aux['parameters']['rho']['value'] = learning['learn']
-                            model_aux['parameters']['epsilon']['value'] = learning['improvement']
-                            model_aux['parameters']['epochs']['value'] = epochs
-                            self.safe_append(model_list, new_armetadata)
+                                model_aux = new_armetadata['model_parameters']['h2o']
+                                model_aux['parameters']['rho']['value'] = learning['learn']
+                                model_aux['parameters']['epsilon']['value'] = learning['improvement']
+                                model_aux['parameters']['epochs']['value'] = epochs
+                                self.safe_append(model_list, new_armetadata)
 
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['h2o']
@@ -309,6 +310,15 @@ class AdviserAStar(Adviser):
                         self.safe_append(model_list, new_armetadata)
 
                 elif model['model'] == 'H2ORandomForestEstimator':
+                    if self.deepness == 2:
+                        for size in sample_rate:
+                            for size2 in sample_rate:
+                                new_armetadata = armetadata.copy_template()
+                                model_aux = new_armetadata['model_parameters']['h2o']
+                                model_aux['parameters']['sample_rate']['value'] = size['size']
+                                model_aux['parameters']['col_sample_rate_per_tree']['value'] = size2['size']
+                                self.safe_append(model_list, new_armetadata)
+
                     if model_metric['number_of_trees'][0] == model['parameters']['ntrees']['value']:
                         new_armetadata = armetadata.copy_template()
                         model_aux = new_armetadata['model_parameters']['h2o']

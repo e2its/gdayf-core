@@ -379,7 +379,7 @@ class Controller(object):
         pd_test_dataset = None
         ''' Changed 05/04/2018
         if metric == 'combined_accuracy' or 'test_accuracy':'''
-        if self._config['common']['minimal_test_split'] < len(pd_dataset.index) \
+        if self._config['common']['minimal_test_split'] <= len(pd_dataset.index) \
                 and (metric in ACCURACY_METRICS or metric in REGRESSION_METRICS):
             pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset,
                                                             train_perc=self._config['common']['test_frame_ratio'])
@@ -548,10 +548,10 @@ class Controller(object):
     # @param self object pointer
     # @param datapath String Path indicating file to be analyzed or DataFrame
     # @param list_ar_metadata list of models to execute
-    # @param metric to evalute models ['accuracy', 'rmse', 'test_accuracy', 'combined', 'cdistance']
+    # @param metric to evalute models
     # @param deep_impact  deep analysis
     # @return status, adviser.analysis_recommendation_order
-    def exec_sanalysis(self, datapath, list_ar_metadata, metric='combined', deep_impact=1, **kwargs):
+    def exec_sanalysis(self, datapath, list_ar_metadata, metric='combined_accuracy', deep_impact=1, **kwargs):
 
         self._logging.log_info('gDayF', "Controller", self._labels["start"])
         self._logging.log_info('gDayF', "Controller", self._labels["ana_param"], metric)
@@ -573,6 +573,7 @@ class Controller(object):
                 self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
                 return self._labels['failed_input']
         elif isinstance(datapath, DataFrame):
+            hash_dataframe = None
             self._logging.log_critical('gDayF', "Controller", self._labels["input_param"], str(datapath.shape))
             pd_dataset = datapath
             id_datapath = 'Dataframe' + \
@@ -584,9 +585,10 @@ class Controller(object):
             return self._labels['failed_input'], None
 
         pd_test_dataset = None
-        if self._config['common']['minimal_test_split'] > len(pd_dataset.index) \
+        if self._config['common']['minimal_test_split'] <= len(pd_dataset.index) \
                 and (metric in ACCURACY_METRICS or metric in REGRESSION_METRICS):
-            pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset)
+            pd_dataset, pd_test_dataset = pandas_split_data(pd_dataset,
+                                                            train_perc=self._config['common']['test_frame_ratio'])
 
         df = DFMetada().getDataFrameMetadata(pd_dataset, 'pandas')
         self._ec.set_id_analysis(self._ec.get_id_user() + '_' + id_datapath + '_' + str(time()))
@@ -611,7 +613,7 @@ class Controller(object):
                         test_frame=pd_test_dataset, filtering='NONE')
                 else:
                     _, analyzed_model = self.model_handler[fw]['handler'].order_training(
-                        training_frame=pd_dataset,
+                        training_pframe=pd_dataset,
                         base_ar=each_model, filtering='NONE')
                 if analyzed_model is not None:
                     adviser.analysis_recommendation_order.append(analyzed_model)
@@ -626,7 +628,7 @@ class Controller(object):
         self._logging.log_info(self._ec.get_id_analysis(), 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
 
-        self.log_model_list(adviser.adviser.analysis_recommendation_order, metric)
+        self.log_model_list(adviser.analysis_recommendation_order, metric)
 
         self._logging.log_info(self._ec.get_id_analysis(), 'controller', self._labels["end"])
 

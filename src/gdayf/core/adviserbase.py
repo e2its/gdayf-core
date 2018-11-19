@@ -682,7 +682,7 @@ class Adviser(object):
 
     ##Method get train accuracy for generic model
     # @param model
-    # @return accuracy metric, inverse rmse, objective or 0.0, 10e+8, objective if not exists
+    # @return r2 metric, inverse rmse, objective or 0.0, 10e+8, objective if not exists
     @staticmethod
     def get_train_r2(model):
         try:
@@ -700,7 +700,7 @@ class Adviser(object):
 
     ##Method get test accuracy for generic model
     # @param model
-    # @return accuracy metric, inverse rmse, objective or 0.0, 10e+308, objective if not exists
+    # @return r2 metric, inverse rmse, objective or 0.0, 10e+308, objective if not exists
     @staticmethod
     def get_test_r2(model):
         try:

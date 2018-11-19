@@ -17,7 +17,7 @@
         "tolerance": {
           "percentage" : 0.05,
           "fixed" : 1,
-          "enable_fixed" : true
+          "enable_fixed" : false
         },
         "enabled" : true,
         "min_rows_enabled": true,
@@ -1449,7 +1449,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.8,
+                "value": 0.9,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -2775,7 +2775,7 @@
         "tolerance": {
           "percentage" : 0.05,
           "fixed" : 1,
-          "enable_fixed" : true
+          "enable_fixed" : false
         },
         "enabled" : true,
         "log": "log4j.Level.ERROR",
@@ -4756,7 +4756,12 @@
         "nv_min_sdev": [1e-3],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "clustering_increment": 2.0
+        "clustering_increment": 2.0,
+        "sample_rate" : [
+          {"size":0.55},
+          {"size":0.68},
+          {"size":0.81}
+        ]
       },
       "spark": {
         "min_rows_limit": 4,

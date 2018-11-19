@@ -5,13 +5,14 @@
       "amode": "NORMAL",
       "mode": "train",
       "objective_column": "Avg-speed",
-      "metric": "train_accuracy",
-      "deep_impact": 8
+      "metric": "test_accuracy",
+      "deep_impact": 10
     },
     "data": {
       "filtered_columns":
       [
           "Good_Level",
+          "Avg-fuel",
           "Bad_Level",
           "Engine-worktime",
           "Braking100",
@@ -44,8 +45,7 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster",
-          "Avg-fuel"
+          "V_Cluster"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -60,12 +60,13 @@
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_accuracy",
-      "deep_impact": 8
+      "deep_impact": 10
     },
     "data": {
       "filtered_columns":
       [
           "Good_Level",
+          "Avg-fuel",
           "Bad_Level",
           "Engine-worktime",
           "Braking100",
@@ -98,8 +99,7 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster",
-          "Avg-fuel"
+          "V_Cluster"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -114,12 +114,13 @@
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "train_rmse",
-      "deep_impact": 8
+      "deep_impact": 10
     },
     "data": {
       "filtered_columns":
       [
           "Good_Level",
+          "Avg-fuel",
           "Bad_Level",
           "Engine-worktime",
           "Braking100",
@@ -152,8 +153,7 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster",
-          "Avg-fuel"
+          "V_Cluster"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -168,12 +168,13 @@
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
-      "deep_impact": 8
+      "deep_impact": 10
     },
     "data": {
       "filtered_columns":
       [
           "Good_Level",
+          "Avg-fuel",
           "Bad_Level",
           "Engine-worktime",
           "Braking100",
@@ -206,8 +207,7 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster",
-          "Avg-fuel"
+          "V_Cluster"
         ],
       "filtered_data": null,
       "for_each": null,
@@ -222,12 +222,13 @@
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "combined_accuracy",
-      "deep_impact": 8
+      "deep_impact": 10
     },
     "data": {
       "filtered_columns":
       [
           "Good_Level",
+          "Avg-fuel",
           "Bad_Level",
           "Engine-worktime",
           "Braking100",
@@ -260,8 +261,115 @@
           "Rollout100-N",
           "Idling100-N",
           "Cruise-Control-N",
-          "V_Cluster",
-          "Avg-fuel"
+          "V_Cluster"
+        ],
+      "filtered_data": null,
+      "for_each": null,
+      "for_each_exclusions":null
+    },
+    "Next": null
+  },
+  "a6": {
+    "model": "",
+    "parameters": {
+      "amode": "NORMAL",
+      "mode": "train",
+      "objective_column": "Avg-speed",
+      "metric": "train_r2",
+      "deep_impact": 10
+    },
+    "data": {
+      "filtered_columns":
+      [
+          "Good_Level",
+          "Avg-fuel",
+          "Bad_Level",
+          "Engine-worktime",
+          "Braking100",
+          "Strong-braking100",
+          "Strong-Acel100",
+          "idling100",
+          "Out-speed",
+          "Out-engine",
+          "Rollout100",
+          "SDS",
+          "SDS-slopes",
+          "SDS-Anticipation",
+          "SDS-brakes",
+          "SDS-Gear",
+          "Fuel",
+          "Fuel-idling",
+          "idling-time",
+          "Distance-remol",
+          "Cruise-Control",
+          "Max-speed",
+          "Max-rpm",
+          "Rollout",
+          "Braking",
+          "Strong-braking",
+          "out-rpm",
+          "Strong-Acel100-B",
+          "Strong-braking100-B",
+          "out-rpm-B",
+          "Braking100-N",
+          "Rollout100-N",
+          "Idling100-N",
+          "Cruise-Control-N",
+          "V_Cluster"
+        ],
+      "filtered_data": null,
+      "for_each": null,
+      "for_each_exclusions":null
+    },
+    "Next": null
+  },
+  "a7": {
+    "model": "",
+    "parameters": {
+      "amode": "NORMAL",
+      "mode": "train",
+      "objective_column": "Avg-speed",
+      "metric": "test_r2",
+      "deep_impact": 10
+    },
+    "data": {
+      "filtered_columns":
+      [
+          "Good_Level",
+          "Avg-fuel",
+          "Bad_Level",
+          "Engine-worktime",
+          "Braking100",
+          "Strong-braking100",
+          "Strong-Acel100",
+          "idling100",
+          "Out-speed",
+          "Out-engine",
+          "Rollout100",
+          "SDS",
+          "SDS-slopes",
+          "SDS-Anticipation",
+          "SDS-brakes",
+          "SDS-Gear",
+          "Fuel",
+          "Fuel-idling",
+          "idling-time",
+          "Distance-remol",
+          "Cruise-Control",
+          "Max-speed",
+          "Max-rpm",
+          "Rollout",
+          "Braking",
+          "Strong-braking",
+          "out-rpm",
+          "Strong-Acel100-B",
+          "Strong-braking100-B",
+          "out-rpm-B",
+          "Braking100-N",
+          "Rollout100-N",
+          "Idling100-N",
+          "Cruise-Control-N",
+          "V_Cluster"
         ],
       "filtered_data": null,
       "for_each": null,
