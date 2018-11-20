@@ -26,6 +26,7 @@ if __name__ == "__main__":
     del workflow_data
 
     # GBM ELEVATION
+    '''
     workflow_data = list()
     workflow_data.append(path.join(path.dirname(__file__), '../workflow/'))
     workflow_data.append("CRULOGIC-Avg-fuel-speed-based-elevacion-opt-gbm.json")
@@ -46,6 +47,7 @@ if __name__ == "__main__":
                       remove_models=NONE, prefix=None)
     del workflow
     del workflow_data
+    '''
 
     # DRF NOT ELEVATION
     workflow_data = list()
@@ -59,6 +61,7 @@ if __name__ == "__main__":
     del workflow_data
 
     # GBM NOT ELEVATION
+    '''
     workflow_data = list()
     workflow_data.append(path.join(path.dirname(__file__), '../workflow/'))
     workflow_data.append("CRULOGIC-Avg-fuel-speed-based-opt-gbm.json")
@@ -79,5 +82,6 @@ if __name__ == "__main__":
                       remove_models=NONE, prefix=None)
     del workflow
     del workflow_data
+    '''
 
     del source_data

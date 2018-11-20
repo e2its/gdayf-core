@@ -260,6 +260,8 @@ class Workflow(object):
                                           prefix=pfix, remove_models=remove_models)
                         except Exception as oexecution_error:
                             self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
+                            self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"],
+                                                       repr(oexecution_error))
 
 
         controller.clean_handlers()
@@ -372,6 +374,8 @@ class Workflow(object):
                                     self.workflow(prediction_frame, fe_next, pfix, remove_models=remove_models)
                             except Exception as oexecution_error:
                                 self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(fe_next))
+                                self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"],
+                                                           repr(oexecution_error))
                 else:
                     aux_dataset = dataset
 
@@ -409,6 +413,8 @@ class Workflow(object):
                                           remove_models=remove_models)
                         except Exception as oexecution_error:
                             self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"], str(wf['Next']))
+                            self._logging.log_critical('gDayF', "Workflow", self._labels["failed_wf"],
+                                                       repr(oexecution_error))
 
         controller.clean_handlers()
         del controller

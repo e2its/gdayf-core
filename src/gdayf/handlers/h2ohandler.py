@@ -1538,7 +1538,9 @@ def get_tolerance(columns, objective_column, tolerance=0.0):
                     min_val = float(each_column["min"])
                     max_val = float(each_column["max"])
             if min_val is None or max_val is None:
-                threshold = tolerance['fixed']
+                threshold = 0
+            else:
+                threshold = (max_val - min_val) * tolerance['percentage']
     else:
         threshold = tolerance
     return threshold
