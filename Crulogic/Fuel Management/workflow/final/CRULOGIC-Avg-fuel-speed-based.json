@@ -1,0 +1,61 @@
+{
+  "Avg-fuel-p": {
+    "model": "",
+    "parameters": {
+      "amode": "NORMAL",
+      "mode": "train",
+      "objective_column": "Avg-fuel",
+      "metric": "combined_accuracy",
+      "deep_impact": 10
+    },
+    "data": {
+      "filtered_columns": [
+        "Good_Level",
+        "Bad_Level",
+        "Engine-worktime",
+        "Braking100",
+        "Strong-braking100",
+        "Strong-Acel100",
+        "idling100",
+        "Out-speed",
+        "Out-engine",
+        "Rollout100",
+        "SDS",
+        "SDS-slopes",
+        "SDS-Anticipation",
+        "SDS-brakes",
+        "SDS-Gear",
+        "Fuel",
+        "Fuel-idling",
+        "idling-time",
+        "Distance-remol",
+        "Cruise-Control",
+        "Avg-speed",
+        "Max-speed",
+        "Max-rpm",
+        "Rollout",
+        "Braking",
+        "Strong-braking",
+        "out-rpm",
+        "Strong-Acel100-B",
+        "Strong-braking100-B",
+        "out-rpm-B",
+        "Braking100-N",
+        "Rollout100-N",
+        "Idling100-N",
+        "Cruise-Control-N",
+        "V_Cluster",
+        "Cluster"
+      ],
+      "filtered_data": null,
+      "for_each": "D_cluster",
+      "for_each_exclusions": null
+    },
+    "Next": null
+  }
+}
+
+
+
+
+

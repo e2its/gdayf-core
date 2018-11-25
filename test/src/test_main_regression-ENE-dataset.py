@@ -28,8 +28,10 @@ if __name__ == "__main__":
                                                       model_file=recomendations[0]['json_path'][0]['value'])
         if 'predict' in prediction_frame.columns.values:
             print(prediction_frame[['Y2', 'predict']])
+        '''
         elif 'prediction' in prediction_frame.columns.values:
             print(prediction_frame[['Y2', 'prediction']])
+        '''
 
         '''prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
                                                       model_file='/PoC_gDayF/default_1542395898.4129217/PoC_gDayF_ENB2012_data-Y1.csv_1542395898.494838/H2ODeepLearningEstimator_1542395919.2426136')

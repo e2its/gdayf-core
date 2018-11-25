@@ -2,11 +2,11 @@
   "a1": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_accuracy",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":
@@ -56,11 +56,11 @@
   "a2": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_accuracy",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":
@@ -110,11 +110,11 @@
   "a3": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "train_rmse",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":
@@ -164,11 +164,11 @@
   "a4": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":
@@ -218,11 +218,11 @@
   "a5": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "combined_accuracy",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":
@@ -272,11 +272,11 @@
   "a6": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "train_r2",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":
@@ -326,11 +326,11 @@
   "a7": {
     "model": "",
     "parameters": {
-      "amode": "NORMAL",
+      "amode": "FAST",
       "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "test_r2",
-      "deep_impact": 10
+      "deep_impact": 8
     },
     "data": {
       "filtered_columns":

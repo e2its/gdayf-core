@@ -53,20 +53,7 @@ class Normalizer (object):
                     col = description['name']
                     if col != objective_column:
                         if int(description['missed']) > 0 and \
-                           (int(description['missed'])/rowcount <= self._config['exclusion_missing_threshold']):
-                            if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
-                                normoption.set_mean_missing_values(objective_column, full=False)
-                                norms.append({col: normoption.copy()})
-                            elif an_objective[0]['type'] in ['regression'] and self._config['manage_on_train_errors']:
-                                normoption.set_progressive_missing_values(objective_column)
-                                norms.append({col: normoption.copy()})
-                            elif an_objective[0]['type'] in ['anomalies']:
-                                normoption.set_mean_missing_values(objective_column, full=True)
-                                norms.append({col: normoption.copy()})
-                            else:
-                                normoption.set_mean_missing_values(objective_column, full=True)
-                                norms.append({col: normoption.copy()})
-                        elif int(description['missed']) > 0:
+                           (int(description['missed'])/rowcount >= self._config['exclusion_missing_threshold']):
                             normoption.set_ignore_column()
                             norms.append({col: normoption.copy()})
                         if self._config['clustering_standardize_enabled'] and an_objective[0]['type'] in ['clustering'] \
@@ -173,6 +160,7 @@ class Normalizer (object):
             return norms.copy()
         else:
             if df_type == 'pandas':
+                rowcount = dataframe_metadata['rowcount']
                 norms = list()
                 normoption = NormalizationSet()
                 normoption.set_drop_missing()
@@ -185,6 +173,20 @@ class Normalizer (object):
                         if description['type'] == "object" and self._config['base_normalization_enabled']:
                             normoption.set_base()
                             norms.append({col: normoption.copy()})
+                        if int(description['missed']) > 0 and \
+                           (int(description['missed'])/rowcount >= self._config['exclusion_missing_threshold']):
+                            if an_objective[0]['type'] in ['binomial', 'multinomial'] and self._config['manage_on_train_errors']:
+                                normoption.set_mean_missing_values(objective_column, full=False)
+                                norms.append({col: normoption.copy()})
+                            elif an_objective[0]['type'] in ['regression'] and self._config['manage_on_train_errors']:
+                                normoption.set_progressive_missing_values(objective_column)
+                                norms.append({col: normoption.copy()})
+                            elif an_objective[0]['type'] in ['anomalies']:
+                                normoption.set_mean_missing_values(objective_column, full=True)
+                                norms.append({col: normoption.copy()})
+                            else:
+                                normoption.set_mean_missing_values(objective_column, full=True)
+                                norms.append({col: normoption.copy()})
                 return norms.copy()
 
     ## Method oriented to filter stdmean operations on non standardize algorithms

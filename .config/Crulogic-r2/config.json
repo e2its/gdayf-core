@@ -16,13 +16,13 @@
         "autosaved": true,
         "tolerance": {
           "percentage" : 0.05,
-          "fixed" : 1,
-          "enable_fixed" : false
+          "fixed" : 2.0,
+          "enable_fixed" : true
         },
         "enabled" : true,
-        "min_rows_enabled": false,
+        "min_rows_enabled": true,
         "max_cols_enabled": true,
-        "train_balance_metric" : 0.2,
+        "train_balance_metric" : 0.4,
         "validation_frame_ratio" : 0.85,
         "validation_frame_threshold" : 100000,
         "anomaly_threshold":
@@ -706,7 +706,7 @@
           "min_rows_applicability": 50000,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -2774,14 +2774,14 @@
         "save_model": "NATIVE",
         "tolerance": {
           "percentage" : 0.05,
-          "fixed" : 1,
-          "enable_fixed" : false
+          "fixed" : 2.0,
+          "enable_fixed" : true
         },
         "enabled" : false,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
-        "train_balance_metric" : 0.2,
+        "train_balance_metric" : 0.4,
         "validation_frame_ratio" : 0.85,
         "nfolds" : 3,
         "validation_frame_threshold" : 100000,
@@ -4810,7 +4810,7 @@
   },
   "common": {
     "version" : "1.1.3",
-    "test_frame_ratio" : 0.85,
+    "test_frame_ratio" : 0.80,
     "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",
     "execution_tree_dir": "execution_tree",
