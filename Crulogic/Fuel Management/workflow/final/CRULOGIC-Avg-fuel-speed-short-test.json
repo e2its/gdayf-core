@@ -1,7 +1,6 @@
 {
   "Avg-speed-p": {
-    "model":
-    {
+    "model":     {
       "short" :"/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-speed_1543175908.897859/Crulogic-r2_Dataframe_9780_978_10_1543176370.332926/h2o/train/1543176370.3339877/json/H2OGradientBoostingEstimator_1543176581.243637.json",
       "normal" : "/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-speed_1543175908.897859/Crulogic-r2_Dataframe_70640_7064_10_1543175909.091165/h2o/train/1543175909.0929244/json/H2OGradientBoostingEstimator_1543176197.0734096.json"
     },
@@ -9,7 +8,7 @@
       "amode": "NORMAL",
       "mode": "predict",
       "objective_column": "Avg-speed",
-      "metric": "train_rmse",
+      "metric": "test_rmse",
       "deep_impact": 8
     },
     "data": {
@@ -54,17 +53,17 @@
         ],
       "filtered_data": null,
       "for_each": "D_cluster",
-      "for_each_exclusions":null
+      "for_each_exclusions":"normal"
     },
     "Next": {
-      "Avg-fuel-p": {
-        "model": "",
+      "Avg-fuel-p":  {
+        "model": "/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-fuel-speed-based-opt_1543176892.9567919/Crulogic-r2_Dataframe_10758_978_11_1543177703.7194118/h2o/train/1543177703.720506/json/H2ORandomForestEstimator_1543177939.6637764.json",
         "parameters": {
           "amode": "NORMAL",
-          "mode": "train",
+          "mode": "predict",
           "objective_column": "Avg-fuel",
           "metric": "combined_accuracy",
-          "deep_impact": 10
+          "deep_impact": 8
         },
         "data": {
           "filtered_columns": [
@@ -106,7 +105,7 @@
             "Cluster"
           ],
           "filtered_data": null,
-          "for_each": "D_cluster",
+          "for_each": null,
           "for_each_exclusions": null
         },
         "Next": null
