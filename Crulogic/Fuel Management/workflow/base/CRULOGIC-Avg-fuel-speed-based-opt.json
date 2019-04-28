@@ -6,7 +6,7 @@
       "mode": "predict",
       "objective_column": "Avg-speed",
       "metric": "test_rmse",
-      "deep_impact": 8
+      "deep_impact": 1
     },
     "data": {
       "filtered_columns":
@@ -59,7 +59,7 @@
           "mode": "train",
           "objective_column": "Avg-fuel",
           "metric": "test_rmse",
-          "deep_impact": 8
+          "deep_impact": 1
         },
         "data": {
           "filtered_columns": [

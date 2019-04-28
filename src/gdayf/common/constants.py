@@ -40,3 +40,4 @@ train_rmse = 'train_rmse'
 test_rmse = 'test_rmse'
 train_r2 = 'train_rmse'
 test_r2 = 'test_rmse'
+atypes = ['binomial', 'multinomial', 'regression']

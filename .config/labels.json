@@ -98,7 +98,10 @@
         "exc_vector": "Excluding Executed Model with Vector Params: ",
         "inc_application": "Applying increment based on data size: ",
         "exc_applicability": "Excluding Model based on applicability limits: ",
-        "failed_op" : "Aborted"
+        "failed_op" : "Aborted",
+        "sucess_specific":"Establishing autoselection: ",
+        "failed_specific":"Promoting to autoselection: Conditions not ready to work with established atype: ",
+        "failed_mselection":"No model analysis suitable: Possible Cardinality < 2: "
       },
       "persistence" : {},
       "normalizer" : {

@@ -17,7 +17,7 @@
         "tolerance": {
           "percentage" : 0.05,
           "fixed" : 1,
-          "enable_fixed" : true
+          "enable_fixed" : false
         },
         "enabled" : true,
         "min_rows_enabled": true,
@@ -30,7 +30,14 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"]
+        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"],
+        "optimization_method": "gdayf.optimizers.h2o_optimizer",
+        "framework_metadata_module": "gdayf.models.h2oframeworkmetadata",
+        "framework_metadata_class": "H2OFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.h2omodelmetadata",
+        "model_metadata_class" : "H2OModelMetadata",
+        "handler_module": "gdayf.handlers.h2ohandler",
+        "handler_class": "H2OHandler"
       },
       "models": [
         {
@@ -2775,7 +2782,7 @@
         "tolerance": {
           "percentage" : 0.05,
           "fixed" : 1,
-          "enable_fixed" : true
+          "enable_fixed" : false
         },
         "enabled" : true,
         "log": "log4j.Level.ERROR",
@@ -2790,7 +2797,15 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"]
+        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"],
+        "optimization_method": "gdayf.optimizers.spark_optimizer",
+        "framework_metadata_module": "gdayf.models.sparkframeworkmetadata",
+        "framework_metadata_class": "sparkFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.sparkmodelmetadata",
+        "model_metadata_class": "sparkModelMetadata",
+        "handler_module": "gdayf.handlers.sparkhandler",
+        "handler_class": "sparkHandler"
+
       },
       "models": [
         {
@@ -4711,7 +4726,7 @@
     }
   },
   "optimizer": {
-    "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
+    "adviser_classpath" : "gdayf.core.adviserastar",
     "adviser_class": "AdviserStart",
     "adviser_L2_wide": 3,
     "adviser_normal_wide": 2,

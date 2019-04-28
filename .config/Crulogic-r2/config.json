@@ -1,13 +1,13 @@
 {
   "persistence": {
-    "compress_json": false
+    "compress_json": true
 },
   "frameworks": {
     "h2o": {
       "conf": {
         "download_dir": "downloads",
         "url": "http://127.0.0.1:54321",
-        "nthreads": 4,
+        "nthreads": 6,
         "ice_root": "/Data/Data/logs",
         "max_mem_size": "8G",
         "start_h2o": true,
@@ -16,13 +16,13 @@
         "autosaved": true,
         "tolerance": {
           "percentage" : 0.05,
-          "fixed" : 2.0,
-          "enable_fixed" : true
+          "fixed" : 1,
+          "enable_fixed" : false
         },
         "enabled" : true,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
-        "train_balance_metric" : 0.4,
+        "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
         "validation_frame_threshold" : 100000,
         "anomaly_threshold":
@@ -30,7 +30,14 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations"]
+        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"],
+        "optimization_method": "gdayf.optimizers.h2o_optimizer",
+        "framework_metadata_module": "gdayf.models.h2oframeworkmetadata",
+        "framework_metadata_class": "H2OFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.h2omodelmetadata",
+        "model_metadata_class" : "H2OModelMetadata",
+        "handler_module": "gdayf.handlers.h2ohandler",
+        "handler_class": "H2OHandler"
       },
       "models": [
         {
@@ -133,7 +140,7 @@
                 "type": "boolean"
               } ,
               "min_rows": {
-                  "value": 16.0,
+                  "value": 8.0,
                   "seleccionable": true,
                   "type": "float"
               }
@@ -181,7 +188,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.000001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -235,7 +242,7 @@
                 "type": "float(0.0, 1.0)"
               },
               "col_sample_rate_change_per_level": {
-                "value": 0.9,
+                "value": 1.0,
                 "seleccionable": false,
                 "type": "float(0.0, 2.0)"
               },
@@ -256,7 +263,7 @@
               },
               "max_abs_leafnode_pred": {
                 "value": 50,
-                "seleccionable": true,
+                "seleccionable": false,
                 "type": "float"
               }
             },
@@ -385,7 +392,7 @@
           "model": "H2OGeneralizedLinearEstimator",
           "id": null,
           "module": "h2o.estimators.glm",
-          "min_rows_applicability": 2500,
+          "min_rows_applicability": 500,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": true,
@@ -703,7 +710,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 50000,
+          "min_rows_applicability": 500,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": true,
@@ -887,17 +894,17 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.000001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
               "classification_stop": {
-                "value": 0.000001,
+                "value": 0.0001,
                 "seleccionable": true,
                 "type": "float"
               },
               "regression_stop": {
-                "value": 0.000001,
+                "value": 0.0001,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1208,7 +1215,7 @@
                 "type": "boolean"
               },
               "categorical_encoding": {
-                "value": "auto",
+                "value": "one_hot_internal",
                 "seleccionable": true,
                 "type": [
                   "auto",
@@ -1337,7 +1344,7 @@
                 "type": "boolean"
               },
               "min_rows": {
-                "value": 16.0,
+                "value": 8.0,
                 "seleccionable": true,
                 "type": "float"
               }
@@ -1385,7 +1392,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.000001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -1444,12 +1451,12 @@
                 "type": "float(0.0, 2.0)"
               },
               "col_sample_rate_per_tree": {
-                "value": 0.99,
-                "seleccionable": true,
+                "value": 1.0,
+                "seleccionable": false,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
-                "value": 0.99,
+                "value": 0.9,
                 "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
@@ -1879,7 +1886,7 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.000001,
+                "value": 0.00005,
                 "seleccionable": true,
                 "type": "float"
               },
@@ -2086,7 +2093,7 @@
           "module": "h2o.estimators.deeplearning",
           "min_rows_applicability": 0,
           "max_cols_applicability": null,
-          "only_standardize": true,
+          "only_standardize": false,
           "enabled": true,
           "types": [
             {
@@ -2268,17 +2275,17 @@
                 ]
               },
               "stopping_tolerance": {
-                "value": 0.000001,
+                "value": 0.00005,
                 "seleccionable": false,
                 "type": "float"
               },
               "classification_stop": {
-                "value": 0.000001,
+                "value": 0.0001,
                 "seleccionable": false,
                 "type": "float"
               },
               "regression_stop": {
-                "value": 0.000001,
+                "value": 0.0001,
                 "seleccionable": false,
                 "type": "float"
               },
@@ -2774,14 +2781,14 @@
         "save_model": "NATIVE",
         "tolerance": {
           "percentage" : 0.05,
-          "fixed" : 2.0,
-          "enable_fixed" : true
+          "fixed" : 1,
+          "enable_fixed" : false
         },
         "enabled" : false,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
-        "train_balance_metric" : 0.4,
+        "train_balance_metric" : 0.2,
         "validation_frame_ratio" : 0.85,
         "nfolds" : 3,
         "validation_frame_threshold" : 100000,
@@ -2790,7 +2797,15 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees"]
+        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"],
+        "optimization_method": "gdayf.optimizers.spark_optimizer",
+        "framework_metadata_module": "gdayf.models.sparkframeworkmetadata",
+        "framework_metadata_class": "sparkFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.sparkmodelmetadata",
+        "model_metadata_class": "sparkModelMetadata",
+        "handler_module": "gdayf.handlers.sparkhandler",
+        "handler_class": "sparkHandler"
+
       },
       "models": [
         {
@@ -3222,7 +3237,7 @@
             },
             {
               "type": "multinomial",
-              "active": true,
+              "active": false,
               "valued": "['number',''enum']"
             },
             {
@@ -4683,6 +4698,12 @@
       }
     ],
     "prediction_path" : [
+      {"value": "prediction" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "prediction" , "type":"hdfs",
+        "hash_value": null, "hash_type":"SHA256"
+      },
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
@@ -4700,29 +4721,29 @@
     "special_spark_naive_offset" : 2.0,
     "datetime_columns_management": {
       "enable": true,
-      "filter": ["weekday","weeknumber"],
+      "filter": ["day","month","year","weekday","weeknumber","hour", "minute","second", "microsecond"],
       "ignore_original": true
     }
   },
   "optimizer": {
-    "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
+    "adviser_classpath" : "gdayf.core.adviserastar",
     "adviser_class": "AdviserStart",
-    "adviser_L2_wide": 4,
-    "adviser_normal_wide": 3,
+    "adviser_L2_wide": 3,
+    "adviser_normal_wide": 2,
     "AdviserStart_rules": {
       "common":{
-        "multi_limit" : 0.01,
+        "multi_limit" : 0.001,
         "multi_cardinality_limit": 5
       },
       "h2o": {
         "nfold_limit": 8,
-        "min_rows_limit": 3,
+        "min_rows_limit": 4,
         "cols_breakdown": 200,
         "nfold_increment": 2,
-        "min_rows_increment": 1.5,
+        "min_rows_increment": 2,
         "max_interactions_rows_breakdown": 1000,
         "max_interactions_increment": 1000,
-        "max_depth_increment": 1.5,
+        "max_depth_increment": 2,
         "ntrees_increment": 2,
         "dpl_rcount_limit": 100000,
         "dpl_divisor": 500,
@@ -4758,11 +4779,11 @@
         ]
       },
       "spark": {
-        "min_rows_limit": 3,
-        "min_rows_increment": 1.5,
+        "min_rows_limit": 4,
+        "min_rows_increment": 2,
         "max_interactions_increment": 1000,
         "interactions_increment": 2,
-        "max_depth_increment": 1.5,
+        "max_depth_increment": 2,
         "ntrees_increment": 2,
         "aggregationDepth_increment": 2,
         "stepSize" : [
@@ -4783,34 +4804,34 @@
         ],
         "nv_improvement" : 0.5,
         "nv_divisor": 0.5,
-        "initstep_increment": 1.5,
+        "initstep_increment": 2,
         "clustering_increment": 2.0
       }
     },
     "common": {
       "base_increment": {
         "small": {
-          "base": 200000,
+          "base": 20000,
           "increment": 2.0
         },
         "medium": {
-          "base": 2000000,
+          "base": 5000000,
           "increment": 4.0
         },
         "large": {
-          "base": 20000000,
+          "base": 50000000,
           "increment": 8.0
         }
       }
     }
   },
   "dfmetadata":{
-    "correlation_threshold": 0.2,
-    "cardinality_limit": 80
+    "correlation_threshold": 0.5,
+    "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.1.3",
-    "test_frame_ratio" : 0.80,
+    "version" : "1.1.4",
+    "test_frame_ratio" : 0.8,
     "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",
     "execution_tree_dir": "execution_tree",

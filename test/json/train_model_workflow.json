@@ -7,7 +7,8 @@
       "mode" : "train",
       "objective_column": "Weather_Temperature",
       "metric": "test_rmse",
-      "deep_impact":4
+      "deep_impact":1,
+      "atype":"regression"
     },
     "data":{
       "filtered_columns": ["CO2_Habitacion_Sensor","Temperature_Habitacion_Sensor"],
@@ -22,7 +23,7 @@
           "mode" : "train",
           "objective_column": "Temperature_Habitacion_Sensor",
           "metric": "test_rmse",
-          "deep_impact": 4
+          "deep_impact":1
         },
         "data":{
           "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature","CO2_Habitacion_Sensor"],
@@ -37,7 +38,7 @@
               "mode" : "train",
               "objective_column": "CO2_Habitacion_Sensor",
               "metric": "test_rmse",
-              "deep_impact": 4
+              "deep_impact":1
             },
             "data":{
               "filtered_columns": ["Weather_Temperature","Regression_Weather_Temperature",

@@ -11,7 +11,7 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='HomeWin',
-                                                          amode=FAST, metric='combined_accuracy', deep_impact=5)
+                                                          amode=FAST, metric='combined_accuracy', deep_impact=3)
 
         controller.reconstruct_execution_tree(metric='test_accuracy', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)

@@ -17,10 +17,6 @@ from gdayf.models.frameworkmetadata import FrameworkMetadata
 from gdayf.common.armetadata import ArMetadata
 from gdayf.normalizer.normalizer import Normalizer
 from gdayf.models.atypesmetadata import ATypesMetadata
-from gdayf.models.h2oframeworkmetadata import H2OFrameworkMetadata
-from gdayf.models.h2omodelmetadata import H2OModelMetadata
-from gdayf.models.sparkframeworkmetadata import sparkFrameworkMetadata
-from gdayf.models.sparkmodelmetadata import sparkModelMetadata
 from gdayf.logs.logshandler import LogsHandler
 from gdayf.common.utils import compare_sorted_list_dict
 from gdayf.common.utils import get_model_fw
@@ -30,6 +26,7 @@ from time import time
 from hashlib import md5 as md5
 from json import dumps
 from copy import deepcopy
+import importlib
 
 
 ## Class focused on execute A* based analysis on three modalities of working
@@ -51,6 +48,7 @@ class Adviser(object):
         self._ec = e_c
         self._labels = self._ec.labels.get_config()['messages']['adviser']
         self._config = self._ec.config.get_config()['optimizer']
+        self._frameworks = self._ec.config.get_config()['frameworks']
         self._logging = LogsHandler(self._ec)
         self.timestamp = time()
         self.an_objective = None
@@ -67,10 +65,11 @@ class Adviser(object):
     ## Main method oriented to execute smart analysis
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
-    # @param atype [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
+    # @param amode [POC, NORMAL, FAST, PARANOIAC, FAST_PARANOIAC]
     # @param objective_column string indicating objective column
+    # @param atype atypes constats or None
     # @return ArMetadata()'s Prioritized queue
-    def set_recommendations(self, dataframe_metadata, objective_column, atype=POC):
+    def set_recommendations(self, dataframe_metadata, objective_column, amode=POC, atype=None):
         supervised = True
         if objective_column is None:
             supervised = False
@@ -79,20 +78,22 @@ class Adviser(object):
                                str(atype) + ' (' + str(self.deepness) + ')')
         if supervised:
             if self.deepness == 1:
-                self.an_objective = self.get_analysis_objective(dataframe_metadata, objective_column=objective_column)
-            if atype == POC:
+                self.an_objective = self.get_analysis_objective(dataframe_metadata,
+                                                                objective_column=objective_column,
+                                                                atype=atype)
+            if amode == POC:
                 return self.analysispoc(dataframe_metadata, objective_column, amode=FAST)
-            if atype in [FAST, NORMAL]:
-                return self.analysisnormal(dataframe_metadata, objective_column, amode=atype)
-            elif atype in [FAST_PARANOIAC, PARANOIAC]:
-                return self.analysisparanoiac(dataframe_metadata, objective_column, amode=atype)
+            if amode in [FAST, NORMAL]:
+                return self.analysisnormal(dataframe_metadata, objective_column, amode=amode)
+            elif amode in [FAST_PARANOIAC, PARANOIAC]:
+                return self.analysisparanoiac(dataframe_metadata, objective_column, amode=amode)
         else:
-            if atype in [ANOMALIES]:
+            if amode in [ANOMALIES]:
                 self.an_objective = ATypesMetadata(anomalies=True)
-                return self.analysisanomalies(dataframe_metadata, objective_column, amode=atype)
-            elif atype in [CLUSTERING]:
+                return self.analysisanomalies(dataframe_metadata, objective_column, amode=amode)
+            elif amode in [CLUSTERING]:
                 self.an_objective = ATypesMetadata(clustering=True)
-                return self.analysisclustering(dataframe_metadata, objective_column, amode=atype)
+                return self.analysisclustering(dataframe_metadata, objective_column, amode=amode)
 
     ## Method oriented to execute smart normal and fast analysis
     # @param self object pointer
@@ -467,18 +468,37 @@ class Adviser(object):
     # @param self object pointer
     # @param dataframe_metadata DFMetadata()
     # @param objective_column string indicating objective column
+    # @param atype atypes constats or None
     # @return ArType or None if objective_column not found
-    def get_analysis_objective(self, dataframe_metadata, objective_column):
+    def get_analysis_objective(self, dataframe_metadata, objective_column, atype=None):
         config = self._config['AdviserStart_rules']['common']
         for each_column in dataframe_metadata['columns']:
             if each_column['name'] == objective_column:
+
                 if each_column['missed'] != 0:
                     cardinality = int(each_column['cardinality']) - 1
                 else:
                     cardinality = int(each_column['cardinality'])
-                if (cardinality == 2):
+
+                if cardinality == 2 and (atype == 'binomial' or atype is None):
+                    if atype is not None:
+                        self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar',
+                                               self._labels["sucess_specific"], '%s-%s' % (cardinality, atype))
                     return ATypesMetadata(binomial=True)
-                elif each_column['type'] not in DTYPES:
+                elif atype is not None:
+                    if atype == 'regression':
+                        self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar',
+                                               self._labels["sucess_specific"], '%s-%s' % (cardinality, atype))
+                        return ATypesMetadata(regression=True)
+                    if atype == 'multinomial':
+                        self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar',
+                                               self._labels["sucess_specific"], '%s-%s' % (cardinality, atype))
+                        return ATypesMetadata(multinomial=True)
+                    else:
+                        self._logging.log_info(self._ec.get_id_analysis(), 'AdviserAStar',
+                                               self._labels["failed_specific"], '%s-%s' % (cardinality, atype))
+
+                if each_column['type'] not in DTYPES:
                     if cardinality > 2:
                         return ATypesMetadata(multinomial=True)
                 elif cardinality <= config['multi_cardinality_limit'] \
@@ -486,6 +506,9 @@ class Adviser(object):
                         return ATypesMetadata(multinomial=True)
                 else:
                     return ATypesMetadata(regression=True)
+
+                self._logging.log_critical(self._ec.get_id_analysis(), 'AdviserAStar',
+                                           self._labels["failed_mselection"], '%s-%s' % (cardinality, atype))
         return None
 
     ## Method oriented to analyze get increments on effort based on DF_metadata structure
@@ -513,23 +536,17 @@ class Adviser(object):
         defaultframeworks = self.load_frameworks()
         model_list = list()
         for fw, fw_value in defaultframeworks.items():
-            if fw == 'h2o' and fw_value['conf']['enabled']:
-                wfw = H2OFrameworkMetadata(defaultframeworks)
+            if fw_value['conf']['enabled']:
+                wfw_module = importlib.import_module(self._frameworks[fw]['conf']['framework_metadata_module'])
+                wfw = eval('wfw_module.' + self._frameworks[fw]['conf']['framework_metadata_class']
+                           + '(defaultframeworks)')
                 for each_base_model in wfw.get_default():
                     if each_base_model['enabled']:
                         for each_type in each_base_model['types']:
                             if each_type['active'] and each_type['type'] == atype[0]['type']:
-                                modelbase = H2OModelMetadata(self._ec)
-                                model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
-                                wfw.models.append(model)
-                                model_list.append((fw, model, None))
-            if fw == 'spark' and fw_value['conf']['enabled']:
-                wfw = sparkFrameworkMetadata(defaultframeworks)
-                for each_base_model in wfw.get_default():
-                    if each_base_model['enabled']:
-                        for each_type in each_base_model['types']:
-                            if each_type['active'] and each_type['type'] == atype[0]['type']:
-                                modelbase = sparkModelMetadata(self._ec)
+                                model_module = importlib.import_module(self._frameworks[fw]['conf']['model_metadata_module'])
+                                modelbase = eval('model_module.' + self._frameworks[fw]['conf']['model_metadata_class']
+                                                 + '(self._ec)')
                                 model = modelbase.generate_models(each_base_model['model'], atype, amode, increment)
                                 wfw.models.append(model)
                                 model_list.append((fw, model, None))
@@ -759,8 +776,6 @@ class Adviser(object):
                 norm_vector.append(md5(dumps(normalization).encode('utf8')).hexdigest())
         #print("Trace:%s-%s-%s-%s"%(fw, model['model_parameters'][fw]['model'], vector, norm_vector))
         return fw, model['model_parameters'][fw]['model'], vector, norm_vector
-        ''' Deleted 31/08/2017. Change vector model
-        return fw, model['model_parameters'][fw]['model'], vector, normalization_set'''
 
     ## Check if model has benn executed or is planned to execute
     # @param vector - model vector
@@ -780,8 +795,6 @@ class Adviser(object):
     def compare_vectors(vector1, vector2):
         return vector1[0] == vector2[0] and vector1[1] == vector2[1] \
                and vector1[2] == vector2[2] and vector1[3] == vector2[3]
-               # Deleted 31/08/2017
-               # and vector1[2] == vector2[2] and compare_list_ordered_dict(vector1[3], vector2[3])
 
     ## Check if model is previously executed. If it not append to list
     # @param model_list

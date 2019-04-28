@@ -7,10 +7,11 @@
     },
     "parameters": {
       "amode": "NORMAL",
-      "mode": "predict",
+      "mode": "train",
       "objective_column": "Avg-speed",
       "metric": "train_rmse",
-      "deep_impact": 8
+      "deep_impact": 1,
+      "atype": "regression"
     },
     "data": {
       "filtered_columns":
@@ -64,7 +65,8 @@
           "mode": "train",
           "objective_column": "Avg-fuel",
           "metric": "combined_accuracy",
-          "deep_impact": 10
+          "deep_impact": 1,
+          "atype": "regression"
         },
         "data": {
           "filtered_columns": [

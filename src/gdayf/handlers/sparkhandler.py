@@ -52,13 +52,13 @@ from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
+from gdayf.handler_metrics.sparkbinomialmetricmetadata import SparkBinomialMetricMetadata as BinomialMetricMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
 from gdayf.metrics.executionmetriccollection import ExecutionMetricCollection
-from gdayf.metrics.regressionmetricmetadata import RegressionMetricMetadata
-from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
-from gdayf.metrics.anomaliesmetricmetadata import AnomaliesMetricMetadata
-from gdayf.metrics.clusteringmetricmetadata import ClusteringMetricMetadata
+from gdayf.handler_metrics.sparkregressionmetricmetadata import SparkRegressionMetricMetadata as RegressionMetricMetadata
+from gdayf.handler_metrics.sparkmultinomialmetricmetadata import SparkMultinomialMetricMetadata as MultinomialMetricMetadata
+from gdayf.handler_metrics.sparkanomaliesmetricmetadata import SparkAnomaliesMetricMetadata as AnomaliesMetricMetadata
+from gdayf.handler_metrics.sparkclusteringmetricmetadata import SparkClusteringMetricMetadata as ClusteringMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.dfmetada import DFMetada
 from gdayf.common.utils import get_model_ns
@@ -328,9 +328,9 @@ class sparkHandler(object):
         evaluator = self._get_evaluator(analysis_type=antype, objective_column=objective_column)
 
         if isinstance(model_metrics, ClusteringMetricMetadata):
-            model_metrics.set_sparkmetrics(model=self._model_base.stages[-1], data=dataframe)
+            model_metrics.set_metrics(model=self._model_base.stages[-1], data=dataframe)
         else:
-            model_metrics.set_sparkmetrics(evaluator=evaluator, data=dataframe, objective_column=objective_column)
+            model_metrics.set_metrics(evaluator=evaluator, data=dataframe, objective_column=objective_column)
         return model_metrics
 
     ## Generate model scoring_history metrics

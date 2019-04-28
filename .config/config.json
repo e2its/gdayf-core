@@ -30,7 +30,14 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"]
+        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"],
+        "optimization_method": "gdayf.optimizers.h2o_optimizer",
+        "framework_metadata_module": "gdayf.models.h2oframeworkmetadata",
+        "framework_metadata_class": "H2OFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.h2omodelmetadata",
+        "model_metadata_class" : "H2OModelMetadata",
+        "handler_module": "gdayf.handlers.h2ohandler",
+        "handler_class": "H2OHandler"
       },
       "models": [
         {
@@ -2790,7 +2797,15 @@
           "columns" :0.15,
           "global_mse":0.10
         },
-        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"]
+        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"],
+        "optimization_method": "gdayf.optimizers.spark_optimizer",
+        "framework_metadata_module": "gdayf.models.sparkframeworkmetadata",
+        "framework_metadata_class": "sparkFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.sparkmodelmetadata",
+        "model_metadata_class": "sparkModelMetadata",
+        "handler_module": "gdayf.handlers.sparkhandler",
+        "handler_class": "sparkHandler"
+
       },
       "models": [
         {
@@ -4711,7 +4726,7 @@
     }
   },
   "optimizer": {
-    "adviser_classpath" : "gdayf.core.adviserastar_tweedie",
+    "adviser_classpath" : "gdayf.core.adviserastar",
     "adviser_class": "AdviserStart",
     "adviser_L2_wide": 3,
     "adviser_normal_wide": 2,
@@ -4815,7 +4830,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.1.3",
+    "version" : "1.1.4",
     "test_frame_ratio" : 0.8,
     "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",

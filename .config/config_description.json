@@ -78,7 +78,29 @@
           }
         },
         "optimizable_scale_params": {
-          "description": "List of H2O.ai model parameters initialisable based on problem scale "
+          "description": "List of H2O.ai model parameters initialisable based on problem scale"
+        },
+        ,
+        "framework_metadata_module": {
+          "description": "Package descriptor for framework metadata"
+        },
+        "optimization_method": {
+          "description": "Package descriptor for framework optimizator class"
+        },
+        "framework_metadata_class": {
+          "description": "Framework Metadata class name"
+        },
+        "model_metadata_module": {
+          "description": "Package descriptor for framework model metadata"
+        },
+        "model_metadata_class": {
+          "description": "Framework Model Metadata class name"
+        },
+        "handler_module": {
+          "description": "Package descriptor for framework handler"
+        },
+        "handler_class": {
+          "description": "Handler Framework class name"
         }
       },
       "models": {

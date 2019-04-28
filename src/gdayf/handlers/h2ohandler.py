@@ -54,13 +54,13 @@ from gdayf.common.constants import DTYPES
 from gdayf.common.storagemetadata import StorageMetadata
 from gdayf.common.utils import hash_key
 from gdayf.logs.logshandler import LogsHandler
-from gdayf.metrics.binomialmetricmetadata import BinomialMetricMetadata
+from gdayf.handler_metrics.h2obinomialmetricmetadata import H2OBinomialMetricMetadata as BinomialMetricMetadata
 from gdayf.metrics.metricmetadata import MetricMetadata
 from gdayf.metrics.executionmetriccollection import ExecutionMetricCollection
-from gdayf.metrics.regressionmetricmetadata import RegressionMetricMetadata
-from gdayf.metrics.multinomialmetricmetadata import MultinomialMetricMetadata
-from gdayf.metrics.anomaliesmetricmetadata import AnomaliesMetricMetadata
-from gdayf.metrics.clusteringmetricmetadata import ClusteringMetricMetadata
+from gdayf.handler_metrics.h2oregressionmetricmetadata import H2ORegressionMetricMetadata as RegressionMetricMetadata
+from gdayf.handler_metrics.h2omultinomialmetricmetadata import H2OMultinomialMetricMetadata as MultinomialMetricMetadata
+from gdayf.handler_metrics.h2oanomaliesmetricmetadata import H2OAnomaliesMetricMetadata as AnomaliesMetricMetadata
+from gdayf.handler_metrics.h2oclusteringmetricmetadata import H2OClusteringMetricMetadata as ClusteringMetricMetadata
 from gdayf.persistence.persistencehandler import PersistenceHandler
 from gdayf.common.dfmetada import DFMetada
 from gdayf.common.utils import get_model_ns
@@ -391,7 +391,7 @@ class H2OHandler(object):
                     perf_metrics = self._model_base.model_performance(xval=True)
                 else:
                     perf_metrics = self._model_base.model_performance(train=True)
-            model_metrics.set_h2ometrics(perf_metrics)
+            model_metrics.set_metrics(perf_metrics)
         except H2OServerError:
             self._logging.log_exec(self._ec.get_id_analysis(), self._h2o_session.session_id, self._labels["gexec_metric"],
                                    self._labels["failed_op"])
@@ -455,9 +455,6 @@ class H2OHandler(object):
                               prediccion['predict'].asnumeric()) and \
                               (prediccion['predict'].asnumeric() <= \
                               dataframe[objective].apply(fmax).asnumeric())
-                    '''print (dataframe[objective].apply(fmin).show())
-                    print (' <=' + prediccion['predict'].show())
-                    print (' <=' + dataframe[objective].apply(fmax).show())'''
                     accuracy = "Valid"
                 except Exception:
                     accuracy = -1.0

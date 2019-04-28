@@ -11,7 +11,8 @@ if __name__ == "__main__":
     controller = Controller()
     if controller.config_checks():
         status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column='Y2',
-                                                          amode=FAST, metric='train_accuracy', deep_impact=1)
+                                                          amode=FAST, metric='train_accuracy', deep_impact=3,
+                                                          atype='binomial')
 
         controller.reconstruct_execution_tree(metric='train_r2', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)

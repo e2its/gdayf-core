@@ -12,8 +12,6 @@ Copyright (C) e2its - All Rights Reserved
  * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
 '''
 
-from gdayf.handlers.h2ohandler import H2OHandler
-from gdayf.handlers.sparkhandler import sparkHandler
 from gdayf.handlers.inputhandler import inputHandlerCSV
 from gdayf.common.dfmetada import DFMetada
 
@@ -54,6 +52,7 @@ class Controller(object):
             self._ec = e_c
         self._config = self._ec.config.get_config()
         self._labels = self._ec.labels.get_config()['messages']['controller']
+        self._frameworks = self._ec.config.get_config()['frameworks']
         self._logging = LogsHandler(self._ec)
         self.analysis_list = OrderedDict()  # For future multi-analysis uses
         self.model_handler = OrderedDict()
@@ -284,16 +283,14 @@ class Controller(object):
     def init_handler(self, fw):
         try:
             if self.model_handler[fw]['handler'] is None:
-                if fw == 'h2o':
-                    self.model_handler[fw]['handler'] = H2OHandler(e_c=self._ec)
-                elif fw == 'spark':
-                    self.model_handler[fw]['handler'] = sparkHandler(e_c=self._ec)
+                handler = importlib.import_module(self._frameworks[fw]['conf']['handler_module'])
+                self.model_handler[fw]['handler'] = \
+                    eval('handler.' + self._frameworks[fw]['conf']['handler_class'] + '(e_c=self._ec)')
         except KeyError:
             self.model_handler[fw] = OrderedDict()
-            if fw == 'h2o':
-                self.model_handler[fw]['handler'] = H2OHandler(e_c=self._ec)
-            elif fw == 'spark':
-                self.model_handler[fw]['handler'] = sparkHandler(e_c=self._ec)
+            handler = importlib.import_module(self._frameworks[fw]['conf']['handler_module'])
+            self.model_handler[fw]['handler'] = \
+                eval('handler.' + self._frameworks[fw]['conf']['handler_class'] + '(e_c=self._ec)')
             self.model_handler[fw]['initiated'] = False
         if not self.model_handler[fw]['handler'].is_alive():
             initiated = self.model_handler[fw]['handler'].connect()
@@ -307,14 +304,11 @@ class Controller(object):
                 self.clean_handler(fw)
                 self._logging.log_exec('gDayF', "Controller", self._labels["cleaning"], fw)
                 if each_handlers['initiated']:
-                    if fw == 'h2o':
-                        H2OHandler(e_c=self._ec).shutdown_cluster()
-                        self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
-                    if fw == 'spark':
-                        #del self._ec.spark_temporal_data_frames
-                        #self._ec.spark_temporal_data_frames = dict()
-                        sparkHandler(e_c=self._ec).shutdown_cluster()
-                        self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
+                    handler = importlib.import_module(self._frameworks[fw]['conf']['handler_module'])
+                    self.model_handler[fw]['handler'] = \
+                        eval('handler.' + self._frameworks[fw]['conf']['handler_class']
+                             + '(e_c=self._ec).shutdown_cluster()')
+                    self._logging.log_exec('gDayF', "Controller", self._labels["shuttingdown"], fw)
 
     ## Method leading and controlling analysis's executions on all frameworks
     # @param self object pointer
@@ -328,6 +322,10 @@ class Controller(object):
         # Clustering variables
         k = None
         estimate_k = False
+
+        #Force analysis variable
+        atype = None
+
         hash_dataframe = ''
 
         for pname, pvalue in kwargs.items():
@@ -337,6 +335,9 @@ class Controller(object):
             elif pname == 'estimate_k':
                 assert isinstance(pvalue, bool)
                 estimate_k = pvalue
+            elif pname == 'atype':
+                assert pvalue in atypes
+                atype = pvalue
 
 
         supervised = True
@@ -392,7 +393,7 @@ class Controller(object):
                                             deep_impact=deep_impact, dataframe_name=id_datapath,
                                             hash_dataframe=hash_dataframe)
 
-        adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
+        adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, amode=amode, atype=atype)
 
         while adviser.next_analysis_list is not None:
             for each_model in adviser.next_analysis_list:
@@ -424,13 +425,12 @@ class Controller(object):
             adviser.next_analysis_list.clear()
             adviser.analysis_recommendation_order = adviser.priorize_models(model_list=
                                                                             adviser.analysis_recommendation_order)
-            adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, atype=amode)
+            adviser.set_recommendations(dataframe_metadata=df, objective_column=objective_column, amode=amode)
 
-        self._logging.log_info(self._ec.get_id_analysis(),'controller',
+        self._logging.log_info(self._ec.get_id_analysis(), 'controller',
                                self._labels["ana_models"], str(len(adviser.analyzed_models)))
-        self._logging.log_info(self._ec.get_id_analysis(),'controller',
+        self._logging.log_info(self._ec.get_id_analysis(), 'controller',
                                self._labels["exc_models"], str(len(adviser.excluded_models)))
-
 
         self._logging.log_exec(self._ec.get_id_analysis(), 'controller', self._labels["end"])
 
