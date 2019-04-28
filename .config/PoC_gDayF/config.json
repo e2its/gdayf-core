@@ -19,7 +19,7 @@
           "fixed" : 1,
           "enable_fixed" : false
         },
-        "enabled" : true,
+        "enabled" : false,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,

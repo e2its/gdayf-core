@@ -1,6 +1,6 @@
 {
 
-  "Weather_Temperature":{
+  "p_Weather_Temperature":{
     "model" : "",
     "parameters": {
       "amode":"FAST",

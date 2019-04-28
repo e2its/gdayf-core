@@ -6,7 +6,7 @@ if __name__ == "__main__":
 
     source_data = list()
     source_data.append(path.join(path.dirname(__file__),
-                                 '../../../../../../source data/Transformados-PDI/Crulogic/final/'))
+                                 '../../../../../source data/Transformados-PDI/Crulogic/final/'))
     source_data.append("Crulogic-train.csv")
 
     workflow_data = list()
