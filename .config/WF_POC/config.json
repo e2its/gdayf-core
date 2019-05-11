@@ -2784,7 +2784,7 @@
           "fixed" : 1,
           "enable_fixed" : false
         },
-        "enabled" : false,
+        "enabled" : true,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
