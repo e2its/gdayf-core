@@ -19,7 +19,7 @@
           "fixed" : 1,
           "enable_fixed" : false
         },
-        "enabled" : false,
+        "enabled" : true,
         "min_rows_enabled": true,
         "max_cols_enabled": true,
         "train_balance_metric" : 0.2,
@@ -710,7 +710,7 @@
           "model": "H2ODeepLearningEstimator",
           "id": null,
           "module": "h2o.estimators.deeplearning",
-          "min_rows_applicability": 500,
+          "min_rows_applicability": 5000,
           "max_cols_applicability": null,
           "only_standardize": true,
           "enabled": true,
@@ -4660,7 +4660,7 @@
         "hash_value": null, "hash_type":"MD5"
       },
     "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
-        "url":"http://localhost:50070",
+        "url":"http://localhost:9870",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
       },

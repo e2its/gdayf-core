@@ -23,10 +23,8 @@ if __name__ == "__main__":
         source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
         source_data.append("DM-Metric-missing-test-3.csv")
 
-        set_option('display.height', 1000)
         set_option('display.max_rows', 500)
-        set_option('display.max_columns', 500)
-        set_option('display.width', 1000)
+        set_option('display.max_columns', 50)
 
         #controller = Controller()
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),

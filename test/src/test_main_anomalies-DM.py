@@ -17,11 +17,8 @@ if __name__ == "__main__":
         controller.reconstruct_execution_tree(recomendations, metric='train-rmse')
         controller.remove_models(recomendations, mode=EACH_BEST)
 
-
-        set_option('display.height', 1000)
         set_option('display.max_rows', 500)
-        set_option('display.max_columns', 500)
-        set_option('display.width', 1000)
+        set_option('display.max_columns', 5000)
 
         #controller = Controller()
         prediction_frame = controller.exec_prediction(datapath=''.join(source_data),

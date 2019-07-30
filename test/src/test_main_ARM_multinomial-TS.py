@@ -43,10 +43,8 @@ if __name__ == "__main__":
         controller = Controller()
         result = controller.get_external_model(recomendations[0], 'mojo')
 
-        set_option('display.height', 1000)
         set_option('display.max_rows', 500)
-        set_option('display.max_columns', 500)
-        set_option('display.width', 1000)
+        set_option('display.max_columns', 5000)
 
         print(controller.table_model_list(ar_list=recomendations, metric='combined_accuracy'))
         controller.clean_handlers()
