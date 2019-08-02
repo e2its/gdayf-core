@@ -4830,7 +4830,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.1.4",
+    "version" : "1.2.1.2",
     "test_frame_ratio" : 0.8,
     "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",

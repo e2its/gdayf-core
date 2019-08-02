@@ -1,53 +1,47 @@
 if __name__ == "__main__":
 
     from gdayf.core.controller import Controller
-    from gdayf.handlers.inputhandler import inputHandlerCSV
     from gdayf.common.constants import *
     from pandas import set_option
+    from gdayf.common.dataload import DataLoad
 
-    source_data = list()
-    source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
-    source_data.append("DM-Metric-missing-3.csv")
-
-    #Generating missing values
-
-    pd_dataset = inputHandlerCSV().inputCSV(filename=''.join(source_data))
     #Analysis
     controller = Controller()
     if controller.config_checks():
-        status, recomendations = controller.exec_analysis(datapath=pd_dataset,
+        data_train, data_test = DataLoad().dm()
+        status, recomendations = controller.exec_analysis(datapath=data_train,
                                                           objective_column='Weather_Temperature',
                                                           amode=POC, metric='test_rmse', deep_impact=5)
 
-        #controller.save_models(recomendations, mode=EACH_BEST)
         controller.reconstruct_execution_tree(arlist=None, metric='test_rmse', store=True)
         controller.remove_models(recomendations, mode=EACH_BEST)
 
-        #Prediction
-        source_data = list()
-        source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
-        source_data.append("DM-Metric-missing-test-3.csv")
-        #source_data.append("DM-Metric-missing-test-weather.csv")
-
         set_option('display.max_rows', 500)
-        set_option('display.max_columns', 5000)
+        set_option('display.max_columns', 50)
+        set_option('display.max_colwidth', 100)
+        set_option('display.precision', 4)
+        set_option('display.width', 1024)
 
-        #Prediccion
-        prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
+        #Prediction
+        print('Starting Prediction\'s Phase')
+
+        prediction_frame = controller.exec_prediction(datapath=data_test,
                                                       model_file=recomendations[0]['json_path'][0]['value'])
+
         if 'predict' in prediction_frame.columns.values:
             print(prediction_frame[['Weather_Temperature', 'predict']])
         elif 'prediction' in prediction_frame.columns.values:
             print(prediction_frame[['Weather_Temperature', 'prediction']])
 
-        # Save Pojo
+        '''# Save Pojo
         #result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
         #result = controller.get_external_model(recomendations[0], 'mojo')
+        '''
 
-        #controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='test_accuracy')
         print(controller.table_model_list(ar_list=recomendations, metric='test_accuracy'))
 
         controller.clean_handlers()
+
     del controller

@@ -9,7 +9,7 @@ Copyright (C) e2its - All Rights Reserved
  *
  * This file is part of gDayF project.
  *
- * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2018
+ * Written by Jose L. Sanchez <e2its.es@gmail.com>, 2016-2019
 '''
 
 from gdayf.metrics.metricmetadata import MetricMetadata

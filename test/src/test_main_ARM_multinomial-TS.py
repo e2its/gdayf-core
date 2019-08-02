@@ -3,50 +3,45 @@ if __name__ == "__main__":
     from gdayf.core.controller import Controller
     from gdayf.common.constants import *
     from pandas import set_option
-
-    source_data = list()
-    source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
-    source_data.append("ARM-Metric-train-TS.csv")
-
-    # Generating missing values
-
+    from gdayf.common.dataload import DataLoad
 
     # Analysis
     controller = Controller()
+
     if controller.config_checks():
-        status, recomendations = controller.exec_analysis(datapath=''.join(source_data),
+        data_train, data_test = DataLoad().arm()
+        status, recomendations = controller.exec_analysis(datapath=data_train,
                                                           objective_column='ATYPE',
-                                                          amode=FAST, metric='combined_accuracy', deep_impact=3)
+                                                          amode=FAST, metric='test_accuracy', deep_impact=3)
 
         controller.reconstruct_execution_tree(metric='test_accuracy', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)
 
-        # Prediction
-        source_data = list()
-        source_data.append("/Data/Data/datasheets/Multinomial/ARM/")
-        source_data.append("ARM-Metric-test-TS.csv")
-        # source_data.append("DM-Metric-missing-test-weather.csv")
+        set_option('display.max_rows', 500)
+        set_option('display.max_columns', 50)
+        set_option('display.max_colwidth', 100)
+        set_option('display.precision', 4)
+        set_option('display.width', 1024)
 
-        # Prediccion
-        prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
+       # Prediccion
+        print('Starting Prediction\'s Phase')
+        prediction_frame = controller.exec_prediction(datapath=data_test,
                                                       model_file=recomendations[0]['json_path'][0]['value'])
         if 'predict' in prediction_frame.columns.values:
             print(prediction_frame[['ATYPE', 'predict']])
         elif 'prediction' in prediction_frame.columns.values:
             print(prediction_frame[['ATYPE', 'prediction']])
 
-        # Save Pojo
+        '''# Save Pojo
         controller = Controller()
         result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
         controller = Controller()
         result = controller.get_external_model(recomendations[0], 'mojo')
-
-        set_option('display.max_rows', 500)
-        set_option('display.max_columns', 5000)
+        '''
 
         print(controller.table_model_list(ar_list=recomendations, metric='combined_accuracy'))
         controller.clean_handlers()
-    del controller
 
+    del controller

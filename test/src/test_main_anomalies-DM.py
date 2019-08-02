@@ -3,38 +3,42 @@ if __name__ == "__main__":
     from gdayf.core.controller import Controller
     from gdayf.common.constants import *
     from pandas import set_option
+    from gdayf.common.dataload import DataLoad
 
-    source_data = list()
-    source_data.append("/Data/Data/datasheets/regression/DM-Metric/")
-    source_data.append("DM-Metric-missing-3.csv")
     #Analysis
     controller = Controller()
     if controller.config_checks():
-        status, recomendations = controller.exec_analysis(datapath=''.join(source_data), objective_column=None,
+        data_train, data_test = DataLoad().dm()
+        status, recomendations = controller.exec_analysis(datapath=data_train, objective_column=None,
                                                           amode=ANOMALIES, metric='train_rmse', deep_impact=5)
 
-        '''controller.save_models(recomendations, mode=EACH_BEST)'''
         controller.reconstruct_execution_tree(recomendations, metric='train-rmse')
         controller.remove_models(recomendations, mode=EACH_BEST)
 
         set_option('display.max_rows', 500)
-        set_option('display.max_columns', 5000)
+        set_option('display.max_columns', 50)
+        set_option('display.max_colwidth', 100)
+        set_option('display.precision', 4)
+        set_option('display.width', 1024)
 
-        #controller = Controller()
-        prediction_frame = controller.exec_prediction(datapath=''.join(source_data),
+        #Prediction
+        print('Starting Prediction\'s Phase')
+        prediction_frame = controller.exec_prediction(datapath=data_test,
                                                       model_file=recomendations[0]['json_path'][0]['value'])
         print(prediction_frame)
 
+        '''
         # Save Pojo
         #controller = Controller()
-        result = controller.get_external_model(recomendations[0], 'pojo')
+        controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
         #controller = Controller()
-        result = controller.get_external_model(recomendations[0], 'mojo')
+        controller.get_external_model(recomendations[0], 'mojo')
+        
 
-        #controller.log_model_list(recomendations[0]['model_id'], recomendations, metric='cdistance')
         print(controller.table_model_list(ar_list=recomendations, metric='train_rmse'))
-
+        
+        '''
         controller.clean_handlers()
     del controller

@@ -9,7 +9,7 @@ Copyright (C) e2its - All Rights Reserved
  *
  * This file is part of gDayF project.
  *
- * Written by e2its <e2its.es@gmail.com>, 2016-2018
+ * Written by Jose L. Sanchez del Coso <e2its.es@gmail.com>, 2016-2019
 '''
 
 from json import dumps, load
