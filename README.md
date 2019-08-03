@@ -1,16 +1,21 @@
-# gdayf-core
+# gDAYF Core
 DayF (Decision at your Fingertips) is an AutoML freeware development framework that let developers works with Machine Learning models without any idea of AI, simply taking a csv dataset and the objective column.
 The software make all transformation (Normalization, cleaning) and choose the  best model and parametrization selection for you.
 Currently is Freeware but soon will be release as opensource.
 
 Clone Git repository: https://github.com/e2its/gdayf-core.git
 
-Prerequisites:
+##Prerequisites:
 
-Create a virtual env versions below:
+#Create a virtual env (gdaf-core) versions below:
 python: 3.5
-h2o: 
-pyspark: 
+
+activate gdayf-core
+pip install h2o==3.20.0.8 
+pip install pyspark==2.2.3
+pip instal pandas==0.24.2
+pip install hdfs==2.1.0
+pip install pymongo==3.8.0
 
 
 
