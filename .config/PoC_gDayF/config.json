@@ -248,7 +248,7 @@
               },
               "col_sample_rate_per_tree": {
                 "value": 1.0,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
@@ -1452,7 +1452,7 @@
               },
               "col_sample_rate_per_tree": {
                 "value": 1.0,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "float(0.0, 1.0)"
               },
               "sample_rate": {
@@ -1936,7 +1936,7 @@
               },
               "col_sample_rate_per_tree": {
                 "value": 1.0,
-                "seleccionable": false,
+                "seleccionable": true,
                 "type": "float[0.0, 1.0]"
               },
               "sample_rate": {
@@ -2773,7 +2773,7 @@
       "conf": {
         "download_dir": "downloads",
         "master": "local",
-        "nthreads": 4,
+        "nthreads": 6,
         "spark_warehouse_dir": "/Data/Data/spark_warehouse",
         "spark.executor.memory": "6G",
         "spark.driver.memory": "2G",
