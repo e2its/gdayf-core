@@ -13,7 +13,7 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 * activate gdayf-core
 
 ### Install package dependencies:
-* pip install h2o==3.20.0.8
+* pip install h2o==3.20.0.7
 * pip install pyspark==2.2.3
 * pip install pandas==0.24.2
 * pip install hdfs==2.1.0
