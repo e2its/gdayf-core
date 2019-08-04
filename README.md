@@ -1,48 +1,46 @@
-# gDAYF Core
-DayF (Decision at your Fingertips) is an AutoML freeware development framework that let developers works with Machine Learning models without any idea of AI, simply taking a csv dataset and the objective column.
-The software make all transformation (Normalization, cleaning) and choose the  best model and parametrization selection for you.
-Currently is Freeware but soon will be release as opensource.
+# gDayF Core Development Framework
+DayF (Decision at your Fingertips) is an AutoML GPL3 opensource development framework that let developers works with Machine Learning models without any idea of AI, simply taking a .csv dataset and the objective column.
 
+gDayF Framework make all transformations (Normalization, cleaning, etc ) and choose the  best model and parametrization selection for you stroing all dataset and model execution parameters in a .json file.
+
+## Getting Started
 Clone Git repository: https://github.com/e2its/gdayf-core.git
 
-##Prerequisites:
+##Prerequisites
 
-#Create a virtual env (gdaf-core) versions below:
+###Create a virtual env (gdaf-core):
 python: 3.5
-
 activate gdayf-core
-pip install h2o==3.20.0.8 
+
+###Install package dependencies:
+pip install h2o==3.20.0.8
 pip install pyspark==2.2.3
-pip instal pandas==0.24.2
+pip install pandas==0.24.2
 pip install hdfs==2.1.0
 pip install pymongo==3.8.0
 
-
-
-Define storage parameters:
-
-1. MongoDB: installed on 127.0.0.1:33017
-[Configuration can be changed on config.json]
+###Define storage parameters [Configuration can be changed on config.json]:
+*MongoDB: installed on 127.0.0.1:33017*
     "mongoDB": { "value": "gdayf-v1",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
-2.HDFS (Apache Hadoop 3.2.0:
+*HDFS (Apache Hadoop 3.1.2):*
     "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
         "url":"http://localhost:9870",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
       }
-3.LocalFS:
+*LocalFS:*
     "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       }
-4. Define primary path to be used:
+*Define primary path to be used:*
     "primary_path": "localfs"
-    
-5. Establish diferent levels of storage based on Storage engines configured:
+
+*Establish different levels of storage based on Storage engines configured:*
     "load_path": [
       {"value": "models" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
@@ -62,5 +60,22 @@ Define storage parameters:
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
-  
-  
+
+## Documentation
+  A doxygen graphviz technical documentation can be located on doc folder in the project
+
+## Running the tests
+`Test.py` scripts can be found on test/src folder in the project
+
+##Built With
+  * [H2o.ai](http://http://docs.h2o.ai/) - a Machine Learning engine working on Hadoop/Yarn, Spark, or your laptop.
+  * [Apache Spark MLlib](https://spark.apache.org/docs/2.2.3/) -  is a fast and general-purpose cluster computing for machine learning.
+  * [mongoDB](https://docs.mongodb.com/) - NoSQL, Json based database.
+  * [Apache HDFS](http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Introduction) - is a distributed file system designed to run on commodity hardware.
+  * [Pandas](https://pandas.pydata.org/) - is an open source Python Data Analysis Library providing high-performance, easy-to-use data structures and data analysis tools for the Python programming language.
+
+## Authors  
+* **Jose L. Sanchez del Coso** - *e2its* - [Linkedin](www.linkedin.com/in/jlsdc)
+
+## LICENSE
+This project is licensed under the GPL3 License - see the [LICENSE.md](https://www.gnu.org/licenses/gpl-3.0.txt) for details
