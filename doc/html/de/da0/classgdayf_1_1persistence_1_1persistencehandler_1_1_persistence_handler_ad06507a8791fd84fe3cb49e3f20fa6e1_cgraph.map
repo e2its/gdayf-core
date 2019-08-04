@@ -1,0 +1,4 @@
+<map id="gdayf.persistence.persistencehandler.PersistenceHandler.remove_file" name="gdayf.persistence.persistencehandler.PersistenceHandler.remove_file">
+<area shape="rect" id="node2" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#ab1ae1b97ec0435779615929720e6397d" title="Method used to remove a file on one persistence system [&#39;localfs&#39;]. " alt="" coords="303,5,545,61"/>
+<area shape="rect" id="node3" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#ad08d4f3bffe2ac41ff7e1d0b73ead005" title="Method used to remove a file on one persistence system [&#39;hdfs&#39;]. " alt="" coords="295,86,553,127"/>
+</map>

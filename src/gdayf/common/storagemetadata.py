@@ -88,7 +88,7 @@ class StorageMetadata (list):
     # @param include enable localfs
     def exclude_debug_fs(self, storage_metadata, include=False):
         equals = list()
-        if not self._config['storage']['localfs_debug_mode'] and not include:
+        if self._config['storage']['localfs_debug_mode'] and not include:
             for each_storage in storage_metadata:
                 if each_storage['type'] == 'localfs':
                     equals.append(each_storage)

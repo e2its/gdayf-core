@@ -1,0 +1,4 @@
+<map id="gdayf.handlers.sparkhandler.sparkHandler.load_model" name="gdayf.handlers.sparkhandler.sparkHandler.load_model">
+<area shape="rect" id="node2" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a4235bfd3c8883cdf77f8eb2c60d6397e" title="Internal method to get an H2Omodel from server or file transparent to user. " alt="" coords="295,5,472,47"/>
+<area shape="rect" id="node3" href="$d2/d81/classgdayf_1_1handlers_1_1sparkhandler_1_1spark_handler.html#ab575e5c65876fcb3907d0e7256671e9e" title="Internal method to get an sparkmodel from server or file transparent to user. " alt="" coords="273,71,493,112"/>
+</map>

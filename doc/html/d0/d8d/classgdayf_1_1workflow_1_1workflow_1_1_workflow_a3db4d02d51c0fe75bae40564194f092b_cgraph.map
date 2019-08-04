@@ -1,0 +1,7 @@
+<map id="gdayf.workflow.workflow.Workflow.workflow" name="gdayf.workflow.workflow.Workflow.workflow">
+<area shape="rect" id="node2" href="$d0/d8d/classgdayf_1_1workflow_1_1workflow_1_1_workflow.html#a0068c7a923a899519ea4e99c335e4c4a" title="Method leading train workflow executions. " alt="" coords="222,39,385,80"/>
+<area shape="rect" id="node6" href="$d0/d8d/classgdayf_1_1workflow_1_1workflow_1_1_workflow.html#ae461c267493f8c093ab422025cf1f4ba" title="Method leading predict workflow executions. " alt="" coords="216,104,391,145"/>
+<area shape="rect" id="node3" href="$d0/d8d/classgdayf_1_1workflow_1_1workflow_1_1_workflow.html#ad3777d297a23781fcdf80d6e1a487601" title="Method managing dataset load from datapath: " alt="" coords="439,5,601,47"/>
+<area shape="rect" id="node4" href="$d0/d8d/classgdayf_1_1workflow_1_1workflow_1_1_workflow.html#a66529119944afd269cf40df363f6b07b" title="Method managing storage path. " alt="" coords="439,71,601,112"/>
+<area shape="rect" id="node5" href="$d0/d8d/classgdayf_1_1workflow_1_1workflow_1_1_workflow.html#acfaf7599c11d8090fa682d8f32c6140c" title="Method replicate files from primery to others. " alt="" coords="439,136,601,177"/>
+</map>

@@ -1,0 +1,7 @@
+<map id="gdayf.core.adviserbase.Adviser.base_iteration" name="gdayf.core.adviserbase.Adviser.base_iteration">
+<area shape="rect" id="node2" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a6b9c59e6e716d560d783b73b39ca5560" title="Method oriented to analyze get increments on effort based on DF_metadata structure. " alt="" coords="310,5,533,47"/>
+<area shape="rect" id="node3" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a1ca54035669a37f3ffdd495ec6186abc" title="Method oriented to analyze choose models candidate and select analysis objective. ..." alt="" coords="310,71,533,112"/>
+<area shape="rect" id="node5" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a15e1b133af3fcc3df551ba226f4dfe2f" title="Method oriented to select applicability of models over min_rows_limit. " alt="" coords="285,137,557,163"/>
+<area shape="rect" id="node6" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a840d0a9ac98d4326a26adc5ee7fdff21" title="Store executed model base parameters to check past executions. " alt="" coords="294,188,549,229"/>
+<area shape="rect" id="node4" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#ae11e2af0af356323d82b4d1adb804fc3" title="Method oriented to get frameworks default values from config. " alt="" coords="605,71,833,112"/>
+</map>

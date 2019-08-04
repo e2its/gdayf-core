@@ -1,0 +1,10 @@
+<map id="gdayf.handlers.h2ohandler.H2OHandler.predict" name="gdayf.handlers.h2ohandler.H2OHandler.predict">
+<area shape="rect" id="node2" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a4235bfd3c8883cdf77f8eb2c60d6397e" title="Internal method to get an H2Omodel from server or file transparent to user. " alt="" coords="255,5,433,47"/>
+<area shape="rect" id="node3" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a22058527c4aa5c4800ea677aa37d55fb" title="Method to execute normalizations base on params. " alt="" coords="231,71,457,112"/>
+<area shape="rect" id="node4" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#aad6481cd941191a2f8e5edef704ad2c8" title="Auxiliary Method to convert numerical and string columns on H2OFrame to enum (factor) for classificat..." alt="" coords="255,136,433,177"/>
+<area shape="rect" id="node5" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#ae68038553d21cf446d1e698125d63e01" title="Generate accuracy metrics for model for regression assume tolerance on results equivalent to 2*tolera..." alt="" coords="243,201,445,243"/>
+<area shape="rect" id="node6" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#aab3c63e88f73db6df29739f9d1a20317" title="Generate detected anomalies on dataframe. " alt="" coords="240,267,448,308"/>
+<area shape="rect" id="node7" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a4d973a492dd1812ed8670dfa0edf2c2a" title="Generate detected clustering on dataframe. " alt="" coords="241,332,447,373"/>
+<area shape="rect" id="node8" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#ad724d830181f8abb9b4799c9a418b37a" title="Generate execution metrics for the correct model. " alt="" coords="236,398,452,454"/>
+<area shape="rect" id="node9" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#ae00d3e7e5070243651b9582c69bd6a5e" title="Load a model in H2OCluster from disk. " alt="" coords="247,478,441,534"/>
+</map>

@@ -1,0 +1,10 @@
+<map id="gdayf.core.adviserbase.Adviser.analysis_specific" name="gdayf.core.adviserbase.Adviser.analysis_specific">
+<area shape="rect" id="node2" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#aaf43f460a4e5f33a11a803c4c1fc88be" title="Method oriented to generate specific candidate metadata. " alt="" coords="548,5,780,47"/>
+<area shape="rect" id="node4" href="$d1/d22/classgdayf_1_1core_1_1adviserastar_1_1_adviser_a_star.html#a849221c8b70ca6a9ff602df75b60df53" title="Method mangaing the generation of possible optimized models. " alt="" coords="323,63,482,119"/>
+<area shape="rect" id="node8" href="$d8/d2d/classgdayf_1_1optimizers_1_1h2o__optimizer_1_1_optimizer.html#a9dda04bbfed3a9f45d15db5d0ca6a5d3" title="Method manging generation of possible optimized H2O models loadded dinamically on adviserclass params..." alt="" coords="305,143,500,199"/>
+<area shape="rect" id="node9" href="$d1/de7/classgdayf_1_1optimizers_1_1spark__optimizer_1_1_optimizer.html#a6704e039cb576b502eaaf2b3127b2ea3" title="Method manging generation of possible optimized H2O models loadded dinamically on adviserclass params..." alt="" coords="305,223,500,279"/>
+<area shape="rect" id="node3" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a840d0a9ac98d4326a26adc5ee7fdff21" title="Store executed model base parameters to check past executions. " alt="" coords="828,5,1083,47"/>
+<area shape="rect" id="node5" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a7edfe4d60dcf1ddad9dd3d59f98a067e" title="Check if model is previously executed. " alt="" coords="550,71,778,112"/>
+<area shape="rect" id="node6" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#aa2404af04ff4004d352b781ce0cd3cfd" title="Check if model has benn executed or is planned to execute. " alt="" coords="848,71,1063,112"/>
+<area shape="rect" id="node7" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#abdb4a964a36efb232ed03c6484da9f91" title="Compare to execution vectors. " alt="" coords="1131,71,1385,112"/>
+</map>

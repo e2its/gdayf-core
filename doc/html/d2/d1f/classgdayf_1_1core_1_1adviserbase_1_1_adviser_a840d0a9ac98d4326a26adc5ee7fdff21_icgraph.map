@@ -1,0 +1,13 @@
+<map id="gdayf.core.adviserbase.Adviser.generate_vectors" name="gdayf.core.adviserbase.Adviser.generate_vectors">
+<area shape="rect" id="node2" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#aaf43f460a4e5f33a11a803c4c1fc88be" title="Method oriented to generate specific candidate metadata. " alt="" coords="308,39,540,80"/>
+<area shape="rect" id="node4" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#abc351e88c05c3cc76203080c20c1a142" title="Method oriented to select initial candidate models. " alt="" coords="588,177,820,219"/>
+<area shape="rect" id="node11" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a7edfe4d60dcf1ddad9dd3d59f98a067e" title="Check if model is previously executed. " alt="" coords="310,104,538,145"/>
+<area shape="rect" id="node3" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#ae0751ab2fef0a6613e3a8271919e25e9" title="Method oriented to execute new analysis. " alt="" coords="897,5,1149,47"/>
+<area shape="rect" id="node5" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a9767845265e981c275e1bf1d993337c3" title="Method oriented to execute smart normal and fast analysis. " alt="" coords="878,173,1169,199"/>
+<area shape="rect" id="node7" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#ada9554eea2f7c01366bbb2fe46823aee" title="Method oriented to execute poc analysis. " alt="" coords="887,223,1160,250"/>
+<area shape="rect" id="node8" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a8049e1208d212f63facb256371190af1" title="Method oriented to execute smart normal and fast analysis. " alt="" coords="869,274,1177,301"/>
+<area shape="rect" id="node9" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#acd49e7b1134561ad1b131eae2277992f" title="Method oriented to execute unsupervised anomalies models. " alt="" coords="868,71,1179,98"/>
+<area shape="rect" id="node10" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#abe034abba9092a3e26b9430cea169c24" title="Method oriented to execute unsupervised clustering models. " alt="" coords="869,122,1177,149"/>
+<area shape="rect" id="node6" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a1eedc057d0730da83c0830d9e4892228" title="Main method oriented to execute smart analysis. " alt="" coords="1227,165,1449,207"/>
+<area shape="rect" id="node12" href="$d1/d22/classgdayf_1_1core_1_1adviserastar_1_1_adviser_a_star.html#a849221c8b70ca6a9ff602df75b60df53" title="Method mangaing the generation of possible optimized models. " alt="" coords="625,97,783,153"/>
+</map>

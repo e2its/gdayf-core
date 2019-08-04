@@ -1,0 +1,6 @@
+<map id="gdayf.core.adviserastar.AdviserAStar.optimize_models" name="gdayf.core.adviserastar.AdviserAStar.optimize_models">
+<area shape="rect" id="node2" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a7edfe4d60dcf1ddad9dd3d59f98a067e" title="Check if model is previously executed. " alt="" coords="212,39,440,80"/>
+<area shape="rect" id="node3" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a840d0a9ac98d4326a26adc5ee7fdff21" title="Store executed model base parameters to check past executions. " alt="" coords="488,5,743,47"/>
+<area shape="rect" id="node4" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#aa2404af04ff4004d352b781ce0cd3cfd" title="Check if model has benn executed or is planned to execute. " alt="" coords="508,71,723,112"/>
+<area shape="rect" id="node5" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#abdb4a964a36efb232ed03c6484da9f91" title="Compare to execution vectors. " alt="" coords="791,71,1045,112"/>
+</map>

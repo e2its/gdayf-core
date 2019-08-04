@@ -1,0 +1,9 @@
+<map id="gdayf.core.controller.Controller.init_handler" name="gdayf.core.controller.Controller.init_handler">
+<area shape="rect" id="node2" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#a9469d0b72d3f8786740c17a9652f3798" title="Method leading and controlling prediction&#39;s executions on all frameworks. " alt="" coords="278,5,509,47"/>
+<area shape="rect" id="node3" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#a56c46dcd93503bd41a49b4cf476e205e" title="Method leading and controlling analysis&#39;s executions on all frameworks. " alt="" coords="278,71,509,112"/>
+<area shape="rect" id="node4" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#a284e153a46fc4987c02d1b5860ccbaae" title="Method leading and controlling analysis&#39;s executions on specific analysis. " alt="" coords="278,136,509,177"/>
+<area shape="rect" id="node5" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#ae57c1b5b2b7f872ccb38a2fae2339dd2" title="Method leading and controlling coversion to java model. " alt="" coords="283,201,503,243"/>
+<area shape="rect" id="node6" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#a41c73f1dfea3d202adede7a570bbea84" title="Method leading and controlling model savings. " alt="" coords="279,267,507,308"/>
+<area shape="rect" id="node7" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#a08f3ee14f06ca948121c0733d6502f25" title="Method leading and controlling model loads. " alt="" coords="280,332,507,373"/>
+<area shape="rect" id="node8" href="$d8/d1e/classgdayf_1_1core_1_1controller_1_1_controller.html#a7abec1e77c78d2da59cb115ab2114eff" title="Method leading and controlling model removing from server. " alt="" coords="272,397,515,439"/>
+</map>

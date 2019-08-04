@@ -1,0 +1,4 @@
+<map id="gdayf.handlers.h2ohandler.H2OHandler.get_external_model" name="gdayf.handlers.h2ohandler.H2OHandler.get_external_model">
+<area shape="rect" id="node2" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a4235bfd3c8883cdf77f8eb2c60d6397e" title="Internal method to get an H2Omodel from server or file transparent to user. " alt="" coords="488,5,665,47"/>
+<area shape="rect" id="node3" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a1d90c1efab01e8ec75edfd89f320c42f" title="Method to load model from persistence layer by armetadata. " alt="" coords="263,35,440,76"/>
+</map>

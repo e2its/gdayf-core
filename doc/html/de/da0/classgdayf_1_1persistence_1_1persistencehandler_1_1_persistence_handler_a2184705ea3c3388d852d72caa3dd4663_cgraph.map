@@ -1,0 +1,6 @@
+<map id="gdayf.persistence.persistencehandler.PersistenceHandler.store_file" name="gdayf.persistence.persistencehandler.PersistenceHandler.store_file">
+<area shape="rect" id="node2" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#a2beb775178e840feda3f43558e1c78d4" title="Protected method used to store a file on [&#39;hdfs&#39;] Not implemented yet !! using mmap structure to mana..." alt="" coords="297,5,539,61"/>
+<area shape="rect" id="node3" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#abaa84bdf62d47f676cbe7e9b1de76dbe" title="Protected method used to store a file on [&#39;localfs&#39;] using mmap structure to manage multi&#45;persistence..." alt="" coords="295,86,541,127"/>
+<area shape="rect" id="node4" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#a567575187b4285e3b1ac4f0fa8741146" title="Static protected method used to check and make directory on [&#39;hdfs&#39;] Not implemented yet! ..." alt="" coords="297,151,539,193"/>
+<area shape="rect" id="node5" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#a82fdcd13d5145fa95261affbe7c84bff" title="Static protected method used to check and make directory on [&#39;localfs&#39;]. " alt="" coords="297,217,539,258"/>
+</map>

@@ -78,22 +78,21 @@ class Controller(object):
         ''' Checking primary Json storage Paths'''
         primary = False
         #if storage_conf['primary_path'] in ['localfs', 'hdfs']:
-        for storage in StorageMetadata(self._ec).get_json_path():
-            if storage_conf['primary_path'] == storage['type']:
+        for storage in StorageMetadata(self._ec).get_load_path():
+            if storage_conf['primary_path'] == storage['type'] and storage['type'] != 'mongoDB':
                 primary = True
             if storage['type'] == 'mongoDB':
-                if not mongoDB:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
+                self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
                                            str(storage))
-                    return False
+                return False
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
                                            str(storage))
                     return False
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
                                            str(storage))
                     return False
 
@@ -104,21 +103,24 @@ class Controller(object):
 
         ''' Checking Load storage Paths'''
         at_least_on = False
-        for storage in StorageMetadata(self._ec).get_load_path():
+        for storage in StorageMetadata(self._ec).get_json_path():
             if storage['type'] == 'mongoDB':
-                self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
-                                       str(storage))
-                return False
+                if not mongoDB:
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
+                                           str(storage))
+                    return False
+                else:
+                    at_least_on = at_least_on or True
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
                 else:
                     at_least_on = at_least_on or True
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_json"],
                                            str(storage))
                     return False
                 else:

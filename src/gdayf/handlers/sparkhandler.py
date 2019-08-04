@@ -81,9 +81,18 @@ class sparkHandler(object):
         self._framework = 'spark'
         self._config = self._ec.config.get_config()
         self._labels = self._ec.labels.get_config()['messages']['corehandler']
-        self.localfs = self._config['storage']['localfs']['value']
-        self.hdfs =self._config['storage']['hdfs']['value']
-        self.mongoDB = self._config['storage']['mongoDB']['value']
+        try:
+            self.localfs = self._config['storage']['localfs']['value']
+        except TypeError:
+            self.localfs = self._config['storage']['localfs']
+        try:
+            self.hdfs =self._config['storage']['hdfs']['value']
+        except TypeError:
+            self.hdfs = self._config['storage']['hdfs']
+        try:
+            self.mongoDB = self._config['storage']['mongoDB']['value']
+        except TypeError:
+            self.mongoDB = self._config['storage']['mongoDB']
         self.primary_path = self._config['storage'][self._config['storage']['primary_path']]['value']
         self.url = self._config['frameworks'][self._framework]['conf']['master']
         self.nthreads = self._config['frameworks'][self._framework]['conf']['nthreads']

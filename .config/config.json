@@ -4670,15 +4670,15 @@
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
-    "primary_path": "hdfs",
-    "localfs_debug_mode": false,
+    "primary_path": "localfs",
+    "localfs_debug_mode": true,
     "grants": "755",
     "load_path": [
-      {"value": "models" , "type":"hdfs",
-        "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "models" , "type":"localfs",
+      {"value": "load" , "type":"hdfs",
         "hash_value": null, "hash_type":"SHA256"
+      },
+      {"value": "load" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
       }
     ],
     "log_path" : [
@@ -4687,23 +4687,11 @@
       }
     ],
     "json_path" : [
-      {"value": "json" , "type":"localfs",
-        "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "json" , "type":"hdfs",
-        "hash_value": null, "hash_type":"SHA256"
-      },
       {"value": "" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
     ],
     "prediction_path" : [
-      {"value": "prediction" , "type":"localfs",
-        "hash_value": null, "hash_type":"MD5"
-      },
-      {"value": "prediction" , "type":"hdfs",
-        "hash_value": null, "hash_type":"SHA256"
-      },
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }

@@ -1,0 +1,9 @@
+<map id="gdayf.optimizers.spark_optimizer.Optimizer.optimize_models" name="gdayf.optimizers.spark_optimizer.Optimizer.optimize_models">
+<area shape="rect" id="node2" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a9767845265e981c275e1bf1d993337c3" title="Method oriented to execute smart normal and fast analysis. " alt="" coords="258,5,549,32"/>
+<area shape="rect" id="node4" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#ada9554eea2f7c01366bbb2fe46823aee" title="Method oriented to execute poc analysis. " alt="" coords="267,56,540,83"/>
+<area shape="rect" id="node5" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#ae0751ab2fef0a6613e3a8271919e25e9" title="Method oriented to execute new analysis. " alt="" coords="277,107,529,149"/>
+<area shape="rect" id="node6" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a8049e1208d212f63facb256371190af1" title="Method oriented to execute smart normal and fast analysis. " alt="" coords="249,173,557,200"/>
+<area shape="rect" id="node7" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#acd49e7b1134561ad1b131eae2277992f" title="Method oriented to execute unsupervised anomalies models. " alt="" coords="248,224,559,251"/>
+<area shape="rect" id="node8" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#abe034abba9092a3e26b9430cea169c24" title="Method oriented to execute unsupervised clustering models. " alt="" coords="249,275,557,301"/>
+<area shape="rect" id="node3" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a1eedc057d0730da83c0830d9e4892228" title="Main method oriented to execute smart analysis. " alt="" coords="607,166,829,207"/>
+</map>

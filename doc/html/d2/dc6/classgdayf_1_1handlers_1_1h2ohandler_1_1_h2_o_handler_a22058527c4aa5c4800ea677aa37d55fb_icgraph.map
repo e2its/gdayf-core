@@ -1,0 +1,7 @@
+<map id="gdayf.handlers.h2ohandler.H2OHandler.execute_normalization" name="gdayf.handlers.h2ohandler.H2OHandler.execute_normalization">
+<area shape="rect" id="node2" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#aee072d2cb4dc2bb797ff481d26187e24" title="Main method to execute sets of analysis and normalizations base on params. " alt="" coords="831,5,1008,47"/>
+<area shape="rect" id="node3" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a60b2ec7414ccdb032c1d669f96bc10e1" title="Main method to execute predictions over traning models Take the ar.json for and execute predictions i..." alt="" coords="301,51,479,92"/>
+<area shape="rect" id="node5" href="$d2/d81/classgdayf_1_1handlers_1_1sparkhandler_1_1spark_handler.html#a2e4118b572e86273292f0278f8d93b67" title="Main method to execute sets of analysis and normalizations base on params. " alt="" coords="809,84,1029,125"/>
+<area shape="rect" id="node6" href="$d2/d81/classgdayf_1_1handlers_1_1sparkhandler_1_1spark_handler.html#ad4608de459d12f51308ed8352580200a" title="Main method to execute predictions over traning models Take the ar.json for and execute predictions i..." alt="" coords="280,168,500,209"/>
+<area shape="rect" id="node4" href="$d2/dc6/classgdayf_1_1handlers_1_1h2ohandler_1_1_h2_o_handler.html#a309d69854baaef63397f92c065f30c83" title="Generate base path to store all files [models, logs, json] relative to it. " alt="" coords="548,51,761,92"/>
+</map>

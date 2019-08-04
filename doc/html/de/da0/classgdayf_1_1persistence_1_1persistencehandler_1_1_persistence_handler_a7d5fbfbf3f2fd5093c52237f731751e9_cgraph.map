@@ -1,0 +1,5 @@
+<map id="gdayf.persistence.persistencehandler.PersistenceHandler.mkdir" name="gdayf.persistence.persistencehandler.PersistenceHandler.mkdir">
+<area shape="rect" id="node2" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#a82fdcd13d5145fa95261affbe7c84bff" title="Static protected method used to check and make directory on [&#39;localfs&#39;]. " alt="" coords="295,5,537,47"/>
+<area shape="rect" id="node3" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#a567575187b4285e3b1ac4f0fa8741146" title="Static protected method used to check and make directory on [&#39;hdfs&#39;] Not implemented yet! ..." alt="" coords="295,71,537,112"/>
+<area shape="rect" id="node4" href="$de/da0/classgdayf_1_1persistence_1_1persistencehandler_1_1_persistence_handler.html#a09cd17a351c5e8e1f0df829ac3e9aee5" title="Static protected method used to check and make directory on [&#39;mongoDB&#39;] Not necessary throught pymong..." alt="" coords="295,136,537,177"/>
+</map>

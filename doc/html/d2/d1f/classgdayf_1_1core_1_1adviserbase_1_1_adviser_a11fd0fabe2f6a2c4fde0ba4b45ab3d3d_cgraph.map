@@ -1,0 +1,10 @@
+<map id="gdayf.core.adviserbase.Adviser.priorize_models" name="gdayf.core.adviserbase.Adviser.priorize_models">
+<area shape="rect" id="node2" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#aa5b096a4582007885bf5637d7524c21c" title="Method get train accuracy for generic model. " alt="" coords="300,5,523,47"/>
+<area shape="rect" id="node3" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a61fe023dd624e76196fcc0dd951153b5" title="Method get test accuracy for generic model. " alt="" coords="300,71,523,112"/>
+<area shape="rect" id="node4" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a03e8cc2fd03387de645adc0b0695cf0e" title="Method get averaged train and test accuracy for generic model. " alt="" coords="300,136,523,177"/>
+<area shape="rect" id="node5" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a7b984663f5b6b22c43684a7fb768287b" title="Method get clustering distance for generic model. " alt="" coords="300,201,523,243"/>
+<area shape="rect" id="node6" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a1549ce5f03efcd4a894e9267faa25aad" title="Method get rmse for generic model. " alt="" coords="300,267,523,308"/>
+<area shape="rect" id="node7" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a854c9bf0572cd08c012a32714443a1c0" title="Method get test rmse for generic model. " alt="" coords="300,332,523,373"/>
+<area shape="rect" id="node8" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#acd49929c5e9abe65138371ee6e77e361" title="Method get train accuracy for generic model. " alt="" coords="300,397,523,439"/>
+<area shape="rect" id="node9" href="$d2/d1f/classgdayf_1_1core_1_1adviserbase_1_1_adviser.html#a48e3a2b185741060b862de2469081151" title="Method get test accuracy for generic model. " alt="" coords="300,463,523,504"/>
+</map>
