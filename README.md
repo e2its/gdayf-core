@@ -9,7 +9,7 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 ## Prerequisites
 
 ### Create a virtual env (gdaf-core):
-* python (3.6)
+* python (3.5)
 * activate gdayf-core
 
 ### Install package dependencies:
