@@ -6,60 +6,63 @@ gDayF Framework make all transformations (Normalization, cleaning, etc ) and cho
 ## Getting Started
 Clone Git repository: https://github.com/e2its/gdayf-core.git
 
-##Prerequisites
+## Prerequisites
 
-###Create a virtual env (gdaf-core):
-python: 3.5
-activate gdayf-core
+### Create a virtual env (gdaf-core):
+* python (3.5)
+* activate gdayf-core
 
-###Install package dependencies:
-pip install h2o==3.20.0.8
-pip install pyspark==2.2.3
-pip install pandas==0.24.2
-pip install hdfs==2.1.0
-pip install pymongo==3.8.0
+### Install package dependencies:
+* pip install h2o==3.20.0.8
+* pip install pyspark==2.2.3
+* pip install pandas==0.24.2
+* pip install hdfs==2.1.0
+* pip install pymongo==3.8.0
 
-###Define storage parameters [Configuration can be changed on config.json]:
-*MongoDB: installed on 127.0.0.1:33017*
-`    "mongoDB": { "value": "gdayf-v1",
+### Define storage parameters [Configuration can be changed on config.json]:
+* MongoDB: installed on 127.0.0.1:33017:
+  * "mongoDB": { "value": "gdayf-v1",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
-      }`
-*HDFS (Apache Hadoop 3.1.2):*
-`    "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
+      }
+* HDFS (Apache Hadoop 3.1.2):
+  * "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
         "url":"http://localhost:9870",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
-      }`
-*LocalFS:*
-`    "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
-        "hash_value": null, "hash_type":"MD5"
-      }`
-*Define primary path to be used:*
-`    "primary_path": "localfs"`
-
-*Establish different levels of storage based on Storage engines configured:*
-`    "load_path": [
-      {"value": "models" , "type":"mongoDB",
+      }
+* LocalFS:
+   * "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       }
-    ],
-    "log_path" : [
+
+* Define primary path to be used:
+    * "primary_path": "localfs"
+
+
+* Establish different levels of storage based on Storage engines configured:
+    * "load_path": [
+      {"value": "models" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      }
+    ]
+    * "log_path" : [
       {"value": "log" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       }
-    ],
-    "json_path" : [
-      {"value": "" , "type":"mongoDB",
+    ]
+    * "json_path" : [
+      {"value": "json" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
-    ],
-    "prediction_path" : [
+    ]
+    * "prediction_path" : [
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
-      }`
+      }
+     ]
 
 ## Documentation
   A doxygen graphviz technical documentation can be located on doc folder in the project
@@ -67,7 +70,7 @@ pip install pymongo==3.8.0
 ## Running the tests
 `Test.py` scripts can be found on test/src folder in the project
 
-##Built With
+## Built With
   * [H2o.ai](http://http://docs.h2o.ai/) - a Machine Learning engine working on Hadoop/Yarn, Spark, or your laptop.
   * [Apache Spark MLlib](https://spark.apache.org/docs/2.2.3/) -  is a fast and general-purpose cluster computing for machine learning.
   * [mongoDB](https://docs.mongodb.com/) - NoSQL, Json based database.
