@@ -21,27 +21,27 @@ pip install pymongo==3.8.0
 
 ###Define storage parameters [Configuration can be changed on config.json]:
 *MongoDB: installed on 127.0.0.1:33017*
-    "mongoDB": { "value": "gdayf-v1",
+`    "mongoDB": { "value": "gdayf-v1",
         "url": "localhost",
         "port": "33017",
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
-      }
+      }`
 *HDFS (Apache Hadoop 3.1.2):*
-    "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
+`    "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
         "url":"http://localhost:9870",
         "uri":"hdfs://localhost:9000",
         "hash_value": null, "hash_type":"MD5"
-      }
+      }`
 *LocalFS:*
-    "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
+`    "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
-      }
+      }`
 *Define primary path to be used:*
-    "primary_path": "localfs"
+`    "primary_path": "localfs"`
 
 *Establish different levels of storage based on Storage engines configured:*
-    "load_path": [
+`    "load_path": [
       {"value": "models" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
@@ -59,7 +59,7 @@ pip install pymongo==3.8.0
     "prediction_path" : [
       {"value": "prediction" , "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
-      }
+      }`
 
 ## Documentation
   A doxygen graphviz technical documentation can be located on doc folder in the project
