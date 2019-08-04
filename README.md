@@ -1,4 +1,4 @@
-# gDayF Core Development Framework
+# DayF Core Development Framework
 DayF (Decision at your Fingertips) is an AutoML GPL3 opensource development framework that let developers works with Machine Learning models without any idea of AI, simply taking a .csv dataset and the objective column.
 
 gDayF Framework make all transformations (Normalization, cleaning, etc ) and choose the  best model and parametrization selection for you stroing all dataset and model execution parameters in a .json file.
