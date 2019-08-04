@@ -1,2 +1,16 @@
 
 \.idea/
+
+src/gdayf/core/__pycache__/
+
+src/gdayf/handlers/__pycache__/
+
+src/gdayf/logs/__pycache__/
+
+src/gdayf/common/__pycache__/
+
+src/gdayf/persistence/__pycache__/
+
+src/gdayf/__pycache__/
+
+src/gdayf/conf/__pycache__/
