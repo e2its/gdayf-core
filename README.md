@@ -78,7 +78,7 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
   * [Pandas](https://pandas.pydata.org/) - is an open source Python Data Analysis Library providing high-performance, easy-to-use data structures and data analysis tools for the Python programming language.
 
 ## Authors  
-* **Jose L. Sanchez del Coso** - *e2its* - [Linkedin](www.linkedin.com/in/jlsdc)
+* **Jose L. Sanchez del Coso** - *e2its* - [Linkedin](http://www.linkedin.com/in/jlsdc)
 
 ## LICENSE
 This project is licensed under the GPL3 License - see the [LICENSE.md](https://www.gnu.org/licenses/gpl-3.0.txt) for details
