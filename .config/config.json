@@ -4321,7 +4321,7 @@
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
-    "primary_path": "localfs",
+    "primary_path": "hdfs",
     "localfs_debug_mode": true,
     "grants": "755",
     "load_path": [
