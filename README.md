@@ -27,12 +27,12 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 ### Define storage parameters [Configuration can be changed on config.json]:
 * MongoDB: installed on 0.0.0.0:27017:
   * "mongoDB": { "value": "gdayf-v1",
-        "url": "localhost",
-        "port": "33017",
+        "url": "0.0.0.0",
+        "port": "27017",
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       }
-* HDFS (Apache Hadoop 3.1.2):
+* HDFS:
   * "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
         "url":"http://0.0.0.0:50070",
         "uri":"hdfs:/<<namenode_ip>>:8020",
