@@ -27,8 +27,10 @@ src/gdayf/optimizers/__pycache__/
 
 src/gdayf/workflow/__pycache__/
 
-\.config/PoC_gDayF/
+.config/PoC_gDayF/
 
-\.config/WF_POC/
-/Avg-fuel/
-/.config/avg-fuel-r2/
+.config/WF_POC/
+
+Avg-fuel/
+
+.config/avg-fuel-r2/
