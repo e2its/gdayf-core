@@ -20,6 +20,9 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 * pip install pymongo
 
 ## Docker images for ML frameworks and mongodb
+e2its/ubuntu-spark:2.4.5
+e2its/ububtu-h2o:3.30.0.1
+e2its/mongodb:latest
 
 ### Define storage parameters [Configuration can be changed on config.json]:
 * MongoDB: installed on 0.0.0.0:27017:
@@ -74,7 +77,7 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 
 ## Built With
   * [H2o.ai](http://http://docs.h2o.ai/) - a Machine Learning engine working on Hadoop/Yarn, Spark, or your laptop.
-  * [Apache Spark MLlib](https://spark.apache.org/docs/2.2.3/) -  is a fast and general-purpose cluster computing for machine learning.
+  * [Apache Spark MLlib](https://spark.apache.org/docs/2.4.5/) -  is a fast and general-purpose cluster computing for machine learning.
   * [mongoDB](https://docs.mongodb.com/) - NoSQL, Json based database.
   * [Apache HDFS](http://hadoop.apache.org/docs/stable/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html#Introduction) - is a distributed file system designed to run on commodity hardware.
   * [Pandas](https://pandas.pydata.org/) - is an open source Python Data Analysis Library providing high-performance, easy-to-use data structures and data analysis tools for the Python programming language.
