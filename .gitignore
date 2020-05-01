@@ -31,6 +31,7 @@ src/gdayf/workflow/__pycache__/
 
 .config/WF_POC/
 
-Avg-fuel/
+avg-fuel/
 
 .config/avg-fuel-r2/
+/avg-fuel/

@@ -23,13 +23,13 @@ if __name__ == "__main__":
     model_data = inputHandlerCSV().inputCSV(filename=''.join(source_data))
 
     source_1_data = list()
-    source_1_data.append('/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-fuel-speed-predicted_1537911231.396293/')
+    source_1_data.append('/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-avg-fuel-speed-predicted_1537911231.396293/')
     source_1_data.append('summary/predict/')
     source_1_data.append('Avg-speed_a2_p_prediction.xls')
     model_1_data = read_excel(io=''.join(source_1_data))
     
     source_2_data = list()
-    source_2_data.append('/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-fuel-speed-predicted_1537911231.396293/')
+    source_2_data.append('/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-avg-fuel-speed-predicted_1537911231.396293/')
     source_2_data.append('summary/predict/')
     source_2_data.append('Avg-speed_a4_p_prediction.xls')
     model_2_data = read_excel(io=''.join(source_2_data))
@@ -38,11 +38,11 @@ if __name__ == "__main__":
     controller = Controller(user_id='Crulogic-r2')
     if controller.config_checks():
 
-        model_1 = '/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-fuel-speed-predicted_1537911231.396293/Crulogic-r2_Dataframe_77256_6438_12_1537911811.7863178/h2o/train/1537911811.7874267/json/H2ORandomForestEstimator_1537912248.5985134.json'
-        model_2 = '/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-fuel-speed-predicted_1537911231.396293/Crulogic-r2_Dataframe_77256_6438_12_1537913921.5431554/h2o/train/1537913921.544499/json/H2OGradientBoostingEstimator_1537914152.3058493.json'
+        model_1 = '/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-avg-fuel-speed-predicted_1537911231.396293/Crulogic-r2_Dataframe_77256_6438_12_1537911811.7863178/h2o/train/1537911811.7874267/json/H2ORandomForestEstimator_1537912248.5985134.json'
+        model_2 = '/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-avg-fuel-speed-predicted_1537911231.396293/Crulogic-r2_Dataframe_77256_6438_12_1537913921.5431554/h2o/train/1537913921.544499/json/H2OGradientBoostingEstimator_1537914152.3058493.json'
 
         dataframe_dict = OrderedDict()
-        objective_column = 'Avg-fuel'
+        objective_column = 'avg-fuel'
         dataframe_dict[objective_column] = model_data[objective_column]
         prediction_frame = controller.exec_prediction(datapath=model_1_data,
                                                       model_file=model_1)
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         model_data['predict'] = prediction_frame['predict']
         source_3_data = list()
         source_3_data.append(
-            '/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-Avg-fuel-speed-predicted_1537911231.396293/')
+            '/Data/gdayf-v1/experiments/Crulogic-r2/CRULOGIC-avg-fuel-speed-predicted_1537911231.396293/')
         source_3_data.append('summary/predict/')
         source_3_data.append('Ensemble_Avg-fuel_prediction.xls')
         model_data.to_excel(''.join(source_3_data))
