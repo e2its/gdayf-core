@@ -20,9 +20,9 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 * pip install pymongo
 
 ## Docker images for ML frameworks and mongodb
-e2its/ubuntu-spark:2.4.5
-e2its/ububtu-h2o:3.30.0.1
-e2its/mongodb:latest
+* e2its/ubuntu-spark:2.4.5
+* e2its/ububtu-h2o:3.30.0.1
+* e2its/mongodb:latest
 
 ### Define storage parameters [Configuration can be changed on config.json]:
 * MongoDB: installed on 0.0.0.0:27017:
