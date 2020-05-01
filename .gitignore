@@ -30,3 +30,5 @@ src/gdayf/workflow/__pycache__/
 \.config/PoC_gDayF/
 
 \.config/WF_POC/
+/Avg-fuel/
+/.config/avg-fuel-r2/
