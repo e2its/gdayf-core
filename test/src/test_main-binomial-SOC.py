@@ -11,7 +11,7 @@ if __name__ == "__main__":
     if controller.config_checks():
         data_train, data_test = DataLoad().footset()
         status, recomendations = controller.exec_analysis(datapath=data_train, objective_column='HomeWin',
-                                                          amode=FAST, metric='combined_accuracy', deep_impact=3)
+                                                          amode=FAST_PARANOIAC, metric='combined_accuracy', deep_impact=3)
 
         controller.reconstruct_execution_tree(metric='test_accuracy', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)

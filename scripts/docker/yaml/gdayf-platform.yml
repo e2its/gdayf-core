@@ -1,0 +1,150 @@
+version: '3.7'
+networks:
+   gdayf:
+    external:
+     name: gdayf
+
+services:
+  unbuntu-mongodb:
+    image: e2its/ubuntu-mongodb
+    container_name: mongodb
+    networks:
+      - gdayf
+    ports: 
+      - 27017:27017
+    volumes:  
+      - /home/e2its/docker/volumes/mongodb/data/configdb:/data/configdb
+      - /home/e2its/docker/volumes/mongodb/data/db:/data/db
+  ubuntu-h2o:
+    image: e2its/ubuntu-h2o:3.30.0.1
+    container_name: h2o-server
+    networks:
+      - gdayf
+    ports: 
+      - 54321:54321
+  namenode:
+    image: bde2020/hadoop-namenode:1.1.0-hadoop2.8-java8
+    container_name: namenode
+    volumes:
+      - /home/e2its/docker/volumes/hadoop-hdfs/data/namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=gdayf-hadoop
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+    networks:
+      - gdayf
+    ports:
+      - 50070:50070
+  datanode:
+    image: bde2020/hadoop-datanode:1.1.0-hadoop2.8-java8
+    container_name: datanode
+    depends_on: 
+      - namenode
+    volumes:
+      - /home/e2its/docker/volumes/hadoop-hdfs/data/datanode:/hadoop/dfs/data
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+    networks:
+      - gdayf
+    ports:
+      - 50075:50075
+      - 8020:8020
+  hive-server:
+    image: bde2020/hive:2.1.0-postgresql-metastore
+    container_name: hive-server
+    env_file: 
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+    environment:
+      - "HIVE_CORE_CONF_javax_jdo_option_ConnectionURL=jdbc:postgresql://hive-metastore/metastore"
+    ports:   
+      - "10000:10000"
+  hive-metastore:
+    image: bde2020/hive:2.1.0-postgresql-metastore
+    container_name: hive-metastore
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+    networks:
+      - gdayf
+    command: /opt/hive/bin/hive --service metastore
+  hive-metastore-postgresql:
+    image: bde2020/hive-metastore-postgresql:2.1.0
+    container_name:  hive-metastore-postgresql
+    networks:
+      - gdayf
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+  spark-master:
+    image: e2its/ubuntu-spark:2.4.5
+    command: /usr/sbin/start-master
+    container_name: spark-master
+    networks:
+      - gdayf
+    ports:
+      - 8080:8080
+      - 7077:7077
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+    environment:
+      - SPARK_NO_DAEMONIZE=true
+  spark-worker_1:
+    image: e2its/ubuntu-spark:2.4.5
+    command: "/usr/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077"
+    container_name: spark-worker_1
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_NO_DAEMONIZE=true
+    networks:
+      - gdayf
+    ports:
+      - "8081:8081"
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+  spark-worker_2:
+    image: e2its/ubuntu-spark:2.4.5
+    command: "/usr/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077"
+    container_name: spark-worker_2
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_NO_DAEMONIZE=true
+    networks:
+      - gdayf
+    ports:
+      - "8082:8081"
+  spark-worker_3:
+    image: e2its/ubuntu-spark:2.4.5
+    command: "/usr/bin/spark-class org.apache.spark.deploy.worker.Worker spark://spark-master:7077"
+    container_name: spark-worker_3
+    depends_on:
+      - spark-master
+    environment:
+      - SPARK_MASTER=spark://spark-master:7077
+      - SPARK_NO_DAEMONIZE=true
+    networks:
+      - gdayf
+    ports:
+      - "8083:8081"      
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+  spark-notebook:
+    image: e2its/ubuntu-spark:2.4.5
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env
+    networks:
+      - gdayf
+    ports:
+      - 9001:9001
+  hue:
+    image: bde2020/hdfs-filebrowser:3.11
+    container_name: hue
+    networks:
+      - gdayf
+    ports:
+      - 8088:8088
+    environment:
+      - NAMENODE_HOST=namenode
+    env_file:
+      - /home/e2its/docker/scripts/env/hadoop-hive.env

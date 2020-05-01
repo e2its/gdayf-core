@@ -4,8 +4,8 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
     from gdayf.common.dataload import DataLoad
 
-    data_train, _ = DataLoad().dm()
-    del _
+    data_train, data_test = DataLoad().dm()
+    del data_test
 
     workflow_data = list()
     workflow_data.append("../json/train_model_workflow.json")

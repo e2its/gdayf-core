@@ -154,11 +154,15 @@ class sparkHandler(object):
     def connect(self):
         initiated = False
         try:
-            spark = SparkSession.builder.master(self.url + '[' + str(self.nthreads) + ']')\
-                .appName('job_gdayf_'+self.url+'_' + time.strftime("%b-%d-%Y_%H:%M:%S-%z", time.localtime())) \
-                .config("spark.executor.memory", self.spark_executor_mem) \
-                .config("spark.driver.memory", self.spark_driver_mem) \
-                .config("spark.sql.warehouse.dir", self.spark_warehouse_dir)
+            if self.url == 'local':
+                url = self.url + '[' + str(self.nthreads) + ']'
+            else:
+                url = self.url
+            spark = SparkSession.builder.master(url)\
+            .appName('job_gdayf_'+self.url+'_' + time.strftime("%b-%d-%Y_%H:%M:%S-%z", time.localtime())) \
+            .config("spark.executor.memory", self.spark_executor_mem) \
+            .config("spark.driver.memory", self.spark_driver_mem) \
+            .config("spark.sql.warehouse.dir", self.spark_warehouse_dir)
 
             self._spark_session = spark.getOrCreate()
             log4j = self._spark_session.sparkContext._jvm.org.apache.log4j

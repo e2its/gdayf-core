@@ -437,6 +437,8 @@ class H2OHandler(object):
                 aux[each_value[0]] = each_value[2]
         except TypeError:
             pass
+        except ZeroDivisionError:
+            pass
         return aux
 
     ## Generate model scoring_history metrics
@@ -647,7 +649,8 @@ class H2OHandler(object):
         full_stack_params = OrderedDict()
         for key, values in params.items():
             if key not in ['model_id', 'training_frame', 'validation_frame', 'response_column']:
-                full_stack_params[key] = values['actual_value']
+                #full_stack_params[key] = values['actual_value']
+                full_stack_params[key] = values
         return (0, full_stack_params)
 
     ## Get one especific metric for execution metrics

@@ -44,6 +44,7 @@ from pymongo.errors import *
 # from  bson.codec_options import CodecOptions
 from hashlib import md5
 from gdayf.core.experiment_context import Experiment_Context as E_C
+from json import dumps
 
 ## Core class oriented to manage the comunication and execution messages pass for all components on system
 # orchestrating the execution of actions activities (train and prediction) on specific frameworks
@@ -383,7 +384,8 @@ class Controller(object):
                           '_' + str(pd_dataset.size) + \
                           '_' + str(pd_dataset.shape[0]) + \
                           '_' + str(pd_dataset.shape[1])
-            hash_dataframe = md5(datapath.to_msgpack()).hexdigest()
+            #hash_dataframe = md5(datapath.to_msgpack()).hexdigest()
+            hash_dataframe = md5(datapath.to_json().encode('utf-8')).hexdigest()
         else:
             self._logging.log_critical('gDayF', "Controller", self._labels["failed_input"], datapath)
             return self._labels['failed_input'], None

@@ -6,6 +6,7 @@ if __name__ == "__main__":
     from gdayf.common.dataload import DataLoad
 
     #Analysis
+    
     controller = Controller()
     if controller.config_checks():
         data_train, data_test = DataLoad().dm()

@@ -38,7 +38,7 @@ class DataLoad (object):
         self.data['CPP']['test'] ='https://raw.githubusercontent.com/e2its/datasets/master/CPP_base_ampliado.csv'
         self.data['DM'] = dict()
         self.data['DM']['train'] ='https://raw.githubusercontent.com/e2its/datasets/master/DM-Metric-missing-3.csv'
-        self.data['DM']['test'] = 'https://raw.githubusercontent.com/e2its/datasets/master/DM-Metric-missing-test-3.csv'
+        self.data['DM']['test'] = 'https://raw.githubusercontent.com/e2its/datasets/master/DM-Metric-missing-3.csv'
         self.data['ENB'] = dict()
         self.data['ENB']['train'] = 'https://raw.githubusercontent.com/e2its/datasets/master/ENB2012_data-Y1.csv'
         self.data['ENB']['test'] = 'https://raw.githubusercontent.com/e2its/datasets/master/ENB2012_data-Y1.csv'

@@ -6,11 +6,11 @@
     "h2o": {
       "conf": {
         "download_dir": "downloads",
-        "url": "http://127.0.0.1:54321",
+        "url": "http://127.0.1.1:54321",
         "nthreads": 6,
-        "ice_root": "/Data/Data/logs",
+        "ice_root": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs",
         "max_mem_size": "8G",
-        "start_h2o": true,
+        "start_h2o": false,
         "debug": false,
         "save_model": "NATIVE",
         "autosaved": true,
@@ -713,7 +713,7 @@
           "min_rows_applicability": 500,
           "max_cols_applicability": null,
           "only_standardize": true,
-          "enabled": false,
+          "enabled": true,
           "types": [
             {
               "type": "binomial",
@@ -2423,12 +2423,12 @@
     "spark": {
       "conf": {
         "download_dir": "downloads",
-        "master": "local",
+        "master": "spark://0.0.0.0:7077",
         "nthreads": 6,
-        "spark_warehouse_dir": "/Data/Data/spark_warehouse",
+        "spark_warehouse_dir": "/home/e2its/data/gdayf-v1/spark_warehouse",
         "spark.executor.memory": "6G",
         "spark.driver.memory": "2G",
-        "start_spark": true,
+        "start_spark": false,
         "save_model": "NATIVE",
         "tolerance": {
           "percentage" : 0.05,
@@ -4202,7 +4202,7 @@
       "info": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "/Data/Data/logs/1-gDayF-info.log",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/1-gDayF-info.log",
         "level": "INFO",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -4211,14 +4211,14 @@
       "debug": {
         "class": "logging.FileHandler",
         "formatter": "standard",
-        "filename": "/Data/Data/logs/2-gDayF-debug.log",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs/2-gDayF-debug.log",
         "level": "DEBUG",
         "encoding": "utf8"
       },
       "error": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "/Data/Data/logs/3-gDayF-error.log",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs/3-gDayF-error.log",
         "level": "ERROR",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -4307,17 +4307,17 @@
     }
   },
   "storage": {
-    "localfs": {"value": "/Data/gdayf-v1/experiments" , "type":"localfs",
+    "localfs": {"value": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/experiments" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
     "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
-        "url":"http://localhost:9870",
-        "uri":"hdfs://localhost:9000",
+        "url":"http://0.0.0.0:50070",
+        "uri":"hdfs://172.19.0.4:8020",
         "hash_value": null, "hash_type":"MD5"
       },
     "mongoDB": { "value": "gdayf-v1",
-        "url": "localhost",
-        "port": "33017",
+        "url": "0.0.0.0",
+        "port": "27017",
         "type":"mongoDB",
         "hash_value": null, "hash_type":"MD5"
       },
@@ -4325,15 +4325,18 @@
     "localfs_debug_mode": true,
     "grants": "755",
     "load_path": [
-      {"value": "load" , "type":"hdfs",
-        "hash_value": null, "hash_type":"SHA256"
-      },
       {"value": "load" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "load" , "type":"hdfs",
         "hash_value": null, "hash_type":"MD5"
       }
     ],
     "log_path" : [
       {"value": "log" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "log" , "type":"hdfs",
         "hash_value": null, "hash_type":"MD5"
       }
     ],
