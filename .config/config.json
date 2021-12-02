@@ -2424,10 +2424,10 @@
       "conf": {
         "download_dir": "downloads",
         "master": "spark://0.0.0.0:7077",
-        "nthreads": 6,
+        "nthreads": 2,
         "spark_warehouse_dir": "/home/e2its/data/gdayf-v1/spark_warehouse",
-        "spark.executor.memory": "6G",
-        "spark.driver.memory": "2G",
+        "spark.executor.memory": "2G",
+        "spark.driver.memory": "1G",
         "start_spark": false,
         "save_model": "NATIVE",
         "tolerance": {
