@@ -4312,7 +4312,7 @@
       },
     "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
         "url":"http://0.0.0.0:50070",
-        "uri":"hdfs://172.19.0.4:8020",
+        "uri":"hdfs://172.19.0.5:8020",
         "hash_value": null, "hash_type":"MD5"
       },
     "mongoDB": { "value": "gdayf-v1",
