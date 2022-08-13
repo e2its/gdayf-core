@@ -786,8 +786,7 @@ class sparkHandler(object):
 
         except ValueError:
             pass
-        transformation_chain.append(VectorAssembler().setInputCols(column_chain).setOutputCol('features')
-                                    .setHandleInvalid('keep'))
+        transformation_chain.append(VectorAssembler().setInputCols(column_chain).setOutputCol('features'))
 
         #Only for trace issues
         trc_pipeline = Pipeline(stages=transformation_chain.copy())
