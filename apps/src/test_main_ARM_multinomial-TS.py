@@ -4,7 +4,7 @@ if __name__ == "__main__":
     from gdayf.common.constants import *
     from pandas import set_option
     from gdayf.common.dataload import DataLoad
-
+  
     # Analysis
     controller = Controller()
 

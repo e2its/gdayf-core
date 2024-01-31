@@ -91,7 +91,7 @@ class LoadLabels(object):
         if path.exists(self._configfile):
             with open(configfile, 'rt') as f:
                 try:
-                    self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')[lang]
+                    self._config = json.load(f, object_hook=OrderedDict)[lang]
                 except IOError:
                     raise IOError
         else:
