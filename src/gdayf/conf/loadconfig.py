@@ -52,7 +52,8 @@ class LoadConfig(object):
         if path.exists(self._configfile):
             with open(self._configfile, 'rt') as f:
                 try: 
-                    self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')
+                    # Desuppported (Encoding) version 3.9 self._config = json.load(f, object_hook=OrderedDict, encoding='utf8')
+                    self._config = json.load(f, object_hook=OrderedDict)
                 except IOError:
                     raise IOError
         else:
