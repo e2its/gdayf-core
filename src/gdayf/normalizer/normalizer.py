@@ -374,7 +374,7 @@ class Normalizer (object):
     # @param dataframe single column dataframe
     # @return dataframe
     def normalizeBase(self, dataframe):
-        if dataframe.dtype == object:
+        if dataframe.dtype == np.object:
             try:
                 return pd.to_numeric(dataframe)
             except ValueError:
@@ -399,8 +399,8 @@ class Normalizer (object):
     # @return dataframe
     def normalizeWorkingRange(self, dataframe, minval=-1.0, maxval=1.0, minrange = -1.0, maxrange = 1.0):
         assert(maxval > minval)
-        if dataframe.dtype != object:
-            if dataframe.dtype != object:
+        if dataframe.dtype != np.object:
+            if dataframe.dtype != np.object:
                 convert_factor = (maxrange - minrange) / (maxval - minval)
                 dataframe = dataframe.astype(np.float16)
                 dataframe = dataframe.apply(lambda x: (x-minval) * convert_factor + minrange)

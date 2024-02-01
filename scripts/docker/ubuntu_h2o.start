@@ -1,2 +1,0 @@
-#!/bin/bash -x
-sudo docker run -it -d --network=host --rm  --name h2o e2its/ubuntu-h2o:3.30.0.1
