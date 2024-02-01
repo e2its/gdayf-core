@@ -21,7 +21,6 @@
         }
     },
     "terminal.integrated.env.linux": {
-        "PYTHONPATH": "/home/e2its/git/gdayf-core/src:/home/e2its/.local/lib/python3.10/site-packages"
-    },
-    "docwriter.style": "Doxygen"
+        "PYTHONPATH": "/home/e2its/git/gdayf-core/src"
+    }
 }
