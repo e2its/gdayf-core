@@ -31,6 +31,7 @@ from hashlib import md5 as md5
 from numpy import isnan
 from os import path
 import operator
+import numpy as np
 
 
 ## Class DFMetadata manage the Data Analysis results structs on OrderedDict format and exportable to json
@@ -49,7 +50,7 @@ class DFMetada(OrderedDict):
         if path.exists(self._configfile):
             with open(configfile, 'rt') as f:
                 try:
-                    self._config = load(f, object_hook=OrderedDict, encoding='utf8')["dfmetadata"]
+                    self._config = load(f, object_hook=OrderedDict)["dfmetadata"]
                 except IOError:
                     raise IOError
         else:
@@ -117,12 +118,12 @@ class DFMetada(OrderedDict):
 
             auxdict['distribution'] = 'Not implemented yet'
             self['columns'].append(auxdict)
-        self['correlation'] = dataframe.corr().to_dict()
+        self['correlation'] = dataframe.select_dtypes(include=[np.number]).corr().to_dict()
         for key, value in deepcopy(self['correlation']).items():
             for subkey, subvalue in value.items():
                 if (self._config['correlation_threshold'] > abs(subvalue)) or key == subkey or isnan(subvalue):
                     self['correlation'][key].pop(subkey)
-        self['covariance'] = dataframe.cov().to_dict()
+        self['covariance'] = dataframe.select_dtypes(include=[np.number]).cov().to_dict()
         return self
 
     def pop(self, key, default=None):
@@ -144,25 +145,3 @@ def compare_dict(dict1, dict2):
         #print( md5(ddict1.encode('utf-8')))
         #print( md5(ddict2.encode('utf-8')))
         return md5(ddict1.encode('utf-8')) == md5(ddict2.encode('utf-8'))
-
-if __name__ == "__main__":
-    from gdayf.handlers.inputhandler import inputHandlerCSV
-    from pandas import concat
-    import operator
-    from gdayf.core.experiment_context import Experiment_Context
-    from os import path
-    from gdayf.common.constants import *
-
-    e_c = Experiment_Context(user_id='Crulogic')
-
-    source_data = list()
-    source_data.append(path.join(path.dirname(__file__),
-                                 '../../../../../source data/Transformados-PDI/Crulogic-2017/'))
-    source_data.append("Crulogic-17-18.csv")
-
-    pd_train_dataset = inputHandlerCSV().inputCSV(''.join(source_data))
-
-    m = DFMetada()
-    print(OrderedDict(m.getDataFrameMetadata(pd_train_dataset, 'pandas')))
-    print(dumps(m.getDataFrameMetadata(pd_train_dataset, 'pandas'), indent=4))
-

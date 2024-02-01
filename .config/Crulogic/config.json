@@ -1,0 +1,4482 @@
+{
+  "persistence": {
+    "compress_json": true
+},
+  "frameworks": {
+    "h2o": {
+      "conf": {
+        "download_dir": "downloads",
+        "url": "http://127.0.1.1:54321",
+        "nthreads": 6,
+        "ice_root": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs",
+        "max_mem_size": "8G",
+        "start_h2o": false,
+        "debug": false,
+        "save_model": "NATIVE",
+        "autosaved": true,
+        "tolerance": {
+          "percentage" : 0.05,
+          "fixed" : 1,
+          "enable_fixed" : false
+        },
+        "enabled" : true,
+        "min_rows_enabled": true,
+        "max_cols_enabled": true,
+        "train_balance_metric" : 0.2,
+        "validation_frame_ratio" : 0.85,
+        "validation_frame_threshold" : 100000,
+        "anomaly_threshold":
+        {
+          "columns" :0.15,
+          "global_mse":0.10
+        },
+        "optimizable_scale_params": ["ntrees", "max_depth", "hidden", "epochs", "max_iterations", "min_rows"],
+        "optimization_method": "gdayf.optimizers.h2o_optimizer",
+        "framework_metadata_module": "gdayf.models.h2oframeworkmetadata",
+        "framework_metadata_class": "H2OFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.h2omodelmetadata",
+        "model_metadata_class" : "H2OModelMetadata",
+        "handler_module": "gdayf.handlers.h2ohandler",
+        "handler_class": "H2OHandler"
+      },
+      "models": [
+        {
+          "model": "H2OGradientBoostingEstimator",
+          "id": null,
+          "module": "h2o.estimators.gbm",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": 50,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_confusion_matrix_size": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+              "ntrees": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_depth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "build_tree_one_node": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              } ,
+              "min_rows": {
+                  "value": 8.0,
+                  "seleccionable": true,
+                  "type": "float"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "score_tree_interval": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "int"
+              }
+            },
+            "stopping":{
+              "stopping_rounds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "stopping_metric": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "deviance",
+                  "logloss",
+                  "mse",
+                  "rmse",
+                  "mae",
+                  "rmsle",
+                  "auc",
+                  "lift_top_group",
+                  "misclassification",
+                  "mean_per_class_error"
+                ]
+              },
+              "stopping_tolerance": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "max_runtime_secs": {
+                "value": 600,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+              "balance_classes": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "col_sample_rate": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              },
+              "col_sample_rate_change_per_level": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float(0.0, 2.0)"
+              },
+              "col_sample_rate_per_tree": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              },
+              "sample_rate": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              },
+              "sample_rate_per_class": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float(0.0, 1.0)]"
+              },
+              "max_abs_leafnode_pred": {
+                "value": 50,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "distribution":{
+              "distribution": {
+                "value": "gaussian",
+                "seleccionable": true,
+                "type": [
+                  "tweedie",
+                  "laplace",
+                  "poisson",
+                  "gamma"
+                ]
+              },
+              "tweedie_power": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "learn":{
+              "learn_rate": {
+                "value": 0.05,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              },
+              "learn_rate_annealing": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              }
+            },
+            "others":{
+              "checkpoint": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "offset_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "weights_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "nbins": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "nbins_top_level": {
+                "value": 1024,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "nbins_cats": {
+                "value": 1024,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "r2_stopping": {
+                "value": 1.797693135e+308,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "quantile_alpha": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+
+              "huber_alpha": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float(0.0, 1.0)"
+              },
+              "min_split_improvement": {
+                "value": 1e-05,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "histogram_type": {
+                "value": "uniform_adaptive",
+                "seleccionable": true,
+                "type": [
+                  "random",
+                  "quantiles_global",
+                  "round_robin"
+                ]
+              },
+              "pred_noise_bandwidth": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "categorical_encoding": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen"
+                ]
+              }
+
+            }
+          }
+        },
+        {
+          "model": "H2OGeneralizedLinearEstimator",
+          "id": null,
+          "module": "h2o.estimators.glm",
+          "min_rows_applicability": 500,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base": {
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_confusion_matrix_size": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+              "max_iterations": {
+                "value": 1000,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "stopping":{
+              "early_stopping": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "max_active_predictors": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_runtime_secs": {
+                "value": 600,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+              "balance_classes": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "alpha": {
+                "value": 0.5,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "lambda_": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "lambda_search": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "nlambdas": {
+                "value": 10,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "standardize": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "lambda_min_ratio": {
+                "value": -1.0,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "distribution":{
+              "family": {
+                "value": "tweedie",
+                "seleccionable": true,
+                "type": [
+                  "poisson",
+                  "gamma",
+                  "gaussian"
+                ]
+              },
+              "tweedie_variance_power": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "tweedie_link_power": {
+                "value": 1,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "solver": {
+                "value": "irlsm",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "irlsm",
+                  "l_bfgs",
+                  "coordinate_descent_naive",
+                  "coordinate_descent"
+                ]
+              }
+            },
+            "learn":{
+            },
+            "others":{
+              "offset_column": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "weights_column": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "missing_values_handling": {
+                "value": "mean_imputation",
+                "seleccionable": false,
+                "type": [
+                  "mean_imputation",
+                  "skip"
+                ]
+              },
+              "compute_p_values": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "remove_collinear_columns": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "intercept": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "non_negative": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "objective_epsilon": {
+                "value": -1.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "beta_epsilon": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "gradient_epsilon": {
+                "value": -1.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "link": {
+                "value": "family_default",
+                "seleccionable": false,
+                "type": [
+                  "family_default",
+                  "identity",
+                  "logit",
+                  "log",
+                  "inverse",
+                  "tweedie"
+                ]
+              },
+              "prior": {
+                "value": -1.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "beta_constraints": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "interactions": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              }
+            }
+          }
+        },
+        {
+          "model": "H2ODeepLearningEstimator",
+          "id": null,
+          "module": "h2o.estimators.deeplearning",
+          "min_rows_applicability": 500,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_confusion_matrix_size": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+              "epochs": {
+                "value": 5.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "mini_batch_size": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "hidden": {
+                "value": [150],
+                "seleccionable": true,
+                "type": "List[int]"
+              },
+              "replicate_training_data": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "single_node_mode": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "shuffle_training_data": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "reproducible": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "scoring":{
+              "train_samples_per_iteration": {
+                "value": -2,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "score_each_iteration": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "score_interval": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "score_training_samples": {
+                "value": 10000,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "score_validation_samples": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "score_duty_cycle": {
+                "value": 0.2,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "score_validation_sampling": {
+                "value": "stratified",
+                "seleccionable": false,
+                "type": ["stratified", "uniform"]
+              }
+            },
+            "stopping":{
+              "stopping_rounds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "stopping_metric": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "deviance",
+                  "logloss",
+                  "mse",
+                  "rmse",
+                  "mae",
+                  "rmsle",
+                  "auc",
+                  "lift_top_group",
+                  "misclassification",
+                  "mean_per_class_error"
+                ]
+              },
+              "stopping_tolerance": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "classification_stop": {
+                "value": 0.0001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "regression_stop": {
+                "value": 0.0001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "overwrite_with_best_model": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "max_runtime_secs": {
+                "value": 600,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+              "balance_classes": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "activation": {
+              "value": "rectifier_with_dropout",
+                "seleccionable": true,
+                "type": [
+                  "tanh_with_dropout"
+                ]
+              },
+              "input_dropout_ratio": {
+                "value": 0.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "hidden_dropout_ratios": {
+                "value": [0.025],
+                "seleccionable": true,
+                "type": "List[float]"
+              },
+              "l1": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "l2": {
+                "value": 0.0001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardize": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "distribution":{
+              "distribution": {
+                "value": "gaussian",
+                "seleccionable": true,
+                "type": [
+                  "tweedie",
+                  "poisson",
+                  "laplace"
+                ]
+              },
+              "tweedie_power": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "learn":{
+              "adaptive_rate": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "rho": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "epsilon": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "nesterov_accelerated_gradient": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "rate": {
+                "value": 0.05,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "rate_annealing": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "rate_decay": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "others":{
+              "offset_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "weights_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_w2": {
+                  "value": 3.4028235e+38,
+                  "seleccionable": false,
+                  "type": "float"
+                },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "checkpoint": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "pretrained_autoencoder": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "use_all_factor_levels": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "target_ratio_comm_to_comp": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_start": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_ramp": {
+                "value": 1000000.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_stable": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "initial_weight_distribution": {
+                "value": "normal",
+                "seleccionable": true,
+                "type": [
+                  "uniform",
+                  "normal"
+                ]
+              },
+              "initial_weight_scale": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "initial_weights": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[H2OFrame]"
+              },
+              "initial_biases": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[H2OFrame]"
+              },
+              "loss": {
+                "value": "automatic",
+                "seleccionable": false,
+                "type": [
+                  "automatic",
+                  "cross_entropy",
+                  "quadratic",
+                  "huber",
+                  "absolute",
+                  "quantile"
+                ]
+              },
+              "quantile_alpha": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "huber_alpha": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float(0.0, 1.0)"
+              },
+              "diagnostics": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "fast_mode": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "force_load_balance": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "variable_importances": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "replicate_training_data": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "quiet_mode": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "autoencoder": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "sparse": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "col_major": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "average_activation": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "sparsity_beta": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "max_categorical_features": {
+                "value": 2147483647,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "export_weights_and_biases": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "categorical_encoding": {
+                "value": "one_hot_internal",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen"
+                ]
+              },
+              "elastic_averaging": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "elastic_averaging_moving_rate": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "elastic_averaging_regularization": {
+                "value": 0.001,
+                "seleccionable": false,
+                "type": "float"
+              }
+            }
+          }
+        },
+        {
+          "model": "H2ORandomForestEstimator",
+          "id": null,
+          "module": "h2o.estimators.random_forest",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": 50,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_confusion_matrix_size": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+              "ntrees": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_depth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "build_tree_one_node": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "min_rows": {
+                "value": 8.0,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "score_tree_interval": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "int"
+              }
+            },
+            "stopping":{
+              "stopping_rounds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "stopping_metric": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "deviance",
+                  "logloss",
+                  "mse",
+                  "rmse",
+                  "mae",
+                  "rmsle",
+                  "auc",
+                  "lift_top_group",
+                  "misclassification",
+                  "mean_per_class_error"
+                ]
+              },
+              "stopping_tolerance": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "max_runtime_secs": {
+                "value": 600,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+              "mtries": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "balance_classes": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "col_sample_rate_change_per_level": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float(0.0, 2.0)"
+              },
+              "col_sample_rate_per_tree": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              },
+              "sample_rate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float(0.0, 1.0)"
+              },
+              "sample_rate_per_class": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float(0.0, 1.0)]"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others": {
+              "offset_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "weights_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "nbins": {
+                "value": 20,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "nbins_top_level": {
+                "value": 1024,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "nbins_cats": {
+                "value": 1024,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "r2_stopping": {
+                "value": 1.797693135e+308,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "binomial_double_trees": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "checkpoint": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "min_split_improvement": {
+                "value": 1e-05,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "histogram_type": {
+                "value": "uniform_adaptive",
+                "seleccionable": true,
+                "type": [
+                  "random",
+                  "quantiles_global",
+                  "round_robin"
+                ]
+              },
+              "categorical_encoding": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "model": "H2ONaiveBayesEstimator",
+          "id": null,
+          "module": "h2o.estimators.naive_bayes",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "compute_metrics": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "stopping":{
+              "max_runtime_secs": {
+                "value": 600,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+              "balance_classes": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "laplace": {
+                "value": 0.000,
+                "seleccionable": true,
+                "type": "integer(0:]"
+              },
+              "min_prob": {
+                "value": 1e-6,
+                "seleccionable": true,
+                "type": "integer(:1e-10)"
+              },
+			  "eps_prob": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "integer(:1e-10)"
+              },
+			  "min_sdev": {
+                "value": 1e-6,
+                "seleccionable": true,
+                "type": "integer(:1e-10)"
+              },
+			  "eps_sdev": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "integer(:1e-10)"
+              }
+            }
+          }
+        },
+        {
+          "model": "H2OAutoEncoderEstimator",
+          "id": null,
+          "module": "h2o.estimators.deeplearning",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "response_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "max_confusion_matrix_size": {
+                "value": 20,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_hit_ratio_k": {
+                "value": 0,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "effort":{
+              "epochs": {
+                "value": 10.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "mini_batch_size": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "hidden": {
+                "value": [8, 2, 8],
+                "seleccionable": true,
+                "type": "List[int]"
+              },
+              "replicate_training_data": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "single_node_mode": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "shuffle_training_data": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "reproducible": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "scoring":{
+              "train_samples_per_iteration": {
+                "value": -2,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "score_interval": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "score_training_samples": {
+                "value": 1000,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "score_validation_samples": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "score_duty_cycle": {
+                "value": 0.2,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "score_validation_sampling": {
+                "value": "stratified",
+                "seleccionable": false,
+                "type": ["stratified", "uniform"]
+              }
+            },
+            "stopping":{
+              "stopping_rounds": {
+                "value": 3,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "stopping_metric": {
+                "value": "auto",
+                "seleccionable": false,
+                "type": [
+                  "auto",
+                  "deviance",
+                  "logloss",
+                  "mse",
+                  "rmse",
+                  "mae",
+                  "rmsle",
+                  "auc",
+                  "lift_top_group",
+                  "misclassification",
+                  "mean_per_class_error"
+                ]
+              },
+              "stopping_tolerance": {
+                "value": 0.00005,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "classification_stop": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "regression_stop": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "overwrite_with_best_model": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "max_runtime_secs": {
+                "value": 600,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+              "balance_classes": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "activation": {
+              "value": "tanh_with_dropout",
+                "seleccionable": true,
+                "type": [
+                  "rectifier_with_dropout"
+                ]
+              },
+              "input_dropout_ratio": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "hidden_dropout_ratios": {
+                "value": [0.025, 0.025, 0.025],
+                "seleccionable": true,
+                "type": "List[float]"
+              },
+              "l1": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "l2": {
+                "value": 0.0001,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "standardize": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "distribution":{
+              "distribution": {
+                "value": "gaussian",
+                "seleccionable": true,
+                "type": [
+                  "tweedie",
+                  "poisson",
+                  "laplace"
+                ]
+              },
+              "tweedie_power": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "learn":{
+              "adaptive_rate": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "rho": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "epsilon": {
+                "value": 1e-06,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "nesterov_accelerated_gradient": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "rate": {
+                "value": 0.05,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "rate_annealing": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "rate_decay": {
+                "value": 0.95,
+                "seleccionable": false,
+                "type": "float"
+              }
+            },
+            "others":{
+              "offset_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "weights_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "class_sampling_factors": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[float]"
+              },
+              "max_w2": {
+                  "value": 3.4028235e+38,
+                  "seleccionable": false,
+                  "type": "float"
+                },
+              "max_after_balance_size": {
+                "value": 5.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "checkpoint": {
+                "value": null,
+                "seleccionable": true,
+                "type": "str"
+              },
+              "pretrained_autoencoder": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "use_all_factor_levels": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "target_ratio_comm_to_comp": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_start": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_ramp": {
+                "value": 1000000.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "momentum_stable": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "initial_weight_distribution": {
+                "value": "normal",
+                "seleccionable": true,
+                "type": [
+                  "uniform",
+                  "normal"
+                ]
+              },
+              "initial_weight_scale": {
+                "value": 1.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "initial_weights": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[H2OFrame]"
+              },
+              "initial_biases": {
+                "value": null,
+                "seleccionable": false,
+                "type": "List[H2OFrame]"
+              },
+              "loss": {
+                "value": "automatic",
+                "seleccionable": false,
+                "type": [
+                  "automatic",
+                  "cross_entropy",
+                  "quadratic",
+                  "huber",
+                  "absolute",
+                  "quantile"
+                ]
+              },
+              "quantile_alpha": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "huber_alpha": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float(0.0, 1.0)"
+              },
+              "diagnostics": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "fast_mode": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "force_load_balance": {
+                "value": true,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "variable_importances": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "replicate_training_data": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "quiet_mode": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "autoencoder": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "sparse": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "col_major": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "average_activation": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "sparsity_beta": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "max_categorical_features": {
+                "value": 2147483647,
+                "seleccionable": false,
+                "type": "int"
+              },
+              "export_weights_and_biases": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "categorical_encoding": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen"
+                ]
+              },
+              "elastic_averaging": {
+                "value": false,
+                "seleccionable": false,
+                "type": "boolean"
+              },
+              "elastic_averaging_moving_rate": {
+                "value": 0.9,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "elastic_averaging_regularization": {
+                "value": 0.001,
+                "seleccionable": false,
+                "type": "float"
+              }
+            }
+          }
+        },
+        {
+          "model": "H2OKMeansEstimator",
+          "id": null,
+          "module": "h2o.estimators.kmeans",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+              "value": 0,
+              "seleccionable": false,
+              "type": "str"
+              },
+              "training_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "validation_frame": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "ignored_columns": {
+                "value": [],
+                "seleccionable": false,
+                "type": "List[str]"
+              },
+              "ignore_const_cols": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "effort":{
+              "k": {
+                "value": 4,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "estimate_k": {
+                "value": false,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "max_iterations": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": -1,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "score_each_iteration": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+              "nfolds": {
+                "value": 3,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "fold_assignment": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "auto",
+                  "random",
+                  "modulo",
+                  "stratified"
+                ]
+              },
+              "fold_column": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "keep_cross_validation_predictions": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "keep_cross_validation_fold_assignment": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              }
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others": {
+              "init": {
+                "value": "plus_plus",
+                "seleccionable": true,
+                "type": ["random","furthest","user"]
+              },
+              "user_points": {
+                "value": null,
+                "seleccionable": false,
+                "type": "H2OFrame"
+              },
+              "standardize": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "categorical_encoding": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": [
+                  "enum",
+                  "one_hot_internal",
+                  "one_hot_explicit",
+                  "binary",
+                  "eigen",
+                  "label_encoder",
+                  "sort_by_response",
+                  "enum_limited"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "spark": {
+      "conf": {
+        "download_dir": "downloads",
+        "master": "spark://0.0.0.0:7077",
+        "nthreads": 2,
+        "spark_warehouse_dir": "/home/e2its/data/gdayf-v1/spark_warehouse",
+        "spark.executor.memory": "2G",
+        "spark.driver.memory": "1G",
+        "start_spark": false,
+        "save_model": "NATIVE",
+        "tolerance": {
+          "percentage" : 0.05,
+          "fixed" : 1,
+          "enable_fixed" : false
+        },
+        "enabled" : true,
+        "log": "log4j.Level.ERROR",
+        "min_rows_enabled": true,
+        "max_cols_enabled": true,
+        "train_balance_metric" : 0.2,
+        "validation_frame_ratio" : 0.85,
+        "nfolds" : 3,
+        "validation_frame_threshold" : 100000,
+        "anomaly_threshold":
+        {
+          "columns" :0.15,
+          "global_mse":0.10
+        },
+        "optimizable_scale_params": ["maxIter", "aggregationDepth","maxDepth","numTrees","minInstancesPerNode"],
+        "optimization_method": "gdayf.optimizers.spark_optimizer",
+        "framework_metadata_module": "gdayf.models.sparkframeworkmetadata",
+        "framework_metadata_class": "sparkFrameworkMetadata",
+        "model_metadata_module": "gdayf.models.sparkmodelmetadata",
+        "model_metadata_class": "sparkModelMetadata",
+        "handler_module": "gdayf.handlers.sparkhandler",
+        "handler_class": "sparkHandler"
+
+      },
+      "models": [
+        {
+          "model": "LinearSVC",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "aggregationDepth": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.000001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardization": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "threshold": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "LogisticRegression",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "aggregationDepth": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+              "family": {
+                "value": "auto",
+                "seleccionable": false,
+                "type": "['auto','binomial','multinomial']"
+              }
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.000001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardization": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "threshold": {
+                "value": 0.5,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "elasticNetParam": {
+                "value": 0.5,
+                "seleccionable": true,
+                "type": "float[0.0:1.0]"
+              },
+              "probabilityCol": {
+                "value": "probability",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "thresholds": {
+                "value": null,
+                "seleccionable": false,
+                "type": "Int[0:cardinality]"
+              }
+
+            }
+          }
+        },
+        {
+          "model": "DecisionTreeClassifier",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxDepth": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "gini",
+                "seleccionable": true,
+                "type": "[ 'entropy']"
+              }
+            }
+          }
+        },
+        {
+          "model": "GBTClassifier",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+              "stepSize": {
+                "value": 0.1,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "lossType": {
+                "value": "logistic",
+                "seleccionable": true,
+                "type": "[]"
+              }
+            }
+          }
+        },
+        {
+          "model": "RandomForestClassifier",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "numTrees": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "featureSubsetStrategy": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": "['auto', 'all', 'onethird', 'sqrt', 'log2']"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "gini",
+                "seleccionable": true,
+                "type": "[ 'entropy', 'gini']"
+              }
+            }
+          }
+        },
+        {
+          "model": "NaiveBayes",
+          "id": null,
+          "module": "pyspark.ml.classification",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+              "modelType": {
+                "value": "multinomial",
+                "seleccionable": true,
+                "type": "['multinomial','bernoulli']"
+              }
+            },
+            "learn":{
+            },
+            "others":{
+              "smoothing": {
+                "value": 1.0,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "thresholds": {
+                "value": null,
+                "seleccionable": false,
+                "type": "float[0:cardinality]"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "DecisionTreeRegressor",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "rawPredictionCol": {
+                "value": "rawPrediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "variance",
+                "seleccionable": false,
+            "type": "[]"
+              },
+              "varianceCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "GBTRegressor",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+              "stepSize": {
+                "value": 0.1,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "lossType": {
+                "value": "squared",
+                "seleccionable": true,
+                "type": "['absolute']"
+              },
+              "impurity": {
+                "value": "variance",
+                "seleccionable": false,
+                "type": "[]"
+              }
+            }
+          }
+        },
+        {
+          "model": "RandomForestRegressor",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": false,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "['number',''enum']"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "numTrees": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "maxDepth": {
+                "value": 5,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "minInstancesPerNode": {
+                "value": 16,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+              "checkpointInterval": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+              "maxBins": {
+                "value": 50,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "subsamplingRate": {
+                "value": 0.9,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "featureSubsetStrategy": {
+                "value": "auto",
+                "seleccionable": true,
+                "type": "['all', 'onethird', 'sqrt', 'log2']"
+              }
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minInfoGain": {
+                "value": 0.0,
+                "seleccionable": false,
+                "type": "float"
+              },
+              "maxMemoryInMB": {
+                "value": 256,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "cacheNodeIds": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "impurity": {
+                "value": "variance",
+                "seleccionable": true,
+                "type": "[]"
+              }
+            }
+          }
+        },
+        {
+          "model": "GeneralizedLinearRegression",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+              "family": {
+                "value": "gaussian",
+                "seleccionable": true,
+                "type": "['gaussian', 'binomial', 'poisson', 'gamma' ,'tweedie']"
+              },
+              "link": {
+                "value": "identity",
+                "seleccionable": true,
+                "type": "['identity', 'log', 'inverse', 'logit', 'probit', 'cloglog' , 'sqrt']"
+              },
+              "linkPower": {
+                "value": null,
+                "seleccionable": false,
+                "type": "float[0.1:1.9]"
+              },
+              "linkPredictionCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "variancePower": {
+                "value": null,
+                "seleccionable": true,
+                "type": "float[0;[1:Inf)]"
+              },
+              "solver": {
+                "value": "irls",
+                "seleccionable": true,
+                "type": "['irls']"
+              }
+
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.00000001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              }
+            }
+          }
+        },
+        {
+          "model": "LinearRegression",
+          "id": null,
+          "module": "pyspark.ml.regression",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": true,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "labelCol": {
+                "value": "label",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "maxIter": {
+                "value": 100,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "aggregationDepth": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "fitIntercept": {
+                "value": true,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "regParam": {
+                "value": 0.000001,
+                "seleccionable": true,
+                "type": "float"
+              },
+              "standardization": {
+                "value": false,
+                "seleccionable": true,
+                "type": "boolean"
+              },
+              "weightCol": {
+                "value": null,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "elasticNetParam": {
+                "value": 0.5,
+                "seleccionable": true,
+                "type": "[0.0:1.0]"
+              },
+              "solver": {
+                "value": "normal",
+                "seleccionable": false,
+                "type": "['normal','auto']"
+              }
+
+            }
+          }
+        },
+        {
+          "model": "BisectingKMeans",
+          "id": null,
+          "module": "pyspark.ml.clustering",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "maxIter": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "k": {
+                "value": 4,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+            },
+            "stopping":{
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "minDivisibleClusterSize": {
+                "value": 0.10,
+                "seleccionable": true,
+                "type": "float"
+              }
+            }
+          }
+        },
+        {
+          "model": "KMeans",
+          "id": null,
+          "module": "pyspark.ml.clustering",
+          "min_rows_applicability": 0,
+          "max_cols_applicability": null,
+          "only_standardize": true,
+          "enabled": true,
+          "types": [
+            {
+              "type": "binomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "multinomial",
+              "active": false,
+              "valued": "number"
+            },
+            {
+              "type": "regression",
+              "active": false,
+              "valued": "float64"
+            },
+            {
+              "type": "clustering",
+              "active": true,
+              "valued": "enum"
+            },
+            {
+              "type": "anomalies",
+              "active": false,
+              "valued": "enum"
+            },
+            {
+              "type": "topology",
+              "active": false,
+              "valued": "float64"
+            }
+          ],
+          "parameters": {
+            "base":{
+              "model_id": {
+                "value": 0,
+                "seleccionable": false,
+                "type": "str"
+              },
+              "featuresCol": {
+                "value": "features",
+                "seleccionable": false,
+                "type": "str"
+              },
+              "predictionCol": {
+                "value": "prediction",
+                "seleccionable": false,
+                "type": "str"
+              }
+            },
+            "effort":{
+              "maxIter": {
+                "value": 10,
+                "seleccionable": true,
+                "type": "int"
+              },
+              "k": {
+                "value": 4,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "repetible":{
+              "seed": {
+                "value": null,
+                "seleccionable": true,
+                "type": "int"
+              }
+            },
+            "scoring":{
+            },
+            "stopping":{
+              "tol": {
+                "value": 0.00005,
+                "seleccionable": true,
+                "type": "float"
+              }
+            },
+            "xval":{
+            },
+            "sampling":{
+            },
+            "distribution":{
+            },
+            "learn":{
+            },
+            "others":{
+              "initMode": {
+                "value": "k-means||",
+                "seleccionable": true,
+                "type": "['random']"
+              },
+              "initSteps": {
+                "value": 2,
+                "seleccionable": true,
+                "type": "int"
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "logging": {
+    "version": 1,
+    "disable_existing_loggers": true,
+    "level": "DEBUG",
+    "formatters": {
+      "standard": {
+        "format": "%(asctime)s\t%(levelname)s\t%(module)s\t%(message)s",
+        "datefmt": "%Y-%m-%d %H:%M:%S %z"
+      }
+    },
+    "handlers": {
+      "info": {
+        "class": "logging.handlers.RotatingFileHandler",
+        "formatter": "standard",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/1-gDayF-info.log",
+        "level": "INFO",
+        "maxBytes": 10485760,
+        "backupCount": 5,
+        "encoding": "utf8"
+      },
+      "debug": {
+        "class": "logging.FileHandler",
+        "formatter": "standard",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs/2-gDayF-debug.log",
+        "level": "DEBUG",
+        "encoding": "utf8"
+      },
+      "error": {
+        "class": "logging.handlers.RotatingFileHandler",
+        "formatter": "standard",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs/3-gDayF-error.log",
+        "level": "ERROR",
+        "maxBytes": 10485760,
+        "backupCount": 5,
+        "encoding": "utf8"
+      }
+    },
+    "loggers": {
+      "gdayf.handlers.h2ohandler": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.handlers.sparkhandler": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.handlers": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "gdayf.workflow.workflow": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.workflow": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "gdayf.normalizer.normalizer": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.normalizer": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "gdayf.logs.logshandler": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.logs": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "gdayf.core.adviserbase": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.core.controller": {
+        "handlers": [
+          "error"
+        ],
+        "propagate": true
+      },
+      "gdayf.core": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      },
+      "__main__": {
+        "handlers": [
+          "info"
+        ],
+        "propagate": false
+      }
+    }
+  },
+  "storage": {
+    "localfs": {"value": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/experiments" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+    "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
+        "url":"http://0.0.0.0:50070",
+        "uri":"hdfs://172.18.0.4:8020",
+        "hash_value": null, "hash_type":"MD5"
+      },
+    "mongoDB": { "value": "gdayf-v1",
+        "url": "0.0.0.0",
+        "port": "27017",
+        "type":"mongoDB",
+        "hash_value": null, "hash_type":"MD5"
+      },
+    "primary_path": "hdfs",
+    "localfs_debug_mode": true,
+    "grants": "755",
+    "load_path": [
+      {"value": "load" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "load" , "type":"hdfs",
+        "hash_value": null, "hash_type":"MD5"
+      }
+    ],
+    "log_path" : [
+      {"value": "log" , "type":"localfs",
+        "hash_value": null, "hash_type":"MD5"
+      },
+      {"value": "log" , "type":"hdfs",
+        "hash_value": null, "hash_type":"MD5"
+      }
+    ],
+    "json_path" : [
+      {"value": "" , "type":"mongoDB",
+        "hash_value": null, "hash_type":"MD5"
+      }
+    ],
+    "prediction_path" : [
+      {"value": "prediction" , "type":"mongoDB",
+        "hash_value": null, "hash_type":"MD5"
+      }
+    ]
+  },
+  "normalizer": {
+    "minimal_normalizations_enabled": true,
+    "non_minimal_normalizations_enabled": true,
+    "manage_on_train_errors" : true,
+    "base_normalization_enabled": true,
+    "exclusion_missing_threshold": 0.3,
+    "clustering_standardize_enabled" : true,
+    "standardize_enabled" : true,
+    "std_threshold" : 0.1,
+    "special_spark_naive_offset" : 2.0,
+    "datetime_columns_management": {
+      "enable": true,
+      "filter": ["day","month","year","weekday","weeknumber","hour", "minute","second", "microsecond"],
+      "ignore_original": true
+    }
+  },
+  "optimizer": {
+    "adviser_classpath" : "gdayf.core.adviserastar",
+    "adviser_class": "AdviserStart",
+    "adviser_L2_wide": 3,
+    "adviser_normal_wide": 2,
+    "AdviserStart_rules": {
+      "common":{
+        "multi_limit" : 0.001,
+        "multi_cardinality_limit": 5
+      },
+      "h2o": {
+        "nfold_limit": 8,
+        "min_rows_limit": 4,
+        "cols_breakdown": 200,
+        "nfold_increment": 2,
+        "min_rows_increment": 2,
+        "max_interactions_rows_breakdown": 1000,
+        "max_interactions_increment": 1000,
+        "max_depth_increment": 2,
+        "ntrees_increment": 2,
+        "dpl_rcount_limit": 100000,
+        "dpl_divisor": 500,
+        "h_dropout_ratio": 0.025,
+        "epochs_increment": 2.0,
+        "deeper_increment": 1.5,
+        "wider_increment": 1.5,
+        "dpl_min_batch_size": 8,
+        "dpl_batch_divisor": "1000: Not used",
+        "dpl_batch_reduced_divisor": 2,
+        "learning_conf" : [
+          {"learn":0.5,"improvement":0.85},
+          {"learn":0.01,"improvement":0.1},
+          {"learn":0.005,"improvement":0.05},
+          {"learn":0.05,"improvement":0.99},
+          {"learn":1.0,"improvement":0.75}
+        ],
+        "rho_conf" : [
+          {"learn":0.95,"improvement":1e-8},
+          {"learn":0.99,"improvement":1e-10},
+          {"learn":0.999,"improvement":1e-10}
+        ],
+        "nv_laplace": [0.001, 3, 10],
+        "nv_min_prob": [1e-9],
+        "nv_min_sdev": [1e-3],
+        "nv_improvement" : 0.5,
+        "nv_divisor": 0.5,
+        "clustering_increment": 2.0,
+        "sample_rate" : [
+          {"size":0.55},
+          {"size":0.68},
+          {"size":0.81}
+        ]
+      },
+      "spark": {
+        "min_rows_limit": 4,
+        "min_rows_increment": 2,
+        "max_interactions_increment": 1000,
+        "interactions_increment": 2,
+        "max_depth_increment": 2,
+        "ntrees_increment": 2,
+        "aggregationDepth_increment": 2,
+        "stepSize" : [
+          {"learn":0.5},
+          {"learn":0.05},
+          {"learn":0.01},
+          {"learn":0.005}
+        ],
+        "regParam" : [
+          {"value": 0.00001},
+          {"value": 0.0001}
+        ],
+        "elastic_variation" : 0.2,
+        "nv_smoothing": [
+          {"value": 0.001},
+          {"value": 3},
+          {"value": 10}
+        ],
+        "nv_improvement" : 0.5,
+        "nv_divisor": 0.5,
+        "initstep_increment": 2,
+        "clustering_increment": 2.0
+      }
+    },
+    "common": {
+      "base_increment": {
+        "small": {
+          "base": 20000,
+          "increment": 2.0
+        },
+        "medium": {
+          "base": 5000000,
+          "increment": 4.0
+        },
+        "large": {
+          "base": 50000000,
+          "increment": 8.0
+        }
+      }
+    }
+  },
+  "dfmetadata":{
+    "correlation_threshold": 0.5,
+    "cardinality_limit": 40
+  },
+  "common": {
+    "version" : "1.2.1.2",
+    "test_frame_ratio" : 0.8,
+    "workflow_summary_enabled": true,
+    "workflow_summary_dir": "summary",
+    "execution_tree_dir": "execution_tree",
+    "minimal_test_split": 200
+  }
+}
