@@ -12,7 +12,7 @@ if __name__ == "__main__":
         status, recomendations = controller.exec_analysis(datapath=data_train, objective_column='Y2',
                                                           amode=FAST, metric='train_accuracy', deep_impact=5)
 
-        controller.reconstruct_execution_tree(metric='train_accuracy', store=True)
+        controller.reconstruct_execution_tree(metric='test_accuracy', store=True)
         controller.remove_models(arlist=recomendations, mode=EACH_BEST)
 
         set_option('display.max_rows', 500)
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         result = controller.get_external_model(recomendations[0], 'mojo')
         '''
 
-        print(controller.table_model_list(ar_list=recomendations, metric='test_r2'))
+        print(controller.table_model_list(ar_list=recomendations, metric='test_accuracy'))
         controller.clean_handlers()
 
     del controller

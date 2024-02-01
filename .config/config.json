@@ -2435,7 +2435,7 @@
           "fixed" : 1,
           "enable_fixed" : false
         },
-        "enabled" : true,
+        "enabled" : false,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
@@ -4312,7 +4312,7 @@
       },
     "hdfs": {"value": "/gdayf-v1/experiments" , "type":"hdfs",
         "url":"http://0.0.0.0:50070",
-        "uri":"hdfs://172.18.0.4:8020",
+        "uri":"hdfs://172.18.0.5:8020",
         "hash_value": null, "hash_type":"MD5"
       },
     "mongoDB": { "value": "gdayf-v1",
