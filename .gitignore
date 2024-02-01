@@ -1,6 +1,8 @@
 
 \.idea/
 
+\.vscode/
+
 src/gdayf/core/__pycache__/
 
 src/gdayf/handlers/__pycache__/
@@ -34,4 +36,5 @@ src/gdayf/workflow/__pycache__/
 avg-fuel/
 
 .config/avg-fuel-r2/
+
 /avg-fuel/
