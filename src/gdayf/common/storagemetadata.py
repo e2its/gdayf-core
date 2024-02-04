@@ -70,7 +70,8 @@ class StorageMetadata (list):
     # @param include enable localfs
     # @return relative path string
     def get_load_path(self, include=False):
-        return self.exclude_debug_fs(deepcopy(self._config['storage']['load_path']), include=include)
+        #return self.exclude_debug_fs(deepcopy(self._config['storage']['load_path']), include=include)
+        return deepcopy(self._config['storage']['log_path'])
 
     ## method used to get relative log path from config.json
     # @param self object pointer location (optional)

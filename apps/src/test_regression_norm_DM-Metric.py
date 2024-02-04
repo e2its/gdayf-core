@@ -33,15 +33,13 @@ if __name__ == "__main__":
         elif 'prediction' in prediction_frame.columns.values:
             print(prediction_frame[['Weather_Temperature', 'prediction']])
 
-        '''# Save Pojo
-        #result = controller.get_external_model(recomendations[0], 'pojo')
+        # Save Pojo
+        result = controller.get_external_model(recomendations[0], 'pojo')
 
         # Save Mojo
-        #result = controller.get_external_model(recomendations[0], 'mojo')
-        '''
-
-        print(controller.table_model_list(ar_list=recomendations, metric='test_accuracy'))
-
+        result = controller.get_external_model(recomendations[0], 'mojo')
+        
+        print(controller.table_model_list(ar_list=recomendations, metric='test_rmse'))
         controller.clean_handlers()
 
     del controller
