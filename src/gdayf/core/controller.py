@@ -85,11 +85,11 @@ class Controller(object):
         self._logging.log_info('gDayF', "Controller", self._labels["primary_path"],
                                str(storage_conf['primary_path']))
 
-        ''' Checking primary Json storage Paths'''
+        ''' Checking primary Load storage Paths'''
         primary = False
         #if storage_conf['primary_path'] in ['localfs', 'hdfs']:
         for storage in StorageMetadata(self._ec).get_load_path():
-            if storage_conf['primary_path'] == storage['type'] and storage['type'] != 'mongoDB':
+            if (storage_conf['primary_path'] == storage['type']) and (storage['type'] != 'mongoDB'):
                 primary = True
             if storage['type'] == 'mongoDB':
                 self._logging.log_critical('gDayF', "Controller", self._labels["failed_file_storage"],
@@ -97,12 +97,12 @@ class Controller(object):
                 return False
             elif storage['type'] == 'localfs':
                 if not localfs:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"] + " localfs",
                                            str(storage))
                     return False
             elif storage['type'] == 'hdfs':
                 if not hdfs:
-                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"],
+                    self._logging.log_critical('gDayF', "Controller", self._labels["failed_load"] + " hdfs",
                                            str(storage))
                     return False
 
@@ -111,7 +111,7 @@ class Controller(object):
                                    str(storage_conf[storage_conf['primary_path']]))
             return False
 
-        ''' Checking Load storage Paths'''
+        ''' Checking json storage Paths'''
         at_least_on = False
         for storage in StorageMetadata(self._ec).get_json_path():
             if storage['type'] == 'mongoDB':

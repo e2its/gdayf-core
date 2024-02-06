@@ -2428,14 +2428,14 @@
         "spark_warehouse_dir": "/home/e2its/data/gdayf-v1/spark_warehouse",
         "spark.executor.memory": "2G",
         "spark.driver.memory": "1G",
-        "start_spark": false,
+        "start_spark": true,
         "save_model": "NATIVE",
         "tolerance": {
           "percentage" : 0.05,
           "fixed" : 1,
           "enable_fixed" : false
         },
-        "enabled" : false,
+        "enabled" : true,
         "log": "log4j.Level.ERROR",
         "min_rows_enabled": true,
         "max_cols_enabled": true,
@@ -4202,7 +4202,7 @@
       "info": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/1-gDayF-info.log",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/experiments/logs/1-gDayF-info.log",
         "level": "INFO",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -4211,14 +4211,14 @@
       "debug": {
         "class": "logging.FileHandler",
         "formatter": "standard",
-        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs/2-gDayF-debug.log",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/experiments/logs/2-gDayF-debug.log",
         "level": "DEBUG",
         "encoding": "utf8"
       },
       "error": {
         "class": "logging.handlers.RotatingFileHandler",
         "formatter": "standard",
-        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/logs/3-gDayF-error.log",
+        "filename": "/home/e2its/docker/volumes/gdayf-data/gdayf-v1/experiments/logs/3-gDayF-error.log",
         "level": "ERROR",
         "maxBytes": 10485760,
         "backupCount": 5,
@@ -4329,16 +4329,16 @@
         "hash_value": null, "hash_type":"MD5"
       },
       {"value": "load" , "type":"hdfs",
-        "hash_value": null, "hash_type":"MD5"
-      }
+      "hash_value": null, "hash_type":"MD5"
+    }
     ],
     "log_path" : [
       {"value": "log" , "type":"localfs",
         "hash_value": null, "hash_type":"MD5"
       },
       {"value": "log" , "type":"hdfs",
-        "hash_value": null, "hash_type":"MD5"
-      }
+      "hash_value": null, "hash_type":"MD5"
+    }
     ],
     "json_path" : [
       {"value": "" , "type":"mongoDB",
@@ -4472,7 +4472,7 @@
     "cardinality_limit": 40
   },
   "common": {
-    "version" : "1.2.1.2",
+    "version" : "1.3.0.1",
     "test_frame_ratio" : 0.8,
     "workflow_summary_enabled": true,
     "workflow_summary_dir": "summary",
