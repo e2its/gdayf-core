@@ -16,3 +16,4 @@ src/gdayf/optimizers/__pycache__/
 src/gdayf/workflow/__pycache__/
 .config/
 avg-fuel/
+gdayf-core.code-workspace
