@@ -1,9 +1,18 @@
 # DayF Core Development Framework
+
+> **⚠️ PROJECT STATUS: CLOSED**  
+> This project is no longer actively maintained or developed. It has been archived and is provided for reference purposes only.
+
 DayF (Decision at your Fingertips) is an AutoML GPL3 opensource development framework that let developers works with Machine Learning models without any idea of AI, simply taking a .csv dataset and the objective column.
 
 gDayF Framework make all transformations (Normalization, cleaning, etc ) and choose the  best model and parametrization selection for you storing all dataset and model execution parameters in a .json file.
 
+## Project Status
+**This project is closed and archived.** No new features, bug fixes, or updates will be provided. The codebase is preserved for historical reference and educational purposes.
+
 ## Getting Started
+> **Note:** This project is archived and no longer actively maintained.
+
 Clone Git repository: https://github.com/e2its/gdayf-core.git
 
 ## Prerequisites
@@ -72,8 +81,12 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 ## Documentation
   A doxygen graphviz technical documentation can be located on doc folder in the project
 
+> **Note:** Documentation may be outdated as this project is no longer maintained.
+
 ## Running the tests
 `Test.py` scripts can be found on test/src folder in the project
+
+> **Note:** Tests may not work with current versions of dependencies as this project is archived.
 
 ## Built With
   * [H2o.ai](http://http://docs.h2o.ai/) - a Machine Learning engine working on Hadoop/Yarn, Spark, or your laptop.
@@ -87,3 +100,11 @@ Clone Git repository: https://github.com/e2its/gdayf-core.git
 
 ## LICENSE
 This project is licensed under the GPL3 License - see the [LICENSE.md](https://www.gnu.org/licenses/gpl-3.0.txt) for details
+
+---
+
+**⚠️ IMPORTANT:** This project is archived and closed. For active AutoML frameworks, please consider alternatives such as:
+- [Auto-Sklearn](https://automl.github.io/auto-sklearn/)
+- [H2O AutoML](https://docs.h2o.ai/h2o/latest-stable/h2o-docs/automl.html)
+- [TPOT](https://epistasislab.github.io/tpot/)
+- [AutoGluon](https://auto.gluon.ai/)
