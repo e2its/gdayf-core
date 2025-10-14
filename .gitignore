@@ -1,6 +1,6 @@
 
-.idea/
-.vscode/
+.idea*
+.vscode*
 src/gdayf/core/__pycache__/
 src/gdayf/handlers/__pycache__/
 src/gdayf/logs/__pycache__/
